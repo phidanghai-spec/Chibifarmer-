@@ -10,6 +10,18 @@
 y_sort_enabled = true
 script = ExtResource("1_main")
 
+[node name="GroundLayer" type="Node2D" parent="."]
+
+[node name="WaterLayer" type="Node2D" parent="."]
+
+[node name="PathLayer" type="Node2D" parent="."]
+
+[node name="PlotLayer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="PropsLayer" type="Node2D" parent="."]
+y_sort_enabled = true
+
 [node name="PlotsContainer" type="Node2D" parent="."]
 y_sort_enabled = true
 

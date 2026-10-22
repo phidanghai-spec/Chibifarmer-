@@ -1,0 +1,101 @@
+{
+  "inset_margin": 8,
+  "grid_sheets": {
+    "chibi_sheet_1": {
+      "path": "res://assets/sprites/chibi_sheet_1.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["visitor_girl", "visitor_boy", "chibi_duck", "chibi_bunny"],
+        ["cow", "sheep", "chicken", "milk_cheese"],
+        ["wheat_field", "carrot", "apple", "bread_bakery"]
+      ]
+    },
+    "chibi_sheet_2": {
+      "path": "res://assets/sprites/chibi_sheet_2.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["crop_wheat_seed", "crop_wheat_sprout", "crop_wheat_ripe", "chibi_well"],
+        ["crop_corn_seed", "crop_corn_sprout", "crop_corn_ripe", "chibi_windmill"],
+        ["chicken_coop", "chibi_eggs", "pig", "chibi_tool_shed"]
+      ]
+    },
+    "chibi_sheet_3": {
+      "path": "res://assets/sprites/chibi_sheet_3.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["chibi_bakery", "chibi_barn", "chibi_farmhouse", "chibi_silo"],
+        ["chibi_fence", "chibi_scarecrow", "chibi_easel", "chibi_telescope"],
+        ["chibi_flower_pot", "chibi_mailbox", "chibi_bench", "chibi_fountain"]
+      ]
+    },
+    "chibi_sheet_animals": {
+      "path": "res://assets/sprites/sheet_animals_visitors.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["animal_cow", "animal_chicken", "animal_pig", "animal_sheep"],
+        ["visitor_tourist", "visitor_farmer", "visitor_grandpa", "visitor_girl_red"],
+        ["decor_flowerbed", "decor_haybale", "building_feed_mill", "building_dairy"]
+      ]
+    },
+    "chibi_sheet_decor": {
+      "path": "res://assets/sprites/sheet_buildings_decor.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["decor_duck_pond", "decor_shrimp_pond", "decor_crab_pond", "decor_cloud_waterfall"],
+        ["decor_carousel", "decor_treehouse", "decor_swing", "decor_cat_bush"],
+        ["decor_elephant", "decor_frog_fountain", "decor_duck", "decor_treasure_chest"]
+      ]
+    },
+    "chibi_sheet_nature": {
+      "path": "res://assets/sprites/sheet_nature_env.png",
+      "rows": 3,
+      "cols": 4,
+      "sprites": [
+        ["env_tree_small", "env_tree_medium", "env_tree_large", "env_bush_berries"],
+        ["env_rock_small", "env_rock_moss", "env_flower_yellow", "env_flower_red"],
+        ["env_stump", "env_log_moss", "env_fence_wood", "env_lamp_post"]
+      ]
+    }
+  },
+  "standalone_sprites": [
+    "wheat",
+    "corn",
+    "sickle",
+    "crop_basket",
+    "field_plot",
+    "cow_pasture",
+    "flowerbed_daisies",
+    "flowerbed_roses",
+    "flowerbed_lavender",
+    "flowerbed_round",
+    "tree_fruitless",
+    "tree_apple_ripe",
+    "tree_mango_ripe",
+    "env_apple_tree",
+    "env_mango_tree",
+    "icon_mango",
+    "mango",
+    "icon_apple_seed",
+    "apple_seed",
+    "icon_mango_seed",
+    "mango_seed",
+    "truck",
+    "truck_delivery",
+    "icon_truck",
+    "env_mountain_peak",
+    "env_mountain_waterfall",
+    "env_rock_outcrop",
+    "env_pine_cluster",
+    "env_flower_meadow",
+    "chibi_meadow_backdrop",
+    "env_lush_green_tree",
+    "env_cherry_tree",
+    "env_river_bush",
+    "visitor_adventurer"
+  ]
+}
