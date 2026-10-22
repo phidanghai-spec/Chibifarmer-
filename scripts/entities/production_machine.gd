@@ -28,8 +28,11 @@ func _ready() -> void:
 	_label_status = Label.new()
 	_label_status.text = "SẴN SÀNG"
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label_status.position = Vector2(-50, -68)
-	_label_status.size = Vector2(100, 20)
+	_label_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_label_status.position = Vector2(-80, -68)
+	_label_status.size = Vector2(160, 24)
+	_label_status.clip_text = false
+	_label_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label_status.add_theme_font_size_override("font_size", 11)
 	_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
 	_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))

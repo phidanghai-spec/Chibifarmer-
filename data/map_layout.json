@@ -1,0 +1,157 @@
+{
+  "tile_size": 32,
+  "zones": {
+    "zone1_processing": {
+      "name": "Khu Nhà & Xưởng Chế Biến",
+      "x_range": [320, 760],
+      "y_range": [220, 540]
+    },
+    "zone2_fields": {
+      "name": "Khu Ruộng Tập Trung",
+      "x_range": [384, 544],
+      "y_range": [480, 608]
+    },
+    "zone3_pens": {
+      "name": "Khu Chuồng Trại",
+      "x_range": [256, 768],
+      "y_range": [672, 832]
+    },
+    "zone4_orchard": {
+      "name": "Khu Vườn Cây Ăn Quả",
+      "x_range": [160, 320],
+      "y_range": [672, 864]
+    },
+    "zone5_east_bank": {
+      "name": "Rừng Anh Đào & Công Viên Bờ Đông",
+      "x_range": [1088, 1376],
+      "y_range": [192, 864]
+    }
+  },
+  "buildings": [
+    {
+      "id": "farmhouse",
+      "sprite_id": "farmhouse",
+      "cell": [10, 8],
+      "tile_size": [3, 3],
+      "max_size": [90, 90]
+    },
+    {
+      "id": "barn",
+      "sprite_id": "barn",
+      "cell": [14, 8],
+      "tile_size": [3, 3],
+      "max_size": [90, 90]
+    },
+    {
+      "id": "silo",
+      "sprite_id": "silo",
+      "cell": [20, 8],
+      "tile_size": [3, 3],
+      "max_size": [90, 90]
+    },
+    {
+      "id": "bakery",
+      "type": "machine",
+      "machine_id": "bakery",
+      "cell": [14, 13],
+      "tile_size": [3, 3]
+    },
+    {
+      "id": "feed_mill",
+      "type": "machine",
+      "machine_id": "feed_mill",
+      "cell": [20, 13],
+      "tile_size": [3, 3]
+    },
+    {
+      "id": "roadside_shop",
+      "sprite_id": "roadside_shop",
+      "cell": [6, 17],
+      "tile_size": [3, 3],
+      "max_size": [90, 90]
+    },
+    {
+      "id": "truck",
+      "sprite_id": "truck",
+      "cell": [10, 17],
+      "tile_size": [2, 2],
+      "max_size": [90, 90]
+    },
+    {
+      "id": "chibi_easel",
+      "sprite_id": "chibi_easel",
+      "cell": [11, 13],
+      "tile_size": [2, 2],
+      "max_size": [44, 48]
+    },
+    {
+      "id": "chibi_scarecrow",
+      "sprite_id": "chibi_scarecrow",
+      "cell": [11, 16],
+      "tile_size": [1, 1],
+      "max_size": [32, 44]
+    }
+  ],
+  "field_plots": [
+    {"cell": [12, 17], "crop": "empty"},
+    {"cell": [13, 17], "crop": "empty"},
+    {"cell": [14, 17], "crop": "empty"},
+    {"cell": [15, 17], "crop": "empty"},
+    {"cell": [12, 18], "crop": "wheat", "ready": true},
+    {"cell": [13, 18], "crop": "wheat", "ready": false},
+    {"cell": [14, 18], "crop": "wheat", "ready": true},
+    {"cell": [15, 18], "crop": "wheat", "ready": false},
+    {"cell": [12, 19], "crop": "corn", "ready": true},
+    {"cell": [13, 19], "crop": "corn", "ready": false},
+    {"cell": [14, 19], "crop": "corn", "ready": true},
+    {"cell": [15, 19], "crop": "corn", "ready": false}
+  ],
+  "animal_pens": [
+    {"animal_id": "cow", "cell": [9, 22], "tile_size": [4, 3], "count": 2},
+    {"animal_id": "chicken", "cell": [14, 22], "tile_size": [4, 3], "count": 3},
+    {"animal_id": "pig", "cell": [19, 22], "tile_size": [4, 3], "count": 2}
+  ],
+  "fishing_spot": {
+    "cell": [23, 22],
+    "tile_size": [3, 3]
+  },
+  "orchard_trees": [
+    {"type": "apple", "pos": [192.0, 710.0], "size": [74.0, 78.0]},
+    {"type": "mango", "pos": [256.0, 710.0], "size": [72.0, 76.0]},
+    {"type": "mango", "pos": [192.0, 780.0], "size": [74.0, 76.0]},
+    {"type": "apple", "pos": [256.0, 780.0], "size": [74.0, 78.0]},
+    {"type": "apple", "pos": [192.0, 850.0], "size": [74.0, 78.0]},
+    {"type": "mango", "pos": [256.0, 850.0], "size": [72.0, 76.0]}
+  ],
+  "flowerbeds": [
+    {"id": "flowerbed_daisies", "pos": [320.0, 470.0], "size": [40.0, 28.0]},
+    {"id": "flowerbed_roses", "pos": [320.0, 520.0], "size": [38.0, 26.0]},
+    {"id": "flowerbed_lavender", "pos": [576.0, 470.0], "size": [38.0, 26.0]},
+    {"id": "flowerbed_round", "pos": [576.0, 520.0], "size": [36.0, 26.0]}
+  ],
+  "scenic_elements": [
+    {"id": "env_cherry_tree", "pos": [340.0, 95.0], "size": [88.0, 92.0]},
+    {"id": "env_lush_green_tree", "pos": [520.0, 100.0], "size": [90.0, 95.0]},
+    {"id": "env_cherry_tree", "pos": [700.0, 95.0], "size": [88.0, 92.0]},
+    {"id": "env_lush_green_tree", "pos": [880.0, 100.0], "size": [90.0, 95.0]},
+    {"id": "env_cherry_tree", "pos": [1120.0, 210.0], "size": [88.0, 92.0]},
+    {"id": "env_river_bush", "pos": [1145.0, 260.0], "size": [40.0, 36.0]},
+    {"id": "env_lush_green_tree", "pos": [1240.0, 240.0], "size": [90.0, 95.0]},
+    {"id": "flowerbed_round", "pos": [1160.0, 310.0], "size": [36.0, 26.0]},
+    {"id": "env_lush_green_tree", "pos": [1135.0, 380.0], "size": [90.0, 95.0]},
+    {"id": "env_river_bush", "pos": [1150.0, 440.0], "size": [40.0, 36.0]},
+    {"id": "env_cherry_tree", "pos": [1240.0, 400.0], "size": [88.0, 92.0]},
+    {"id": "env_lush_green_tree", "pos": [1250.0, 490.0], "size": [90.0, 95.0]},
+    {"id": "flowerbed_roses", "pos": [1165.0, 490.0], "size": [38.0, 26.0]},
+    {"id": "env_cherry_tree", "pos": [1120.0, 560.0], "size": [88.0, 92.0]},
+    {"id": "env_river_bush", "pos": [1155.0, 610.0], "size": [40.0, 36.0]},
+    {"id": "flowerbed_lavender", "pos": [1240.0, 580.0], "size": [38.0, 26.0]},
+    {"id": "env_lush_green_tree", "pos": [1125.0, 720.0], "size": [90.0, 95.0]},
+    {"id": "env_river_bush", "pos": [1145.0, 770.0], "size": [40.0, 36.0]},
+    {"id": "env_cherry_tree", "pos": [1240.0, 740.0], "size": [88.0, 92.0]},
+    {"id": "flowerbed_daisies", "pos": [1165.0, 810.0], "size": [38.0, 26.0]},
+    {"id": "env_cherry_tree", "pos": [1130.0, 860.0], "size": [88.0, 92.0]},
+    {"id": "env_river_bush", "pos": [1150.0, 910.0], "size": [40.0, 36.0]},
+    {"id": "env_lush_green_tree", "pos": [1240.0, 880.0], "size": [90.0, 95.0]}
+  ]
+}

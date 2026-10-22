@@ -209,6 +209,7 @@ func _setup_aliases() -> void:
 	_alias("chibi_pigs", "pig")
 	_alias("barn", "farmhouse")
 	_alias("silo", "dairy")
+	_alias("fishing_hut", "feed_mill")
 	_alias("truck_delivery", "truck")
 	_alias("apple_tree", "tree_apple_ripe")
 	_alias("mango_tree", "tree_mango_ripe")

@@ -12,100 +12,12 @@ class_name MainFarm
 var environment_container: Node2D
 var _scenic_valley_container: Node2D = null
 var _scenic_elements: Array[Node2D] = []
-var _scenic_clouds: Array[Dictionary] = []
 
 func get_scenic_elements_count() -> int:
 	return _scenic_elements.size()
 var field_plots: Dictionary = {} # Vector2i -> FieldPlot
 var fishing_spot: FishingSpot
 
-# --- Living Ecosystem Enums & Classes ---
-enum CritterState {
-	IDLE,
-	MOVING_LAND,
-	SWIMMING,
-	SHAKING
-}
-
-enum LocomotionStyle {
-	HOPPING,   # Rabbit, Chick
-	WADDLING,  # Duck, Dog
-	FLUTTERING # Butterfly, Bee
-}
-
-class FlyingBird:
-	var sprite: Sprite2D
-	var shadow: Sprite2D
-	var base_y: float = 0.0
-	var speed: float = 50.0
-	var flap_phase: float = 0.0
-	var flap_freq: float = 7.5
-	var base_scale: Vector2 = Vector2(0.28, 0.28)
-
-class WaterRippleNode extends Node2D:
-	var is_swimming: bool = false
-	var ripple_phase: float = 0.0
-	var facing_left: bool = false
-	
-	func _process(delta: float) -> void:
-		if is_swimming and visible:
-			ripple_phase += delta * 3.0
-			queue_redraw()
-	
-	func _draw_ellipse(center: Vector2, rx: float, ry: float, col: Color, line_w: float = 1.2) -> void:
-		var points: PackedVector2Array = PackedVector2Array()
-		const SEGMENTS: int = 24
-		for i: int in range(SEGMENTS + 1):
-			var theta: float = float(i) * TAU / float(SEGMENTS)
-			points.append(center + Vector2(cos(theta) * rx, sin(theta) * ry))
-		draw_polyline(points, col, line_w, true)
-	
-	func _draw() -> void:
-		if not is_swimming or not visible:
-			return
-		
-		var center: Vector2 = Vector2(0.0, 8.0)
-		
-		# 1st flattened horizontal ellipse (rx: 10..14px, ry: 3..5px)
-		var p1: float = fmod(ripple_phase, 1.0)
-		var rx1: float = 10.0 + p1 * 4.0
-		var ry1: float = 3.0 + p1 * 1.5
-		var a1: float = (1.0 - p1) * 0.45
-		var col1: Color = Color(0.9, 0.98, 1.0, a1)
-		_draw_ellipse(center, rx1, ry1, col1, 1.2)
-		
-		# 2nd flattened horizontal ellipse (out of phase by 0.5)
-		var p2: float = fmod(ripple_phase + 0.5, 1.0)
-		var rx2: float = 10.0 + p2 * 4.0
-		var ry2: float = 3.0 + p2 * 1.5
-		var a2: float = (1.0 - p2) * 0.38
-		var col2: Color = Color(0.9, 0.98, 1.0, a2)
-		_draw_ellipse(center, rx2, ry2, col2, 1.2)
-
-class AmbientCritter:
-	var root: Node2D
-	var sprite: Sprite2D
-	var shadow: Sprite2D
-	var ripple_node: WaterRippleNode
-	var critter_id: String = ""
-	var locomotion: int = LocomotionStyle.HOPPING
-	var state: int = CritterState.IDLE
-	var current_pos: Vector2 = Vector2.ZERO
-	var target_pos: Vector2 = Vector2.ZERO
-	var speed: float = 38.0
-	var state_timer: float = 0.0
-	var move_progress: float = 0.0
-	var move_duration: float = 2.0
-	var base_scale: Vector2 = Vector2(0.22, 0.22)
-	var float_phase: float = 0.0
-	var shake_timer: float = 0.0
-	var hop_height: float = 8.5
-	var can_swim: bool = false
-
-var _flying_birds: Array[FlyingBird] = []
-var _ambient_critters: Array[AmbientCritter] = []
-var _critters_container: Node2D
-var _birds_container: Node2D
 var _flower_targets: Array[Vector2] = []
 var _movable_decors: Array[MovableDecor] = []
 var _animal_pens: Array[AnimalPen] = []
@@ -150,21 +62,6 @@ func _ready() -> void:
 	_scenic_valley_container.y_sort_enabled = true
 	add_child(_scenic_valley_container)
 	_spawn_scenic_valley_environment()
-	_setup_scenic_clouds()
-
-	# Dedicated Critters Layer (z_index = 0, y_sorted below tree foliage)
-	_critters_container = Node2D.new()
-	_critters_container.name = "CrittersContainer"
-	_critters_container.z_index = 0
-	_critters_container.y_sort_enabled = true
-	add_child(_critters_container)
-
-	# Dedicated Sky Birds Layer (z_index = 20)
-	_birds_container = Node2D.new()
-	_birds_container.name = "BirdsContainer"
-	_birds_container.z_index = 20
-	add_child(_birds_container)
-
 	# Connect Core System Event Signals
 	EventBus.building_placed.connect(_on_building_placed)
 	EventBus.building_removed.connect(_on_building_removed)
@@ -181,9 +78,8 @@ func _ready() -> void:
 	# Spawn Rich Chibi Nature & Environmental Scenery
 	_setup_environment_decorations()
 
-	# Spawn Living Ecosystem (Birds, Critters, Pets)
-	_setup_flying_birds()
-	_setup_ambient_critters()
+	# Tắt _process hoàn toàn để chống giật lag
+	set_process(false)
 
 	# Check screenshot test mode
 	var args: PackedStringArray = OS.get_cmdline_args()
@@ -192,152 +88,29 @@ func _ready() -> void:
 			_capture_screenshot_and_quit()
 			break
 
-func _process(delta: float) -> void:
-	_update_flying_birds(delta)
-	_update_ambient_critters(delta)
-	_update_scenic_clouds(delta)
-	queue_redraw()
-
 func _screen_to_world(scr: Vector2) -> Vector2:
 	return (scr - Vector2(576.0, 324.0)) / 1.35 + camera_2d.position
 
 func _world_to_screen(world_pos: Vector2) -> Vector2:
 	return (world_pos - camera_2d.position) * 1.35 + Vector2(576.0, 324.0)
 
-# --- PHẦN 1.3: CƠ CHẾ KIỂM TRA MẶT NƯỚC (WATER POND DETECTION) ---
+# --- CƠ CHẾ KIỂM TRA MẶT NƯỚC (WATER POND DETECTION) ---
 func _is_in_lake_zone(world_pos: Vector2) -> bool:
 	return _is_in_water_pond(world_pos)
 
 func _is_in_water_pond(pos: Vector2) -> bool:
-	var rx: float = FishingSpot.get_river_center_x(pos.y)
-	# Exclude wooden river bridge at y = 636..684, x = 820..1080
-	if pos.y >= 636.0 and pos.y <= 684.0 and pos.x >= 820.0 and pos.x <= 1080.0:
-		return false
-	# Exclude fishing pier at y = 708..736, x = 780..885
-	if pos.y >= 708.0 and pos.y <= 736.0 and pos.x >= 780.0 and pos.x <= 885.0:
-		return false
-	# Water half-width is 88px + 35px safety margin = 123px minimum distance from water edge!
-	return absf(pos.x - rx) <= 125.0 and pos.y >= -50.0 and pos.y <= 1350.0
+	return FishingSpot.is_in_water_or_sand(pos)
 
-func _get_random_critter_waypoint(can_swim: bool = false, is_flutter: bool = false) -> Vector2:
-	# Flutterers prefer landing on flowerbeds or apple trees for nectar
-	if is_flutter and _flower_targets.size() > 0 and randf() < 0.72:
-		var target: Vector2 = _flower_targets[randi() % _flower_targets.size()]
-		return target + Vector2(randf_range(-16.0, 16.0), randf_range(-12.0, 12.0))
-
-	# Swimming-capable ducks swim along the winding river
-	if can_swim and randf() < 0.65:
-		var ry: float = randf_range(350.0, 950.0)
-		var rx: float = FishingSpot.get_river_center_x(ry) + randf_range(-40.0, 40.0)
-		return Vector2(rx, ry)
-
-	var tree_centers: Array[Vector2] = [
-		Vector2(360, 115), Vector2(740, 115), Vector2(80, 480), Vector2(880, 520), Vector2(1040, 360),
-		Vector2(75, 715), Vector2(110, 755), Vector2(175, 715), Vector2(540, 115), Vector2(650, 165),
-		Vector2(310, 725), Vector2(420, 725), Vector2(950, 120), Vector2(1100, 220)
-	]
-
-	# Full-Map Free Roaming across visible screen (X: 100..1080, Y: 140..540)
-	# Avoiding top-left HUD (X < 260, Y < 260) and bottom HUD (Y > 545)
-	for attempt: int in range(40):
-		var sx: float = randf_range(110.0, 1070.0)
-		var sy: float = randf_range(145.0, 535.0)
-		if sx < 260.0 and sy < 260.0:
-			continue
-		if sy > 540.0:
-			continue
-		
-		# Land animals and insects MUST NEVER pick waypoints in the lake or on the pier
-		if not can_swim and sx >= 670.0 and sy >= 400.0:
-			continue
-
-		var candidate_world: Vector2 = _screen_to_world(Vector2(sx, sy))
-		if not is_flutter:
-			var cell: Vector2i = Vector2i(int(candidate_world.x / 32.0), int(candidate_world.y / 32.0))
-			if GridManager.occupied_cells.has(cell):
-				continue
-			var on_tree: bool = false
-			for tc: Vector2 in tree_centers:
-				if candidate_world.distance_to(tc) < 40.0:
-					on_tree = true
-					break
-			if on_tree:
-				continue
-		return candidate_world
-
-	return Vector2(580.0, 580.0)
+const MapBuilderClass = preload("res://scripts/map/map_builder.gd")
 
 func _setup_initial_farm() -> void:
-	# 1. 12 Field Plots in 2 beds of 3x2 separated by a grassy lane
-	var bed1_coords: Array[Vector2i] = [
-		Vector2i(14, 15), Vector2i(15, 15), Vector2i(16, 15),
-		Vector2i(14, 16), Vector2i(15, 16), Vector2i(16, 16)
-	]
-	var bed2_coords: Array[Vector2i] = [
-		Vector2i(14, 18), Vector2i(15, 18), Vector2i(16, 18),
-		Vector2i(14, 19), Vector2i(15, 19), Vector2i(16, 19)
-	]
-
-	# Bed 1: 6 plots EMPTY for seeding tests
-	for coord: Vector2i in bed1_coords:
-		if not GridManager.is_cell_occupied(coord):
-			var inst_id: int = GridManager.place_building("field_plot", coord)
-			_spawn_field_plot(coord, inst_id)
-
-	# Bed 2: 6 plots for harvesting / growth tests
-	for coord: Vector2i in bed2_coords:
-		if not GridManager.is_cell_occupied(coord):
-			var inst_id: int = GridManager.place_building("field_plot", coord)
-			var plot: FieldPlot = _spawn_field_plot(coord, inst_id)
-			if coord == Vector2i(14, 18):
-				plot.plant("wheat")
-				plot.state = FieldPlot.PlotState.READY
-				plot._show_ready_crop()
-			elif coord == Vector2i(14, 19):
-				plot.plant("corn")
-				plot.state = FieldPlot.PlotState.READY
-				plot._show_ready_crop()
-			elif coord.y == 18:
-				plot.plant("wheat")
-			else:
-				plot.plant("corn")
-
-	# 2. Roadside Shop & Delivery Truck (along main road)
-	_spawn_building_prop("roadside_shop", Vector2i(6, 17), Vector2i(3, 3), Vector2(90, 90))
-	_spawn_building_prop("truck", Vector2i(10, 17), Vector2i(2, 2), Vector2(90, 90))
-
-	# 3. Hillside Estate (Farmhouse, Barn, Silo) placed safely at Y=11 so roofs are never cut off by top edge!
-	_spawn_building_prop("farmhouse", Vector2i(15, 11), Vector2i(3, 3), Vector2(90, 90))
-	_spawn_building_prop("barn", Vector2i(19, 11), Vector2i(3, 3), Vector2(90, 90))
-	_spawn_building_prop("silo", Vector2i(23, 11), Vector2i(2, 3), Vector2(86, 86))
-
-	# 4. Production Machines (Bakery & Feed Mill)
-	_spawn_production_machine("bakery", Vector2i(20, 16))
-	_spawn_production_machine("feed_mill", Vector2i(20, 21))
-
-	# 5. Chibi Attraction Spots (Easel and Scarecrow, floating telescope removed!)
-	_spawn_building_prop("chibi_scarecrow", Vector2i(17, 17), Vector2i(1, 1), Vector2(32, 44))
-	_spawn_building_prop("chibi_easel", Vector2i(18, 13), Vector2i(2, 2), Vector2(44, 48))
-
-	# 6. Animal Pens (Cow at Y=10 North of fields; Chicken & Pig neatly South of fields at Y=23)
-	_spawn_animal_pen("cow", Vector2i(11, 10), 2)
-	_spawn_animal_pen("chicken", Vector2i(11, 23), 3)
-	_spawn_animal_pen("pig", Vector2i(17, 23), 2)
-
-	# 7. Expansive Natural Lake at South-East (Y=19 so water is beautifully visible in bottom right!)
-	_spawn_fishing_spot(Vector2i(24, 19))
+	MapBuilderClass.build_farm(self)
 
 func _setup_environment_decorations() -> void:
 	_movable_decors.clear()
 	_flower_targets.clear()
 
-	# 1. Distant Rolling Hills along Northern Boundary (Fixed background landscape)
-	_spawn_background_hill("env_hill_1", Vector2(280, 42), Vector2(280, 85))
-	_spawn_background_hill("env_hill_2", Vector2(560, 38), Vector2(300, 90))
-	_spawn_background_hill("env_hill_1", Vector2(840, 40), Vector2(290, 85))
-	_spawn_background_hill("env_hill_2", Vector2(1100, 42), Vector2(300, 90))
-
-	# 2. Customizable / Movable Decorations (Loaded from Save or Default Layout)
+	# Customizable / Movable Decorations (Loaded from Save or Default Layout)
 	if SaveManager.custom_decorations.size() > 0:
 		for item: Variant in SaveManager.custom_decorations:
 			if item is Dictionary:
@@ -365,26 +138,23 @@ func _setup_environment_decorations() -> void:
 
 func _spawn_default_decorations() -> void:
 	# 1. Blooming Pastel Cherry Trees along North boundary (soft wind sway)
-	_spawn_swaying_tree("env_cherry_tree_1", Vector2(360, 115), Vector2(84, 84))
-	_spawn_swaying_tree("env_cherry_tree_2", Vector2(740, 115), Vector2(88, 88))
+	_spawn_swaying_tree("env_cherry_tree", Vector2(360, 115), Vector2(84, 84))
+	_spawn_swaying_tree("env_cherry_tree", Vector2(740, 115), Vector2(88, 88))
 
-	# 2. Fruit Orchard (Apple & Mango) - Organized in neat rows in Southwest (below horizontal road)
-	# Row 1 (y = 750)
-	_spawn_apple_tree(Vector2(110, 750), Vector2(74, 78))
-	_spawn_mango_tree(Vector2(230, 750), Vector2(72, 76))
-	# Row 2 (y = 850)
-	_spawn_mango_tree(Vector2(110, 850), Vector2(74, 76))
-	_spawn_apple_tree(Vector2(230, 840), Vector2(74, 78))
-	# Row 3 (y = 960)
-	_spawn_apple_tree(Vector2(110, 960), Vector2(74, 78))
-	_spawn_mango_tree(Vector2(230, 960), Vector2(72, 76))
+	# 2. Phân vùng 4: Khu Vườn Cây Ăn Quả (Góc Dưới Trái, X: 160..320, Y: 672..864)
+	# 6 Cây Táo và Cây Xoài theo hàng lối thẳng tắp: 2 cột x 3 hàng (cách nhau 64px - 70px)
+	_spawn_apple_tree(Vector2(192, 710), Vector2(74, 78))
+	_spawn_mango_tree(Vector2(256, 710), Vector2(72, 76))
+	_spawn_mango_tree(Vector2(192, 780), Vector2(74, 76))
+	_spawn_apple_tree(Vector2(256, 780), Vector2(74, 78))
+	_spawn_apple_tree(Vector2(192, 850), Vector2(74, 78))
+	_spawn_mango_tree(Vector2(256, 850), Vector2(72, 76))
 
 	# 3. Soft Flowerbeds placed strictly near buildings/corners (clean and orderly)
-	_spawn_flowerbed("flowerbed_daisies", Vector2(460, 675), Vector2(40, 28))
-	_spawn_flowerbed("flowerbed_roses", Vector2(540, 675), Vector2(38, 26))
-	_spawn_flowerbed("flowerbed_lavender", Vector2(600, 565), Vector2(38, 26))
-	_spawn_flowerbed("flowerbed_daisies", Vector2(265, 360), Vector2(38, 26))
-	_spawn_flowerbed("flowerbed_lavender", Vector2(560, 360), Vector2(38, 26))
+	_spawn_flowerbed("flowerbed_daisies", Vector2(320, 470), Vector2(40, 28))
+	_spawn_flowerbed("flowerbed_roses", Vector2(320, 520), Vector2(38, 26))
+	_spawn_flowerbed("flowerbed_lavender", Vector2(576, 470), Vector2(38, 26))
+	_spawn_flowerbed("flowerbed_round", Vector2(576, 520), Vector2(36, 26))
 
 func _spawn_background_hill(sprite_id: String, pos: Vector2, size: Vector2) -> Node2D:
 	if not SpriteAtlasManager.has_texture(sprite_id):
@@ -544,294 +314,6 @@ func _find_nearest_empty_grass_pos(from_cell: Vector2i) -> Vector2:
 					return world_pos
 	return Vector2.ZERO
 
-# --- PHẦN 2.5: ĐÀN CHIM BAY LƯỢN (FLYING BIRDS SYSTEM - REFINED SHADOW) ---
-func _setup_flying_birds() -> void:
-	var bird_types: Array[String] = ["bird_dove", "bird_sparrow", "bird_dove", "bird_sparrow"]
-	var initial_x_offsets: Array[float] = [280.0, 520.0, 760.0, 960.0]
-	var initial_ys: Array[float] = [410.0, 470.0, 520.0, 620.0]
-
-	for i: int in range(4):
-		var b_type: String = bird_types[i]
-		if not SpriteAtlasManager.has_texture(b_type):
-			continue
-
-		var bird: FlyingBird = FlyingBird.new()
-		bird.base_y = initial_ys[i]
-		bird.speed = randf_range(48.0, 65.0)
-		bird.flap_freq = randf_range(7.0, 9.0)
-		bird.flap_phase = randf_range(0.0, TAU)
-
-		# Ground Shadow reduced to Color(0, 0, 0, 0.12) as requested!
-		var shadow_sp: Sprite2D = _create_ellipse_shadow(Vector2(18.0, 8.0))
-		shadow_sp.z_index = 1
-		shadow_sp.modulate = Color(0.0, 0.0, 0.0, 0.12)
-		_birds_container.add_child(shadow_sp)
-		bird.shadow = shadow_sp
-
-		# Sky Bird Sprite (z_index = 20)
-		var sp: Sprite2D = Sprite2D.new()
-		sp.texture = SpriteAtlasManager.get_texture(b_type)
-		SpriteAtlasManager.set_sprite_pixel_size(sp, Vector2(26.0, 22.0))
-		sp.position = Vector2(initial_x_offsets[i], bird.base_y)
-		sp.z_index = 20
-		_birds_container.add_child(sp)
-		bird.sprite = sp
-		bird.base_scale = sp.scale
-
-		_flying_birds.append(bird)
-
-func _update_flying_birds(delta: float) -> void:
-	var time: float = Time.get_ticks_msec() * 0.001
-	for bird: FlyingBird in _flying_birds:
-		# Advance X position
-		var cur_x: float = bird.sprite.position.x + bird.speed * delta
-
-		# Sinusoidal Altitude Oscillation
-		var sin_offset: float = sin(time * bird.flap_freq + bird.flap_phase) * 6.5
-		var cur_y: float = bird.base_y + sin_offset
-
-		# Flapping pulse
-		var flap_scale_y: float = 1.0 + sin(time * bird.flap_freq * 2.0 + bird.flap_phase) * 0.16
-		bird.sprite.scale = Vector2(bird.base_scale.x, bird.base_scale.y * flap_scale_y)
-		bird.sprite.position = Vector2(cur_x, cur_y)
-
-		# Shadow positioned at Y + 25px offset as requested!
-		if bird.shadow != null:
-			bird.shadow.position = Vector2(cur_x - 4.0, bird.base_y + 25.0)
-
-		# Wrap around screen edge
-		if cur_x > 1260.0:
-			bird.sprite.position.x = -80.0
-			bird.base_y = randf_range(380.0, 680.0)
-			bird.speed = randf_range(48.0, 65.0)
-
-# --- PHẦN 1: NÂNG CẤP AI ĐỘNG VẬT NHỎ (AMBIENT CRITTERS / PETS) ---
-func _setup_ambient_critters() -> void:
-	# 1 & 2. 2 Ducks (animal_duckling) initialized directly inside the lake in open water to verify swimming & ripples!
-	# Lake center is (928, 720). Open water is around Vector2(945, 710) and Vector2(905, 675)
-	var duck1: AmbientCritter = _create_critter("animal_duckling", Vector2(835.0, 755.0), Vector2(28, 28), LocomotionStyle.WADDLING, 36.0, true)
-	duck1.state = CritterState.SWIMMING
-	duck1.ripple_node.is_swimming = true
-	duck1.ripple_node.visible = true
-	duck1.shadow.visible = false
-
-	var duck2: AmbientCritter = _create_critter("animal_duckling", Vector2(790.0, 765.0), Vector2(28, 28), LocomotionStyle.WADDLING, 36.0, true)
-	duck2.state = CritterState.SWIMMING
-	duck2.ripple_node.is_swimming = true
-	duck2.ripple_node.visible = true
-	duck2.shadow.visible = false
-
-	# 3 & 4. 2 White Bunnies (critter_bunny) hopping on grass and meadows
-	_create_critter("critter_bunny", Vector2(320, 480), Vector2(26, 26), LocomotionStyle.HOPPING, 42.0, false)
-	_create_critter("critter_bunny", Vector2(650, 380), Vector2(26, 26), LocomotionStyle.HOPPING, 40.0, false)
-
-	# 5 & 6. 2 Chicks (animal_duckling) hopping near fields & bakery
-	_create_critter("animal_duckling", Vector2(460, 480), Vector2(24, 24), LocomotionStyle.HOPPING, 35.0, false)
-	_create_critter("animal_duckling", Vector2(530, 490), Vector2(24, 24), LocomotionStyle.HOPPING, 35.0, false)
-
-	# 7 & 8. 2 Butterflies fluttering among flowerbeds (never swimming!)
-	_create_critter("critter_butterfly_pink", Vector2(535, 565), Vector2(18, 18), LocomotionStyle.FLUTTERING, 45.0, false)
-	_create_critter("critter_butterfly_yellow", Vector2(560, 360), Vector2(18, 18), LocomotionStyle.FLUTTERING, 45.0, false)
-
-	# 9 & 10. 2 Honey Bees fluttering near lavender & lake flowers
-	_create_critter("critter_bee", Vector2(620, 565), Vector2(17, 17), LocomotionStyle.FLUTTERING, 40.0, false)
-	_create_critter("critter_bee", Vector2(750, 665), Vector2(17, 17), LocomotionStyle.FLUTTERING, 40.0, false)
-
-func _create_critter(sprite_id: String, init_pos: Vector2, size: Vector2, loco_style: int, speed_val: float, swim_capable: bool) -> AmbientCritter:
-	if not SpriteAtlasManager.has_texture(sprite_id):
-		return null
-
-	var critter: AmbientCritter = AmbientCritter.new()
-	critter.critter_id = sprite_id
-	critter.locomotion = loco_style
-	critter.current_pos = init_pos
-	critter.target_pos = init_pos
-	critter.speed = speed_val
-	critter.can_swim = swim_capable
-	critter.state = CritterState.IDLE
-	critter.state_timer = randf_range(1.0, 2.5)
-	critter.float_phase = randf_range(0.0, TAU)
-
-	var wrapper: Node2D = Node2D.new()
-	wrapper.position = init_pos
-	wrapper.y_sort_enabled = true
-	_critters_container.add_child(wrapper)
-	critter.root = wrapper
-
-	# Water Ripple Node (renders below the sprite when swimming)
-	var ripple: WaterRippleNode = WaterRippleNode.new()
-	ripple.visible = false
-	wrapper.add_child(ripple)
-	critter.ripple_node = ripple
-	if loco_style == LocomotionStyle.FLUTTERING:
-		critter.can_swim = false
-		wrapper.z_index = 2
-
-	# Shadow
-	var shadow_sp: Sprite2D = _create_ellipse_shadow(Vector2(size.x * 0.7, size.y * 0.35))
-	shadow_sp.position = Vector2(0, size.y * 0.35)
-	shadow_sp.z_index = -1
-	wrapper.add_child(shadow_sp)
-	critter.shadow = shadow_sp
-
-	# Critter Sprite
-	var sp: Sprite2D = Sprite2D.new()
-	sp.texture = SpriteAtlasManager.get_texture(sprite_id)
-	SpriteAtlasManager.set_sprite_pixel_size(sp, size)
-	wrapper.add_child(sp)
-	critter.sprite = sp
-	critter.base_scale = sp.scale
-
-	_ambient_critters.append(critter)
-	return critter
-
-func _update_ambient_critters(delta: float) -> void:
-	var time: float = Time.get_ticks_msec() * 0.001
-	for critter: AmbientCritter in _ambient_critters:
-		if critter.locomotion == LocomotionStyle.FLUTTERING:
-			if critter.state == CritterState.SWIMMING or critter.state == CritterState.SHAKING:
-				critter.state = CritterState.IDLE
-			critter.ripple_node.is_swimming = false
-			critter.ripple_node.visible = false
-		else:
-			critter.ripple_node.visible = (critter.state == CritterState.SWIMMING)
-		match critter.state:
-			CritterState.IDLE:
-				critter.state_timer -= delta
-
-				# Subtle cute idle behaviors
-				if critter.locomotion == LocomotionStyle.HOPPING:
-					# Pecking grain / nibbling grass (squash & stretch scale.y)
-					critter.sprite.scale.y = critter.base_scale.y * (1.0 - absf(sin(time * 5.0)) * 0.12)
-					critter.sprite.scale.x = critter.base_scale.x * (1.0 + absf(sin(time * 5.0)) * 0.08)
-					critter.sprite.rotation = 0.0
-				elif critter.locomotion == LocomotionStyle.WADDLING:
-					# Gentle breathing tilt
-					critter.sprite.rotation = sin(time * 3.5) * 0.03
-					critter.sprite.scale = critter.base_scale
-				elif critter.locomotion == LocomotionStyle.FLUTTERING:
-					# Hovering or perching on petals: gentle wing beat
-					critter.sprite.scale.x = critter.base_scale.x * (0.85 + sin(time * 10.0) * 0.15)
-					critter.sprite.scale.y = critter.base_scale.y
-
-				# Check when idle finishes -> choose new destination
-				if critter.state_timer <= 0.0:
-					critter.target_pos = _get_random_critter_waypoint(critter.can_swim, critter.locomotion == LocomotionStyle.FLUTTERING)
-					var dist: float = critter.current_pos.distance_to(critter.target_pos)
-					if dist < 25.0:
-						dist = 25.0
-
-					critter.sprite.flip_h = (critter.target_pos.x < critter.current_pos.x)
-					critter.ripple_node.facing_left = critter.sprite.flip_h
-
-					# Determine starting move state based on whether current spot is in water
-					if critter.can_swim and critter.locomotion != LocomotionStyle.FLUTTERING and _is_in_water_pond(critter.current_pos):
-						critter.state = CritterState.SWIMMING
-						critter.ripple_node.is_swimming = true
-						critter.ripple_node.visible = true
-						critter.shadow.visible = false
-						critter.move_duration = dist / (critter.speed * 0.70)
-					else:
-						critter.state = CritterState.MOVING_LAND
-						critter.ripple_node.is_swimming = false
-						critter.ripple_node.visible = false
-						critter.shadow.visible = true
-						critter.move_duration = dist / critter.speed
-
-					critter.move_progress = 0.0
-
-			CritterState.MOVING_LAND:
-				critter.move_progress += delta / critter.move_duration
-				var p: float = clampf(critter.move_progress, 0.0, 1.0)
-				var new_pos: Vector2 = critter.current_pos.lerp(critter.target_pos, p)
-
-				# Non-swimming land critters turn back immediately if approaching the lake water/pier
-				if not critter.can_swim and _is_in_lake_zone(new_pos):
-					critter.target_pos = critter.current_pos
-					critter.root.position = critter.current_pos
-					critter.state = CritterState.IDLE
-					critter.state_timer = randf_range(1.0, 2.0)
-					continue
-
-				critter.root.position = new_pos
-
-				# Swimming-capable ducks seamlessly switch to SWIMMING!
-				if critter.can_swim and critter.locomotion != LocomotionStyle.FLUTTERING and _is_in_water_pond(new_pos):
-					critter.state = CritterState.SWIMMING
-					critter.ripple_node.is_swimming = true
-					critter.ripple_node.visible = true
-					critter.shadow.visible = false
-					var rem_dist: float = new_pos.distance_to(critter.target_pos)
-					critter.move_duration = critter.move_progress * critter.move_duration + (rem_dist / (critter.speed * 0.70))
-
-				# Land Locomotion animations
-				if critter.locomotion == LocomotionStyle.HOPPING:
-					# Parabolic / sinusoidal hop trajectory
-					var hop: float = absf(sin(p * PI * 4.0)) * critter.hop_height
-					critter.sprite.position.y = -hop
-					critter.sprite.rotation = 0.0
-					critter.sprite.scale = critter.base_scale
-				elif critter.locomotion == LocomotionStyle.WADDLING:
-					# Continuous waddling sway side-to-side
-					critter.sprite.position.y = 0.0
-					critter.sprite.rotation = sin(time * 12.0) * 0.08
-					critter.sprite.scale = critter.base_scale
-				elif critter.locomotion == LocomotionStyle.FLUTTERING:
-					# Smooth undulating wave flight path
-					critter.sprite.position.y = sin(time * 5.0 + critter.float_phase) * 6.0
-					critter.sprite.scale.x = critter.base_scale.x * (0.8 + sin(time * 20.0) * 0.25)
-
-				if critter.move_progress >= 1.0:
-					critter.current_pos = critter.target_pos
-					critter.root.position = critter.current_pos
-					critter.sprite.position.y = 0.0
-					critter.sprite.rotation = 0.0
-					critter.state = CritterState.IDLE
-					critter.state_timer = randf_range(1.5, 3.0)
-
-			CritterState.SWIMMING:
-				critter.shadow.visible = false
-				critter.ripple_node.is_swimming = true
-				critter.ripple_node.visible = true
-
-				critter.move_progress += delta / critter.move_duration
-				var sp_p: float = clampf(critter.move_progress, 0.0, 1.0)
-				var swim_pos: Vector2 = critter.current_pos.lerp(critter.target_pos, sp_p)
-				critter.root.position = swim_pos
-
-				# Water emergence detection: swimming onto shore!
-				if not _is_in_water_pond(swim_pos):
-					critter.ripple_node.is_swimming = false
-					critter.ripple_node.visible = false
-					critter.shadow.visible = true
-					critter.state = CritterState.SHAKING
-					critter.shake_timer = 0.45
-					critter.sprite.scale = critter.base_scale
-					critter.sprite.position.y = 0.0
-
-				# Swimming animation: glide with soft wave bobbing and submerged body tuck
-				critter.sprite.position.y = sin(time * 4.0) * 2.0
-				critter.sprite.rotation = sin(time * 3.0) * 0.04
-				critter.sprite.scale = Vector2(critter.base_scale.x, critter.base_scale.y * 0.85)
-
-				if critter.move_progress >= 1.0:
-					critter.current_pos = critter.target_pos
-					critter.root.position = critter.current_pos
-					critter.state = CritterState.IDLE
-					critter.state_timer = randf_range(1.5, 3.0)
-
-			CritterState.SHAKING:
-				# Quick joyful shake-off-water animation upon exiting pond!
-				critter.shake_timer -= delta
-				critter.sprite.rotation = sin(critter.shake_timer * 38.0) * 0.18
-				critter.sprite.position.y = 0.0
-				critter.sprite.scale = critter.base_scale
-
-				if critter.shake_timer <= 0.0:
-					critter.sprite.rotation = 0.0
-					critter.state = CritterState.IDLE
-					critter.state_timer = randf_range(1.0, 2.0)
-
 func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i, max_size: Vector2 = Vector2(90, 90)) -> Sprite2D:
 	for x: int in range(cell.x, cell.x + tile_size.x):
 		for y: int in range(cell.y, cell.y + tile_size.y):
@@ -886,8 +368,8 @@ func _spawn_production_machine(m_id: String, cell: Vector2i) -> ProductionMachin
 	return machine
 
 func _spawn_animal_pen(a_id: String, cell: Vector2i, count: int) -> AnimalPen:
-	for x: int in range(cell.x, cell.x + 6):
-		for y: int in range(cell.y, cell.y + 4):
+	for x: int in range(cell.x, cell.x + 4):
+		for y: int in range(cell.y, cell.y + 3):
 			var c: Vector2i = Vector2i(x, y)
 			GridManager.occupied_cells[c] = 777
 			GridManager.astar_grid.set_point_solid(c, true)
@@ -898,8 +380,8 @@ func _spawn_animal_pen(a_id: String, cell: Vector2i, count: int) -> AnimalPen:
 	pen.animal_count = count
 	pen.grid_pos = cell
 	var center_pixel: Vector2 = Vector2(
-		(float(cell.x) + 3.0) * 32.0,
-		(float(cell.y) + 2.0) * 32.0
+		(float(cell.x) + 2.0) * 32.0,
+		(float(cell.y) + 1.5) * 32.0
 	)
 	pen.position = center_pixel
 	animal_pens_container.add_child(pen)
@@ -907,8 +389,8 @@ func _spawn_animal_pen(a_id: String, cell: Vector2i, count: int) -> AnimalPen:
 	return pen
 
 func _spawn_fishing_spot(cell: Vector2i) -> FishingSpot:
-	for x: int in range(cell.x, cell.x + 10):
-		for y: int in range(cell.y, cell.y + 7):
+	for x: int in range(cell.x, cell.x + 3):
+		for y: int in range(cell.y, cell.y + 3):
 			var c: Vector2i = Vector2i(x, y)
 			GridManager.occupied_cells[c] = 666
 			GridManager.astar_grid.set_point_solid(c, true)
@@ -1024,10 +506,7 @@ func _draw() -> void:
 		draw_circle(pos + Vector2(24, 11), 2.2, road_grain)
 		draw_circle(pos + Vector2(11, 23), 2.0, road_grain)
 
-	# 4. Railroad Track + Pastel Steam Train on Northern Ridge
-	_draw_railroad_and_train()
-
-	# 5. Perimeter Hand-drawn Border
+	# 4. Perimeter Hand-drawn Border
 	var fence_col: Color = Color(0.42, 0.30, 0.21, 0.6)
 	draw_rect(Rect2(0, 0, total_w, total_h), fence_col, false, 3.0)
 
@@ -1035,44 +514,6 @@ func _draw() -> void:
 	var gate_pos: Vector2 = Vector2(0, 20 * 32)
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.96, 0.82, 0.45), true)
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.42, 0.30, 0.21), false, 1.8)
-
-func _draw_railroad_and_train() -> void:
-	var track_y: float = 68.0
-	var track_len: float = 1250.0
-
-	# Wooden ties in warm brown
-	for tx: float in range(0, track_len, 14.0):
-		draw_line(Vector2(tx, track_y - 10), Vector2(tx, track_y + 10), Color(0.52, 0.38, 0.26), 2.5)
-
-	# Steel rails
-	draw_line(Vector2(0, track_y - 7), Vector2(track_len, track_y - 7), Color(0.80, 0.78, 0.82), 2.0)
-	draw_line(Vector2(0, track_y + 7), Vector2(track_len, track_y + 7), Color(0.80, 0.78, 0.82), 2.0)
-
-	# Moving Steam Locomotive in Cozy Pastel Red & Mustard
-	var train_x: float = fmod(Time.get_ticks_msec() * 0.055, 1300.0) - 200.0
-
-	# Wagon 2 (Pastel Hay)
-	draw_rect(Rect2(train_x - 105, track_y - 14, 46, 24), Color(0.65, 0.48, 0.32), true)
-	draw_circle(Vector2(train_x - 82, track_y - 16), 10.0, Color(0.96, 0.85, 0.45))
-
-	# Wagon 1 (Pastel Blue Milk)
-	draw_rect(Rect2(train_x - 52, track_y - 15, 46, 26), Color(0.55, 0.68, 0.78), true)
-	draw_circle(Vector2(train_x - 29, track_y - 17), 8.0, Color(0.98, 0.98, 0.95))
-
-	# Engine Body (Pastel Terracotta)
-	draw_rect(Rect2(train_x, track_y - 18, 56, 30), Color(0.88, 0.42, 0.38), true)
-	draw_rect(Rect2(train_x + 10, track_y - 28, 24, 10), Color(0.42, 0.30, 0.21), true)
-	draw_rect(Rect2(train_x + 44, track_y - 26, 8, 8), Color(0.38, 0.32, 0.30), true)
-
-	# Steam Puffs
-	var time_val: float = Time.get_ticks_msec() * 0.005
-	for p: int in range(4):
-		var puff_offset: float = float(p) * 14.0
-		var puff_x: float = train_x + 46.0 - puff_offset - sin(time_val + float(p)) * 4.0
-		var puff_y: float = track_y - 34.0 - float(p) * 8.0
-		var puff_r: float = 6.0 + float(p) * 3.0
-		var puff_alpha: float = clampf(0.55 - float(p) * 0.12, 0.05, 0.6)
-		draw_circle(Vector2(puff_x, puff_y), puff_r, Color(1.0, 1.0, 1.0, puff_alpha))
 
 func _capture_screenshot_and_quit() -> void:
 	await get_tree().create_timer(1.2).timeout
@@ -1161,10 +602,9 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 				if world_pos.distance_to(visitor.global_position) <= 55.0:
 					return visitor.handle_visitor_click()
 
-	# 5. Hồ Câu Cá & Cầu Gỗ (Rect2(560, 560, 540, 300) bao phủ cả Cầu Gỗ lẫn Mặt Hồ)
-	var f_rect: Rect2 = Rect2(Vector2(560.0, 560.0), Vector2(540.0, 300.0))
-	if f_rect.has_point(world_pos):
-		if fishing_spot != null and is_instance_valid(fishing_spot):
+	# 5. Nhà Câu Cá & Bến Nước Sông (không đè lên mặt Cầu Gỗ)
+	if fishing_spot != null and is_instance_valid(fishing_spot):
+		if fishing_spot.fishing_rect.has_point(world_pos) or world_pos.distance_to(Vector2(790.0, 745.0)) <= 80.0:
 			if fishing_spot.state == FishingSpot.SpotState.READY:
 				return fishing_spot.handle_fishing_click()
 	
@@ -1204,85 +644,41 @@ func _spawn_scenic_element(sprite_id: String, pos: Vector2, size: Vector2, z_off
 	return node
 
 func _spawn_scenic_valley_environment() -> void:
-	# 1. BỜ ĐÔNG BÊN KIA CẦU GỖ (x: 1080..1320) - Khu Vườn Sinh Thái & Đồi Hoa Anh Đào Chibi
-	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 180), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1145, 230), Vector2(40, 36))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1220, 220), Vector2(90, 95))
-	_spawn_scenic_element("flowerbed_round", Vector2(1160, 280), Vector2(36, 26))
+	# 1. Phân vùng 5: Rừng Anh Đào & Công Viên Bờ Đông (X: 1088..1376, Y: 192..864)
+	# Phía Bắc Cầu Gỗ (Y: 200..600):
+	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 210), Vector2(88, 92))
+	_spawn_scenic_element("env_river_bush", Vector2(1145, 260), Vector2(40, 36))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(1240, 240), Vector2(90, 95))
+	_spawn_scenic_element("flowerbed_round", Vector2(1160, 310), Vector2(36, 26))
 
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1135, 360), Vector2(90, 95))
-	_spawn_scenic_element("env_river_bush", Vector2(1150, 420), Vector2(40, 36))
-	_spawn_scenic_element("env_cherry_tree", Vector2(1230, 380), Vector2(88, 92))
-	_spawn_scenic_element("flowerbed_roses", Vector2(1165, 470), Vector2(38, 26))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(1135, 380), Vector2(90, 95))
+	_spawn_scenic_element("env_river_bush", Vector2(1150, 440), Vector2(40, 36))
+	_spawn_scenic_element("env_cherry_tree", Vector2(1240, 400), Vector2(88, 92))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(1250, 490), Vector2(90, 95))
+	_spawn_scenic_element("flowerbed_roses", Vector2(1165, 490), Vector2(38, 26))
 
-	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 530), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1155, 590), Vector2(40, 36))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1225, 560), Vector2(90, 95))
-	_spawn_scenic_element("flowerbed_lavender", Vector2(1165, 650), Vector2(38, 26))
+	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 560), Vector2(88, 92))
+	_spawn_scenic_element("env_river_bush", Vector2(1155, 610), Vector2(40, 36))
+	_spawn_scenic_element("flowerbed_lavender", Vector2(1240, 580), Vector2(38, 26))
 
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1125, 730), Vector2(90, 95))
-	_spawn_scenic_element("env_river_bush", Vector2(1145, 790), Vector2(40, 36))
-	_spawn_scenic_element("env_cherry_tree", Vector2(1230, 760), Vector2(88, 92))
-	_spawn_scenic_element("flowerbed_daisies", Vector2(1165, 840), Vector2(38, 26))
+	# Phía Nam Cầu Gỗ trên bờ Đông (lấp đầy khoảng trống góc dưới bên phải):
+	_spawn_scenic_element("env_lush_green_tree", Vector2(1125, 720), Vector2(90, 95))
+	_spawn_scenic_element("env_river_bush", Vector2(1145, 770), Vector2(40, 36))
+	_spawn_scenic_element("env_cherry_tree", Vector2(1240, 740), Vector2(88, 92))
+	_spawn_scenic_element("flowerbed_daisies", Vector2(1165, 810), Vector2(38, 26))
 
-	_spawn_scenic_element("env_cherry_tree", Vector2(1130, 890), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1150, 940), Vector2(40, 36))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1230, 930), Vector2(90, 95))
+	_spawn_scenic_element("env_cherry_tree", Vector2(1130, 860), Vector2(88, 92))
+	_spawn_scenic_element("env_river_bush", Vector2(1150, 910), Vector2(40, 36))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(1240, 880), Vector2(90, 95))
 
-	# 2. PHÍA BẮC ÔM SAU CHUỒNG BÒ & KHU NHÀ NẤM (y: 200..320)
-	_spawn_scenic_element("env_cherry_tree", Vector2(180, 230), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(280, 220), Vector2(90, 95))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(380, 220), Vector2(90, 95))
-	_spawn_scenic_element("env_cherry_tree", Vector2(490, 230), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(610, 220), Vector2(90, 95))
-	_spawn_scenic_element("env_cherry_tree", Vector2(730, 230), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(840, 220), Vector2(90, 95))
-	_spawn_scenic_element("flowerbed_daisies", Vector2(320, 260), Vector2(38, 26))
-	_spawn_scenic_element("flowerbed_roses", Vector2(660, 260), Vector2(38, 26))
+	# 2. Hàng cây phía Bắc ôm sau khu nhà xưởng (Y: 95..100):
+	_spawn_scenic_element("env_cherry_tree", Vector2(340, 95), Vector2(88, 92))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(520, 100), Vector2(90, 95))
+	_spawn_scenic_element("env_cherry_tree", Vector2(700, 95), Vector2(88, 92))
+	_spawn_scenic_element("env_lush_green_tree", Vector2(880, 100), Vector2(90, 95))
 
-	# 3. BỜ TÂY VEN SÔNG (cách mép nước > 40px, tuyệt đối không đè mặt sông)
+	# 3. Bờ Tây ven sông (phía Bắc cầu gỗ):
 	_spawn_scenic_element("env_river_bush", Vector2(765, 380), Vector2(42, 38))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(775, 480), Vector2(85, 90))
 	_spawn_scenic_element("flowerbed_round", Vector2(755, 550), Vector2(36, 26))
-	_spawn_scenic_element("env_river_bush", Vector2(760, 615), Vector2(42, 38))
-	_spawn_scenic_element("env_cherry_tree", Vector2(765, 830), Vector2(85, 90))
-	_spawn_scenic_element("env_river_bush", Vector2(755, 895), Vector2(42, 38))
-	_spawn_scenic_element("flowerbed_lavender", Vector2(750, 950), Vector2(38, 26))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(140, 1140), Vector2(90, 95))
-	_spawn_scenic_element("env_cherry_tree", Vector2(460, 1140), Vector2(88, 92))
 
 	print("[MainFarm] Spawned Harmonious Hay Day Scenic Valley with ", _scenic_elements.size(), " elements!")
-
-func _setup_scenic_clouds() -> void:
-	_scenic_clouds.clear()
-	var cloud_configs: Array[Dictionary] = [
-		{"id": "chibi_cloud_1", "pos": Vector2(140.0, 45.0), "size": Vector2(140.0, 95.0), "speed": 14.0},
-		{"id": "chibi_cloud_2", "pos": Vector2(460.0, 75.0), "size": Vector2(130.0, 62.0), "speed": 17.0},
-		{"id": "chibi_cloud_3", "pos": Vector2(780.0, 40.0), "size": Vector2(120.0, 75.0), "speed": 13.0},
-		{"id": "chibi_cloud_4", "pos": Vector2(1120.0, 85.0), "size": Vector2(145.0, 58.0), "speed": 16.0},
-		{"id": "chibi_cloud_2", "pos": Vector2(1460.0, 50.0), "size": Vector2(130.0, 62.0), "speed": 15.0}
-	]
-
-	for cfg: Dictionary in cloud_configs:
-		var c_id: String = str(cfg["id"])
-		var c_size: Vector2 = cfg["size"] as Vector2
-		var sp: Sprite2D = SpriteAtlasManager.create_sized_sprite(c_id, c_size)
-		if sp != null:
-			sp.position = cfg["pos"] as Vector2
-			sp.z_index = 35
-			sp.modulate = Color(1.0, 1.0, 1.0, 0.88)
-			add_child(sp)
-			_scenic_clouds.append({
-				"sprite": sp,
-				"speed": float(cfg["speed"])
-			})
-	print("[MainFarm] Setup ", _scenic_clouds.size(), " drifting scenic clouds at North horizon.")
-
-func _update_scenic_clouds(delta: float) -> void:
-	for cloud_data: Dictionary in _scenic_clouds:
-		var sp: Sprite2D = cloud_data["sprite"] as Sprite2D
-		if sp != null and is_instance_valid(sp):
-			var spd: float = float(cloud_data["speed"])
-			sp.position.x += spd * delta
-			if sp.position.x > 1850.0:
-				sp.position.x = -250.0

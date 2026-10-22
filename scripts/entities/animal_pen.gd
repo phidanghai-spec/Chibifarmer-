@@ -8,7 +8,7 @@ enum PenState {
 }
 
 @export var animal_id: String = "chicken" # "cow", "chicken", "pig"
-@export var pen_size: Vector2 = Vector2(180.0, 120.0) # Clean 180x120 px
+@export var pen_size: Vector2 = Vector2(120.0, 86.0) # Clean 4x3 tiles (128x96 px)
 @export var animal_count: int = 3
 
 var state: PenState = PenState.HUNGRY
@@ -41,22 +41,22 @@ func _ready() -> void:
 	if animal_id == "chicken" and SpriteAtlasManager.has_texture("chicken_coop"):
 		_coop_sprite = Sprite2D.new()
 		_coop_sprite.texture = SpriteAtlasManager.get_texture("chicken_coop")
-		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(56, 56))
-		_coop_sprite.position = Vector2(-54, -26)
+		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(44, 44))
+		_coop_sprite.position = Vector2(-34, -14)
 		_coop_sprite.z_index = 1
 		add_child(_coop_sprite)
 	elif animal_id == "cow" and SpriteAtlasManager.has_texture("cow_pasture"):
 		_coop_sprite = Sprite2D.new()
 		_coop_sprite.texture = SpriteAtlasManager.get_texture("cow_pasture")
-		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(80, 80))
-		_coop_sprite.position = Vector2(-28, -12)
+		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(50, 50))
+		_coop_sprite.position = Vector2(-28, -10)
 		_coop_sprite.z_index = 1
 		add_child(_coop_sprite)
 	elif animal_id == "sheep" and SpriteAtlasManager.has_texture("sheep_pasture"):
 		_coop_sprite = Sprite2D.new()
 		_coop_sprite.texture = SpriteAtlasManager.get_texture("sheep_pasture")
-		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(86, 86))
-		_coop_sprite.position = Vector2(-42, -16)
+		SpriteAtlasManager.set_sprite_pixel_size(_coop_sprite, Vector2(50, 50))
+		_coop_sprite.position = Vector2(-28, -10)
 		_coop_sprite.z_index = 1
 		add_child(_coop_sprite)
 		

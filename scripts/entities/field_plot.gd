@@ -176,9 +176,6 @@ func harvest() -> bool:
 	return true
 
 func _draw() -> void:
-	var half: Vector2 = plot_size * 0.5
-	var r: Rect2 = Rect2(-half, plot_size)
-	
 	# 1. Authentic Warm Pastel Brown Soil Base (#C9A66B and #8D6E63 - Sample 3 Style)
 	var soil_fill: Color = Color(0.79, 0.65, 0.42) # Warm pastel brown #C9A66B
 	var soil_border: Color = Color(0.55, 0.43, 0.39) # Soft dark border #8D6E63

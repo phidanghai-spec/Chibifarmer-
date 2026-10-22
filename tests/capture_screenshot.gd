@@ -8,11 +8,20 @@ func _ready() -> void:
 	# Frame camera to show the winding river, wooden bridge, fishing pier, and farm center
 	var cam: Camera2D = farm.get_node_or_null("Camera2D") as Camera2D
 	if cam != null:
-		cam.position = Vector2(720.0, 580.0)
-		cam.zoom = Vector2(0.82, 0.82)
+		cam.position = Vector2(700.0, 520.0)
+		cam.zoom = Vector2(0.78, 0.78)
+		cam.set("target_zoom", Vector2(0.78, 0.78))
 	
+	# Start a production batch on Bakery to verify full countdown display
+	var main_farm: MainFarm = farm as MainFarm
+	if main_farm != null and not main_farm._production_machines.is_empty():
+		for m: ProductionMachine in main_farm._production_machines:
+			if m.machine_id == "bakery":
+				m.handle_machine_click()
+				break
+
 	# Wait for rendering pipeline
-	for i in range(15):
+	for i: int in range(25):
 		await get_tree().process_frame
 	
 	var img: Image = get_viewport().get_texture().get_image()

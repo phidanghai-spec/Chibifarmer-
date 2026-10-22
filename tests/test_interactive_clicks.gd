@@ -294,16 +294,16 @@ func _ready() -> void:
 	else:
 		push_error(" -> FAIL: CameraController not found for TEST 9")
 
-	# TEST 10: 14 Animated Swimming Fish in Lake & Scenic Valley Scenery
+	# TEST 10: Anti-Lag Performance Optimization (Fish removed) & Scenic Valley Scenery
 	var fish_cnt: int = f_spot.get_fish_count() if f_spot != null else 0
 	var scenic_cnt: int = int(farm.call("get_scenic_elements_count"))
 	print("[TEST 10] Swimming fish in lake: ", fish_cnt, ", Scenic valley elements: ", scenic_cnt)
 	
-	if fish_cnt >= 12 and scenic_cnt >= 20:
-		print(" -> PASS: Lake has 14 animated fish (Koi, Carp, Bass, Deep Shadows) and farm is surrounded by 26 Scenic Valley elements!")
+	if fish_cnt == 0 and scenic_cnt >= 20:
+		print(" -> PASS: Anti-lag verified: 0 dynamic fish in river and farm is surrounded by ", scenic_cnt, " Scenic Valley elements!")
 		pass_count += 1
 	else:
-		push_error(" -> FAIL: Fish count (" + str(fish_cnt) + " < 12) or Scenic count (" + str(scenic_cnt) + " < 20)")
+		push_error(" -> FAIL: Fish count (" + str(fish_cnt) + " != 0) or Scenic count (" + str(scenic_cnt) + " < 20)")
 
 	print("==================================================")
 	print("AUTOMATED TEST RESULTS: %d / %d PASSED" % [pass_count, total_tests])

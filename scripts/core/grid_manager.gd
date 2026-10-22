@@ -57,9 +57,8 @@ func _init_default_layout() -> void:
 	# South alley leading to Bakery & Feed Mill
 	for y: int in range(20, 25):
 		place_path(Vector2i(18, y))
-	# Pathway branching into Fishing Pier at West Bank
-	for y: int in range(21, 23):
-		place_path(Vector2i(23, y))
+	# Pathway branching into Fishing Hut at West Bank
+	place_path(Vector2i(23, 21))
 	# East Bank scenic walking promenade
 	for y: int in range(14, 20):
 		place_path(Vector2i(35, y))
