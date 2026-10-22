@@ -223,13 +223,15 @@ func _complete_catch() -> void:
 
 func _start_cooldown() -> void:
 	state = SpotState.COOLDOWN
-	finish_timestamp = TickManager.calculate_finish_timestamp(15)
-	_label_status.text = "⏳ HỒI: 00:15"
+	finish_timestamp = TickManager.calculate_finish_timestamp(7)
+	_label_status.text = "⏳ HỒI: 00:07"
 	_label_status.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 
-	var tw: Tween = create_tween()
-	tw.tween_property(self, "scale", Vector2(1.03, 0.97), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(self, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if _hut_sprite != null:
+		var base_scale: Vector2 = _hut_sprite.scale
+		var tw: Tween = create_tween()
+		tw.tween_property(_hut_sprite, "scale", base_scale * Vector2(1.08, 0.92), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_hut_sprite, "scale", base_scale, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func get_minigame() -> FishingMinigame:
 	return _minigame

@@ -9,7 +9,8 @@ enum ToolType {
 	BUILD_FIELD,
 	BUILD_PATH,
 	PLANT_APPLE_TREE,
-	PLANT_MANGO_TREE
+	PLANT_MANGO_TREE,
+	PLANT_CROP
 }
 
 signal tool_changed(new_tool: ToolType)
@@ -17,6 +18,7 @@ signal tool_changed(new_tool: ToolType)
 @export var camera_controller: CameraController
 
 var current_tool: ToolType = ToolType.NONE
+var selected_crop_id: String = ""
 var _is_dragging: bool = false
 var _touched_plots: Dictionary = {} # FieldPlot -> bool
 var _last_drag_cell: Vector2i = Vector2i(-999, -999)
@@ -55,6 +57,19 @@ func set_tool(new_tool: ToolType) -> void:
 	tool_changed.emit(current_tool)
 	print("[DragActionManager] Tool selected: ", ToolType.keys()[current_tool])
 
+func set_plant_tool(crop_id: String) -> void:
+	selected_crop_id = crop_id
+	if crop_id == "wheat":
+		set_tool(ToolType.PLANT_WHEAT)
+	elif crop_id == "corn":
+		set_tool(ToolType.PLANT_CORN)
+	elif crop_id == "apple" or crop_id == "apple_tree":
+		set_tool(ToolType.PLANT_APPLE_TREE)
+	elif crop_id == "mango" or crop_id == "mango_tree":
+		set_tool(ToolType.PLANT_MANGO_TREE)
+	else:
+		set_tool(ToolType.PLANT_CROP)
+
 func _update_cursor_sprite() -> void:
 	if _cursor_sprite == null or SpriteAtlasManager == null:
 		return
@@ -70,6 +85,10 @@ func _update_cursor_sprite() -> void:
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
 		ToolType.PLANT_CORN:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("corn")
+			_cursor_sprite.visible = (_cursor_sprite.texture != null)
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
+		ToolType.PLANT_CROP:
+			_cursor_sprite.texture = SpriteAtlasManager.get_texture(selected_crop_id)
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
 		ToolType.PLANT_APPLE_TREE:
@@ -134,6 +153,8 @@ func _apply_action_at_world_pos(world_pos: Vector2) -> void:
 			_handle_plant(cell, "wheat")
 		ToolType.PLANT_CORN:
 			_handle_plant(cell, "corn")
+		ToolType.PLANT_CROP:
+			_handle_plant(cell, selected_crop_id)
 		ToolType.BUILD_FIELD:
 			_handle_build_field(cell)
 		ToolType.BUILD_PATH:
@@ -159,6 +180,11 @@ func apply_tool_to_plot(plot: FieldPlot) -> void:
 				if plot.plant("corn"):
 					_touched_plots[plot] = true
 					print("[DragActionManager] Planted corn at cell: ", plot.grid_pos)
+		ToolType.PLANT_CROP:
+			if plot.state == FieldPlot.PlotState.EMPTY:
+				if plot.plant(selected_crop_id):
+					_touched_plots[plot] = true
+					print("[DragActionManager] Planted ", selected_crop_id, " at cell: ", plot.grid_pos)
 
 func _handle_sickle(cell: Vector2i) -> void:
 	var plot: FieldPlot = _get_field_plot_at(cell)

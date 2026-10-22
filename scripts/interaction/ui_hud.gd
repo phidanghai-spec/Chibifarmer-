@@ -38,14 +38,31 @@ class_name UIHud
 @onready var pill_barn: PanelContainer = $TopLeftHUD/PillBarn
 
 var _tool_buttons: Dictionary = {}
+var _crop_buttons: Dictionary = {}
+
+const ALL_CROPS: Array[Dictionary] = [
+	{"id": "wheat", "name": "🌾 Lúa Mì", "icon": "wheat"},
+	{"id": "corn", "name": "🌽 Ngô", "icon": "corn"},
+	{"id": "carrot", "name": "🥕 Cà Rốt", "icon": "carrot"},
+	{"id": "soybean", "name": "🌱 Đậu Nành", "icon": "soybean"},
+	{"id": "sugarcane", "name": "🎋 Mía Đường", "icon": "sugarcane"},
+	{"id": "strawberry", "name": "🍓 Dâu Tây", "icon": "strawberry"},
+	{"id": "tomato", "name": "🍅 Cà Chua", "icon": "tomato"},
+	{"id": "pumpkin", "name": "🎃 Bí Đỏ", "icon": "pumpkin"},
+	{"id": "apple_tree", "name": "🍎 Mầm Cây Táo", "icon": "apple_seed", "item_key": "apple_seed"},
+	{"id": "mango_tree", "name": "🥭 Mầm Cây Xoài", "icon": "mango_seed", "item_key": "mango_seed"}
+]
 
 func _ready() -> void:
 	_tool_buttons[DragActionManager.ToolType.NONE] = btn_view
 	_tool_buttons[DragActionManager.ToolType.PLANT_WHEAT] = btn_seeds
 	_tool_buttons[DragActionManager.ToolType.PLANT_CORN] = btn_seeds
+	_tool_buttons[DragActionManager.ToolType.PLANT_CROP] = btn_seeds
 	_tool_buttons[DragActionManager.ToolType.SICKLE] = btn_sickle
 	_tool_buttons[DragActionManager.ToolType.BUILD_FIELD] = btn_build_field
 	_tool_buttons[DragActionManager.ToolType.BUILD_PATH] = btn_build_path
+	
+	_setup_extra_seed_buttons()
 	
 	btn_view.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
@@ -233,6 +250,41 @@ func _refresh_all_hud() -> void:
 	_on_attraction_score_changed(GridManager.total_attraction_score)
 	_refresh_seed_counts()
 
+func _setup_extra_seed_buttons() -> void:
+	var vbox_seeds: VBoxContainer = %VBoxSeeds as VBoxContainer
+	if vbox_seeds == null:
+		return
+	
+	_crop_buttons["wheat"] = btn_select_wheat
+	_crop_buttons["corn"] = btn_select_corn
+	_crop_buttons["apple_tree"] = btn_select_apple_tree
+	_crop_buttons["mango_tree"] = btn_select_mango_tree
+
+	var extra_crops: Array[Dictionary] = [
+		{"id": "carrot", "name": "🥕 Cà Rốt", "icon": "carrot"},
+		{"id": "soybean", "name": "🌱 Đậu Nành", "icon": "soybean"},
+		{"id": "sugarcane", "name": "🎋 Mía Đường", "icon": "sugarcane"},
+		{"id": "strawberry", "name": "🍓 Dâu Tây", "icon": "strawberry"},
+		{"id": "tomato", "name": "🍅 Cà Chua", "icon": "tomato"},
+		{"id": "pumpkin", "name": "🎃 Bí Đỏ", "icon": "pumpkin"}
+	]
+
+	for c: Dictionary in extra_crops:
+		var c_id: String = String(c["id"])
+		var btn: Button = Button.new()
+		btn.custom_minimum_size = Vector2(0, 32)
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.expand_icon = true
+		btn.add_theme_constant_override("icon_max_width", 24)
+		if SpriteAtlasManager.has_texture(String(c["icon"])):
+			btn.icon = SpriteAtlasManager.get_texture(String(c["icon"]))
+		var c_name: String = String(c["name"])
+		var cnt: int = StorageManager.get_item_count(c_id)
+		btn.text = "%s (%d)" % [c_name, cnt]
+		btn.pressed.connect(func() -> void: select_seed(c_id))
+		vbox_seeds.add_child(btn)
+		_crop_buttons[c_id] = btn
+
 func toggle_seeds_menu() -> void:
 	if panel_seeds_menu == null:
 		return
@@ -247,16 +299,21 @@ func select_seed(crop_id: String) -> void:
 		panel_seeds_menu.visible = false
 	if crop_id == "wheat":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_WHEAT)
-		btn_seeds.text = "🌾 Đang gieo: Lúa (%d)" % StorageManager.get_item_count("wheat")
+		btn_seeds.text = "🌾 Gieo: Lúa (%d)" % StorageManager.get_item_count("wheat")
 	elif crop_id == "corn":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_CORN)
-		btn_seeds.text = "🌽 Đang gieo: Ngô (%d)" % StorageManager.get_item_count("corn")
+		btn_seeds.text = "🌽 Gieo: Ngô (%d)" % StorageManager.get_item_count("corn")
 	elif crop_id == "apple_tree":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_APPLE_TREE)
 		btn_seeds.text = "🍎 Trồng: Táo (%d)" % StorageManager.get_item_count("apple_seed")
 	elif crop_id == "mango_tree":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_MANGO_TREE)
 		btn_seeds.text = "🥭 Trồng: Xoài (%d)" % StorageManager.get_item_count("mango_seed")
+	else:
+		if drag_action_manager != null:
+			drag_action_manager.set_plant_tool(crop_id)
+		var c_name: String = DataManager.get_item_name(crop_id)
+		btn_seeds.text = "🌱 Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(crop_id)]
 
 func _refresh_seed_counts() -> void:
 	var wheat_count: int = StorageManager.get_item_count("wheat")
@@ -271,15 +328,28 @@ func _refresh_seed_counts() -> void:
 		btn_select_apple_tree.text = "🍎 Mầm Cây Táo (%d)" % apple_seed_count
 	if btn_select_mango_tree != null:
 		btn_select_mango_tree.text = "🥭 Mầm Cây Xoài (%d)" % mango_seed_count
+
+	for c_dict: Dictionary in ALL_CROPS:
+		var c_id: String = String(c_dict["id"])
+		if _crop_buttons.has(c_id):
+			var btn: Button = _crop_buttons[c_id] as Button
+			var count_key: String = String(c_dict.get("item_key", c_id))
+			var cnt: int = StorageManager.get_item_count(count_key)
+			btn.text = "%s (%d)" % [String(c_dict["name"]), cnt]
+
 	if drag_action_manager != null:
 		if drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_WHEAT:
-			btn_seeds.text = "🌾 Đang gieo: Lúa (%d)" % wheat_count
+			btn_seeds.text = "🌾 Gieo: Lúa (%d)" % wheat_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CORN:
-			btn_seeds.text = "🌽 Đang gieo: Ngô (%d)" % corn_count
+			btn_seeds.text = "🌽 Gieo: Ngô (%d)" % corn_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_APPLE_TREE:
 			btn_seeds.text = "🍎 Trồng: Táo (%d)" % apple_seed_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_MANGO_TREE:
 			btn_seeds.text = "🥭 Trồng: Xoài (%d)" % mango_seed_count
+		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CROP:
+			var s_id: String = drag_action_manager.selected_crop_id
+			var c_name: String = DataManager.get_item_name(s_id)
+			btn_seeds.text = "🌱 Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(s_id)]
 		else:
 			btn_seeds.text = "🌱 Hạt Giống"
 
@@ -393,7 +463,7 @@ func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer
 		vbox.add_child(lbl_sold)
 		
 		var btn_collect: Button = Button.new()
-		btn_collect.text = "Nhận %d 🪙" % price
+		btn_collect.text = "Nhận %d Vàng" % price
 		btn_collect.pressed.connect(func() -> void:
 			RoadsideShop.collect_coins(slot_index)
 		)
@@ -407,7 +477,7 @@ func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer
 		vbox.add_child(lbl_info)
 		
 		var lbl_price: Label = Label.new()
-		lbl_price.text = "Giá: %d 🪙" % price
+		lbl_price.text = "Giá: %d Vàng" % price
 		lbl_price.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 		lbl_price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_price)
@@ -492,7 +562,7 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	var gold: int = int(order.get("reward_gold", 0))
 	var xp: int = int(order.get("reward_xp", 0))
 	var lbl_rew: Label = Label.new()
-	lbl_rew.text = "+%d 🪙  +%d ⭐" % [gold, xp]
+	lbl_rew.text = "+%d Vàng  +%d ⭐" % [gold, xp]
 	lbl_rew.add_theme_font_size_override("font_size", 12)
 	lbl_rew.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
 	hbox_header.add_child(lbl_rew)
@@ -775,7 +845,7 @@ func _refresh_storage_modal() -> void:
 		if count > 0:
 			item_count_total += 1
 			var item_card: PanelContainer = PanelContainer.new()
-			item_card.custom_minimum_size = Vector2(96, 75)
+			item_card.custom_minimum_size = Vector2(96, 88)
 			
 			var item_sb: StyleBoxFlat = StyleBoxFlat.new()
 			item_sb.bg_color = Color(1.0, 1.0, 1.0, 0.8)
@@ -789,11 +859,10 @@ func _refresh_storage_modal() -> void:
 			item_card.add_child(cvbox)
 			
 			var s_icon: TextureRect = TextureRect.new()
-			s_icon.custom_minimum_size = Vector2(28, 28)
+			s_icon.custom_minimum_size = Vector2(44, 44)
 			s_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			s_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			if SpriteAtlasManager.has_texture(String(item_id)):
-				s_icon.texture = SpriteAtlasManager.get_texture(String(item_id))
+			s_icon.texture = SpriteAtlasManager.get_texture(String(item_id))
 			cvbox.add_child(s_icon)
 			
 			var s_name: Label = Label.new()
@@ -823,10 +892,10 @@ func _refresh_storage_modal() -> void:
 	var btn_upgrade: Button = Button.new()
 	var can_upgrade: bool = StorageManager.has_gold(300)
 	if can_upgrade:
-		btn_upgrade.text = "⬆️ Nâng Cấp Kho (+25 sức chứa) - 300 🪙"
+		btn_upgrade.text = "⬆️ Nâng Cấp Kho (+25 sức chứa) - 300 Vàng"
 		btn_upgrade.disabled = false
 	else:
-		btn_upgrade.text = "⬆️ Nâng Cấp Kho (+25 sức chứa) - Cần 300 🪙"
+		btn_upgrade.text = "⬆️ Nâng Cấp Kho (+25 sức chứa) - Cần 300 Vàng"
 		btn_upgrade.disabled = true
 	
 	btn_upgrade.custom_minimum_size = Vector2(0, 36)

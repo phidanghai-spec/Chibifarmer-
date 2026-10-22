@@ -128,6 +128,9 @@ func can_place_building(building_id: String, grid_pos: Vector2i) -> bool:
 			var check_cell: Vector2i = Vector2i(x, y)
 			if occupied_cells.has(check_cell):
 				return false
+			var w_pos: Vector2 = grid_to_world(check_cell)
+			if FishingSpot.is_in_water_or_sand(w_pos):
+				return false
 	
 	return true
 
@@ -172,6 +175,9 @@ func place_path(grid_pos: Vector2i) -> bool:
 	if not is_within_bounds(grid_pos):
 		return false
 	if occupied_cells.has(grid_pos):
+		return false
+	var w_pos: Vector2 = grid_to_world(grid_pos)
+	if FishingSpot.is_in_water_or_sand(w_pos):
 		return false
 	if path_cells.get(grid_pos, false):
 		return true

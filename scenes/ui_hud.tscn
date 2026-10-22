@@ -493,48 +493,54 @@ columns = 2
 unique_name_in_owner = true
 visible = false
 z_index = 40
-custom_minimum_size = Vector2(175, 168)
+custom_minimum_size = Vector2(210, 240)
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -240.0
-offset_top = -238.0
-offset_right = -65.0
+offset_left = -260.0
+offset_top = -310.0
+offset_right = -50.0
 offset_bottom = -67.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="VBoxSeeds" type="VBoxContainer" parent="PanelSeedsMenu"]
+[node name="ScrollSeeds" type="ScrollContainer" parent="PanelSeedsMenu"]
 layout_mode = 2
-theme_override_constants/separation = 6
+horizontal_scroll_mode = 0
 
-[node name="BtnSelectWheat" type="Button" parent="PanelSeedsMenu/VBoxSeeds"]
+[node name="VBoxSeeds" type="VBoxContainer" parent="PanelSeedsMenu/ScrollSeeds"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="BtnSelectWheat" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "🌾 Lúa Mì"
 alignment = 0
 
-[node name="BtnSelectCorn" type="Button" parent="PanelSeedsMenu/VBoxSeeds"]
+[node name="BtnSelectCorn" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "🌽 Ngô"
 alignment = 0
 
-[node name="BtnSelectAppleTree" type="Button" parent="PanelSeedsMenu/VBoxSeeds"]
+[node name="BtnSelectAppleTree" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "🍎 Mầm Cây Táo"
 alignment = 0
 
-[node name="BtnSelectMangoTree" type="Button" parent="PanelSeedsMenu/VBoxSeeds"]
+[node name="BtnSelectMangoTree" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "🥭 Mầm Cây Xoài"
 alignment = 0

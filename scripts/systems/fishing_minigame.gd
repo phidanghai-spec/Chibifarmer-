@@ -149,7 +149,7 @@ func pull_rod() -> void:
 	EventBus.loot_collected.emit(reward_fish, 1, spot_pos)
 	EventBus.loot_collected.emit("gold", 20, spot_pos)
 	
-	_label_status.text = "🎉 GIẬT ĐƯỢC CÁ CHÉP! (+1 🐟, +20🪙, +5⭐)"
+	_label_status.text = "🎉 GIẬT ĐƯỢC CÁ CHÉP! (+1 Cá Chép, +20 Vàng, +5 XP)"
 	_label_status.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 	_btn_catch.disabled = true
 	

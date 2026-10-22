@@ -193,6 +193,58 @@ func load_all_atlases() -> void:
 
 	_load_standalone_texture("env_river_bush", "res://assets/sprites/env_river_bush.png")
 	_load_standalone_texture("visitor_adventurer", "res://assets/sprites/visitor_adventurer.png")
+
+	# Barn and Silo Item Icons (128x128 RGBA Transparent)
+	_load_standalone_texture("bread", "res://assets/sprites/bread.png")
+	_load_standalone_texture("item_bread", "res://assets/sprites/item_bread.png")
+	_load_standalone_texture("bacon", "res://assets/sprites/bacon.png")
+	_load_standalone_texture("item_bacon", "res://assets/sprites/item_bacon.png")
+	_load_standalone_texture("pork", "res://assets/sprites/pork.png")
+	_load_standalone_texture("chicken_feed", "res://assets/sprites/chicken_feed.png")
+	_load_standalone_texture("item_chicken_feed", "res://assets/sprites/item_chicken_feed.png")
+	_load_standalone_texture("cow_feed", "res://assets/sprites/cow_feed.png")
+	_load_standalone_texture("item_cow_feed", "res://assets/sprites/item_cow_feed.png")
+	_load_standalone_texture("animal_feed", "res://assets/sprites/animal_feed.png")
+	_load_standalone_texture("pig_feed", "res://assets/sprites/pig_feed.png")
+	_load_standalone_texture("egg", "res://assets/sprites/egg.png")
+	_load_standalone_texture("item_egg", "res://assets/sprites/item_egg.png")
+	_load_standalone_texture("milk", "res://assets/sprites/milk.png")
+	_load_standalone_texture("item_milk", "res://assets/sprites/item_milk.png")
+	_load_standalone_texture("butter", "res://assets/sprites/butter.png")
+	_load_standalone_texture("item_butter", "res://assets/sprites/item_butter.png")
+	_load_standalone_texture("cheese", "res://assets/sprites/cheese.png")
+	_load_standalone_texture("item_cheese", "res://assets/sprites/item_cheese.png")
+	_load_standalone_texture("cream", "res://assets/sprites/cream.png")
+	_load_standalone_texture("item_cream", "res://assets/sprites/item_cream.png")
+	_load_standalone_texture("fish_carp", "res://assets/sprites/fish_carp.png")
+	_load_standalone_texture("item_fish_carp", "res://assets/sprites/item_fish_carp.png")
+	_load_standalone_texture("carrot", "res://assets/sprites/carrot.png")
+	_load_standalone_texture("item_carrot", "res://assets/sprites/item_carrot.png")
+	_load_standalone_texture("soybean", "res://assets/sprites/soybean.png")
+	_load_standalone_texture("item_soybean", "res://assets/sprites/item_soybean.png")
+	_load_standalone_texture("sugarcane", "res://assets/sprites/sugarcane.png")
+	_load_standalone_texture("item_sugarcane", "res://assets/sprites/item_sugarcane.png")
+	_load_standalone_texture("wheat", "res://assets/sprites/wheat.png")
+	_load_standalone_texture("item_wheat", "res://assets/sprites/item_wheat.png")
+	_load_standalone_texture("corn", "res://assets/sprites/corn.png")
+	_load_standalone_texture("item_corn", "res://assets/sprites/item_corn.png")
+	_load_standalone_texture("strawberry", "res://assets/sprites/strawberry.png")
+	_load_standalone_texture("item_strawberry", "res://assets/sprites/item_strawberry.png")
+	_load_standalone_texture("tomato", "res://assets/sprites/tomato.png")
+	_load_standalone_texture("item_tomato", "res://assets/sprites/item_tomato.png")
+	_load_standalone_texture("pumpkin", "res://assets/sprites/pumpkin.png")
+	_load_standalone_texture("item_pumpkin", "res://assets/sprites/item_pumpkin.png")
+
+	# Barn Building Sprite
+	_load_standalone_texture("building_barn", "res://assets/sprites/building_barn.png")
+	_load_standalone_texture("chibi_barn_red", "res://assets/sprites/chibi_barn_red.png")
+
+	# Sliced Characters
+	for i in range(1, 9):
+		var char_key: String = "npc_char_%02d" % i
+		var char_path: String = "res://assets/sprites/%s.png" % char_key
+		_load_standalone_texture(char_key, char_path)
+
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)
@@ -206,8 +258,8 @@ func _setup_aliases() -> void:
 	# Ensure backwards compatibility and easy access for game systems
 	_alias("egg_milk", "milk_cheese")
 	_alias("chibi_coop", "chicken_coop")
-	_alias("chibi_pigs", "pig")
-	_alias("barn", "farmhouse")
+	_load_standalone_texture("barn", "res://assets/sprites/building_barn.png")
+	_alias("barn", "building_barn")
 	_alias("silo", "dairy")
 	_alias("fishing_hut", "feed_mill")
 	_alias("truck_delivery", "truck")
@@ -216,7 +268,6 @@ func _setup_aliases() -> void:
 	_alias("env_mango_tree", "tree_mango_ripe")
 	_alias("fountain", "decor_frog_fountain")
 	_alias("cow_pen", "cow_pasture")
-	_alias("carrot", "chibi_carrot_plot")
 	_alias("harvest_basket", "crop_basket")
 	_alias("basket", "crop_basket")
 	
@@ -394,10 +445,38 @@ func create_sized_sprite(sprite_id: String, max_size: Vector2) -> Sprite2D:
 	return sp
 
 func get_texture(sprite_id: String) -> Texture2D:
-	return textures.get(sprite_id, null) as Texture2D
+	if textures.has(sprite_id):
+		return textures[sprite_id] as Texture2D
+	var item_key: String = "item_" + sprite_id
+	if textures.has(item_key):
+		return textures[item_key] as Texture2D
+	var lower_key: String = sprite_id.to_lower()
+	if textures.has(lower_key):
+		return textures[lower_key] as Texture2D
+	var lower_item_key: String = "item_" + lower_key
+	if textures.has(lower_item_key):
+		return textures[lower_item_key] as Texture2D
+
+	# Synonyms mapping
+	match lower_key:
+		"pork":
+			return get_texture("bacon")
+		"feed_chicken", "cám_gà":
+			return get_texture("chicken_feed")
+		"feed_cow", "cám_bò", "animal_feed":
+			return get_texture("cow_feed")
+		"feed_pig", "cám_heo":
+			return get_texture("pig_feed")
+		"fish", "carp", "cá":
+			return get_texture("fish_carp")
+		"barn":
+			if textures.has("building_barn"):
+				return textures["building_barn"] as Texture2D
+
+	return null
 
 func has_texture(sprite_id: String) -> bool:
-	return textures.has(sprite_id)
+	return get_texture(sprite_id) != null
 
 func create_sprite(sprite_id: String, target_size: Vector2 = Vector2.ZERO) -> Sprite2D:
 	if target_size != Vector2.ZERO:

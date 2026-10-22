@@ -5,8 +5,8 @@ var diamonds: int = 45
 var xp: int = 1240
 var level: int = 32
 
-var silo_capacity: int = 150
-var barn_capacity: int = 150
+var silo_capacity: int = 200
+var barn_capacity: int = 200
 
 var silo_items: Dictionary = {}
 var barn_items: Dictionary = {}
@@ -15,25 +15,31 @@ func _ready() -> void:
 	_init_starter_inventory()
 
 func _init_starter_inventory() -> void:
-	# Initial stock mirroring Hay Day interface: Silo: 125/150, Barn: 98/150
+	# Initial stock mirroring Hay Day interface with all crop seeds and goods
 	silo_items["wheat"] = 50
 	silo_items["corn"] = 35
+	silo_items["carrot"] = 15
 	silo_items["soybean"] = 15
-	silo_items["carrot"] = 10
-	silo_items["sugarcane"] = 5
+	silo_items["sugarcane"] = 10
+	silo_items["strawberry"] = 10
+	silo_items["tomato"] = 10
+	silo_items["pumpkin"] = 10
 	silo_items["apple"] = 5
-	silo_items["mango"] = 2
-	silo_items["apple_seed"] = 2
-	silo_items["mango_seed"] = 2
-	# Total Silo = 50 + 35 + 20 + 15 + 5 = 125
+	silo_items["mango"] = 5
+	silo_items["apple_seed"] = 5
+	silo_items["mango_seed"] = 5
 	
 	barn_items["egg"] = 25
 	barn_items["milk"] = 20
 	barn_items["bacon"] = 15
 	barn_items["bread"] = 15
-	barn_items["chicken_feed"] = 13
-	barn_items["cow_feed"] = 10
-	# Total Barn = 25 + 20 + 15 + 15 + 13 + 10 = 98
+	barn_items["chicken_feed"] = 15
+	barn_items["cow_feed"] = 15
+	barn_items["pig_feed"] = 10
+	barn_items["butter"] = 5
+	barn_items["cheese"] = 5
+	barn_items["cream"] = 5
+	barn_items["fish_carp"] = 5
 	
 	_emit_storage_updated("silo")
 	_emit_storage_updated("barn")

@@ -2,7 +2,7 @@ extends Node
 
 const SAVE_PATH: String = "user://hayday_save.json"
 
-const SAVE_VERSION: int = 6
+const SAVE_VERSION: int = 7
 
 var custom_decorations: Array = []
 

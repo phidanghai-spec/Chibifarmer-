@@ -131,7 +131,7 @@ func plant(new_crop_id: String) -> bool:
 
 func _show_ready_crop() -> void:
 	var tex_id: String = crop_id
-	if tex_id != "wheat" and tex_id != "corn" and tex_id != "carrot":
+	if not SpriteAtlasManager.has_texture(tex_id):
 		tex_id = "wheat"
 	
 	if SpriteAtlasManager.has_texture(tex_id):

@@ -165,7 +165,7 @@ func _assign_new_demand() -> void:
 	reward_xp = int(choice["xp"])
 	
 	if _label_demand != null:
-		_label_demand.text = "🛒 Cần: 1 %s (+%d🪙)" % [requested_name, reward_gold]
+		_label_demand.text = "🛒 Cần: 1 %s (+%d Vàng)" % [requested_name, reward_gold]
 		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
 		_label_demand.visible = true
 
@@ -205,14 +205,14 @@ func handle_visitor_click() -> bool:
 		StorageManager.add_gold(10)
 		EventBus.loot_collected.emit("gold", 10, global_position)
 		
-		_label_demand.text = "Chưa có %s! Tặng 10🪙" % requested_name
+		_label_demand.text = "Chưa có %s! Tặng 10 Vàng" % requested_name
 		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4))
 		
 		var tw: Tween = create_tween()
 		tw.tween_interval(2.5)
 		tw.tween_callback(func() -> void:
 			if not _is_demand_satisfied and is_instance_valid(_label_demand):
-				_label_demand.text = "🛒 Cần: 1 %s (+%d🪙)" % [requested_name, reward_gold]
+				_label_demand.text = "🛒 Cần: 1 %s (+%d Vàng)" % [requested_name, reward_gold]
 				_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
 		)
 		return true

@@ -8,6 +8,7 @@ class_name MainFarm
 @onready var animal_pens_container: Node2D = $AnimalPensContainer
 @onready var visitor_manager: VisitorManager = $VisitorManager
 @onready var drag_action_manager: DragActionManager = $DragActionManager
+@onready var ui_hud: UIHud = $UIHud
 
 var environment_container: Node2D
 var _scenic_valley_container: Node2D = null
@@ -23,6 +24,8 @@ var _movable_decors: Array[MovableDecor] = []
 var _animal_pens: Array[AnimalPen] = []
 var _production_machines: Array[ProductionMachine] = []
 var _truck_prop: Node2D = null
+var _barn_prop: Node2D = null
+var _silo_prop: Node2D = null
 
 func _ready() -> void:
 	# Center camera around the vibrant central farm plaza immediately
@@ -345,6 +348,34 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		_truck_prop = node_wrapper
 		_truck_prop.position = Vector2(435.0, 660.0)
 		_truck_prop.z_index = 2
+	elif sprite_id == "barn" or sprite_id == "building_barn":
+		_barn_prop = node_wrapper
+		var lbl_barn: Label = Label.new()
+		lbl_barn.text = "📦 NHÀ KHO"
+		lbl_barn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_barn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_barn.position = Vector2(-60.0, -max_size.y * 0.65)
+		lbl_barn.size = Vector2(120.0, 20.0)
+		lbl_barn.z_index = 10
+		lbl_barn.add_theme_font_size_override("font_size", 11)
+		lbl_barn.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+		lbl_barn.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.05, 1.0))
+		lbl_barn.add_theme_constant_override("outline_size", 3)
+		node_wrapper.add_child(lbl_barn)
+	elif sprite_id == "silo":
+		_silo_prop = node_wrapper
+		var lbl_silo: Label = Label.new()
+		lbl_silo.text = "🌾 KHO SILO"
+		lbl_silo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_silo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_silo.position = Vector2(-60.0, -max_size.y * 0.65)
+		lbl_silo.size = Vector2(120.0, 20.0)
+		lbl_silo.z_index = 10
+		lbl_silo.add_theme_font_size_override("font_size", 11)
+		lbl_silo.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+		lbl_silo.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.05, 1.0))
+		lbl_silo.add_theme_constant_override("outline_size", 3)
+		node_wrapper.add_child(lbl_silo)
 	return sp
 
 func _spawn_production_machine(m_id: String, cell: Vector2i) -> ProductionMachine:
@@ -607,6 +638,23 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 		if fishing_spot.fishing_rect.has_point(world_pos) or world_pos.distance_to(Vector2(790.0, 745.0)) <= 80.0:
 			if fishing_spot.state == FishingSpot.SpotState.READY:
 				return fishing_spot.handle_fishing_click()
+	
+	# 6. Nhà Kho (Barn), Kho Silo & Xe Tải
+	if _barn_prop != null and is_instance_valid(_barn_prop):
+		if world_pos.distance_to(_barn_prop.global_position) <= 65.0:
+			if ui_hud != null:
+				ui_hud.open_storage_popup("barn")
+				return true
+	if _silo_prop != null and is_instance_valid(_silo_prop):
+		if world_pos.distance_to(_silo_prop.global_position) <= 65.0:
+			if ui_hud != null:
+				ui_hud.open_storage_popup("silo")
+				return true
+	if _truck_prop != null and is_instance_valid(_truck_prop):
+		if world_pos.distance_to(_truck_prop.global_position) <= 65.0:
+			if ui_hud != null:
+				ui_hud.toggle_truck_popup()
+				return true
 	
 	return false
 

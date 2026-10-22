@@ -94,14 +94,68 @@ func get_item_storage_type(item_id: String) -> String:
 	return "barn"
 
 func get_item_name(item_id: String) -> String:
+	match item_id.to_lower():
+		"bacon", "pork":
+			return "Thịt Xông Khói"
+		"egg":
+			return "Trứng Gà"
+		"milk":
+			return "Sữa Bò Tươi"
+		"bread":
+			return "Bánh Mì Nóng"
+		"chicken_feed":
+			return "Cám Gà"
+		"cow_feed", "animal_feed":
+			return "Cám Bò"
+		"pig_feed":
+			return "Cám Heo"
+		"butter":
+			return "Bơ Sữa"
+		"cheese":
+			return "Phô Mai"
+		"cream":
+			return "Kem Tươi"
+		"fish_carp", "fish":
+			return "Cá Chép"
+		"wheat":
+			return "Lúa Mì"
+		"corn":
+			return "Ngô"
+		"carrot":
+			return "Cà Rốt"
+		"soybean":
+			return "Đậu Nành"
+		"sugarcane":
+			return "Mía Đường"
+		"strawberry":
+			return "Dâu Tây"
+		"tomato":
+			return "Cà Chua"
+		"pumpkin":
+			return "Bí Đỏ"
+		"apple":
+			return "Táo Đỏ"
+		"mango":
+			return "Xoài Chín"
+		"apple_seed":
+			return "Hạt Giống Táo"
+		"mango_seed":
+			return "Hạt Giống Xoài"
+		"cookie":
+			return "Bánh Quy Bơ"
+		"corn_bread":
+			return "Bánh Mì Ngô"
+		"wool":
+			return "Lông Cừu"
+
 	if crops.has(item_id):
 		return String((crops[item_id] as Dictionary).get("name", item_id))
-	if animals.has(item_id):
-		return String((animals[item_id] as Dictionary).get("name", item_id))
 	for rec_key: Variant in recipes:
 		var rec: Dictionary = recipes[rec_key] as Dictionary
 		if String(rec.get("produce_item_id", "")) == item_id:
 			return String(rec.get("name", item_id))
+	if animals.has(item_id):
+		return String((animals[item_id] as Dictionary).get("name", item_id))
 	if fishes.has(item_id):
 		return String((fishes[item_id] as Dictionary).get("name", item_id))
 	return item_id.capitalize()

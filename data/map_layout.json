@@ -29,6 +29,13 @@
   },
   "buildings": [
     {
+      "id": "barn",
+      "sprite_id": "building_barn",
+      "cell": [18, 8],
+      "tile_size": [3, 3],
+      "max_size": [96, 96]
+    },
+    {
       "id": "farmhouse",
       "sprite_id": "farmhouse",
       "cell": [10, 8],
@@ -36,16 +43,9 @@
       "max_size": [90, 90]
     },
     {
-      "id": "barn",
-      "sprite_id": "barn",
-      "cell": [14, 8],
-      "tile_size": [3, 3],
-      "max_size": [90, 90]
-    },
-    {
       "id": "silo",
       "sprite_id": "silo",
-      "cell": [20, 8],
+      "cell": [14, 8],
       "tile_size": [3, 3],
       "max_size": [90, 90]
     },

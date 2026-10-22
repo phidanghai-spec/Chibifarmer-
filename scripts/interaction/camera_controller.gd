@@ -13,6 +13,8 @@ var target_zoom: Vector2 = Vector2(1.35, 1.35)
 var _is_panning: bool = false
 var _pan_start_mouse_pos: Vector2 = Vector2.ZERO
 var _pan_start_camera_pos: Vector2 = Vector2.ZERO
+var _lmb_down: bool = false
+var _lmb_start_pos: Vector2 = Vector2.ZERO
 
 const MAP_MIN: Vector2 = Vector2(0.0, 0.0)
 const MAP_MAX: Vector2 = Vector2(2048.0, 2048.0)
@@ -30,9 +32,10 @@ func _ready() -> void:
 	_clamp_camera_position()
 
 func _process(delta: float) -> void:
-	# Hardware check: If neither RMB nor MMB is held down, panning MUST be false
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
+	# Hardware check: If neither LMB, RMB nor MMB is held down, panning MUST be false
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
 		_is_panning = false
+		_lmb_down = false
 
 	# Smooth Zoom interpolation
 	if not zoom.is_equal_approx(target_zoom):
@@ -69,7 +72,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 		
-		# Panning ONLY with Right Mouse or Middle Mouse (NEVER Left Click!)
+		# Panning with Right Mouse or Middle Mouse
 		if mb.button_index == MOUSE_BUTTON_RIGHT or mb.button_index == MOUSE_BUTTON_MIDDLE:
 			if mb.is_pressed() and not is_pan_locked:
 				_is_panning = true
@@ -78,18 +81,39 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			else:
 				_is_panning = false
+		elif mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.is_pressed() and not is_pan_locked:
+				_lmb_down = true
+				_lmb_start_pos = mb.global_position
+				_pan_start_camera_pos = position
+			else:
+				_lmb_down = false
+				_is_panning = false
 	
 	elif event is InputEventMouseMotion:
 		# Double-check physical mouse state
-		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
-			_is_panning = false
+		var lmb_held: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or _lmb_down
+		var rmb_held: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE)
 		
-		if _is_panning and not is_pan_locked:
+		if not lmb_held and not rmb_held:
+			_is_panning = false
+			_lmb_down = false
+		
+		if not is_pan_locked:
 			var mm: InputEventMouseMotion = event as InputEventMouseMotion
-			var drag_offset: Vector2 = (_pan_start_mouse_pos - mm.global_position) / zoom
-			position = _pan_start_camera_pos + drag_offset
-			_clamp_camera_position()
-			get_viewport().set_input_as_handled()
+			if rmb_held:
+				_is_panning = true
+				var drag_offset: Vector2 = (_pan_start_mouse_pos - mm.global_position) / zoom
+				position = _pan_start_camera_pos + drag_offset
+				_clamp_camera_position()
+				get_viewport().set_input_as_handled()
+			elif lmb_held and _lmb_down:
+				if mm.global_position.distance_to(_lmb_start_pos) > 8.0:
+					_is_panning = true
+					var drag_offset: Vector2 = (_lmb_start_pos - mm.global_position) / zoom
+					position = _pan_start_camera_pos + drag_offset
+					_clamp_camera_position()
+					get_viewport().set_input_as_handled()
 
 func _adjust_zoom(amount: float) -> void:
 	var new_zoom_val: float = clampf(target_zoom.x + amount, zoom_min, zoom_max)

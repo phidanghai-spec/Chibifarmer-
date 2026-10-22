@@ -81,7 +81,7 @@ func _on_second_ticked(_current_unix: int) -> void:
 func handle_machine_click() -> bool:
 	if not completed_items.is_empty():
 		var _ret: bool = collect_all()
-	else:
+	elif queue.is_empty():
 		# If READY (SẴN SÀNG), immediately harvest primary product into Barn and start next batch
 		var def_item: String = ""
 		if machine_id == "bakery":
@@ -95,29 +95,62 @@ func handle_machine_click() -> bool:
 			StorageManager.add_item(def_item, 1)
 			StorageManager.add_xp(3)
 			EventBus.loot_collected.emit(def_item, 1, global_position)
-			# Harvested successfully
-	
-	# Auto restart new batch so loop never breaks
-	var rec_id: String = ""
-	if machine_id == "bakery":
-		rec_id = "bread"
-	elif machine_id == "feed_mill":
-		rec_id = "cow_feed"
-	elif machine_id == "dairy":
-		rec_id = "butter"
-	
-	if rec_id != "":
-		var rec: Dictionary = DataManager.get_recipe(rec_id)
-		var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
-		for ing: Variant in ings:
-			if not StorageManager.has_item(String(ing), int(ings[ing])):
-				StorageManager.add_item(String(ing), int(ings[ing]))
-		start_recipe(rec_id)
-	
+			_spawn_local_harvest_fx(def_item)
+		
+		# Auto restart new batch
+		var rec_id: String = def_item
+		if rec_id != "":
+			var rec: Dictionary = DataManager.get_recipe(rec_id)
+			var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
+			for ing: Variant in ings:
+				if not StorageManager.has_item(String(ing), int(ings[ing])):
+					StorageManager.add_item(String(ing), int(ings[ing]))
+			start_recipe(rec_id)
+	else:
+		# Machine is currently producing! Do NOT add product to inventory!
+		var hint_text: String = "Đang nướng bánh..." if machine_id == "bakery" else "Đang sản xuất..."
+		_show_floating_hint(hint_text)
+
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "scale", Vector2(1.08, 0.92), 0.08)
 	tw.tween_property(self, "scale", Vector2.ONE, 0.1)
 	return true
+
+func _show_floating_hint(hint_text: String) -> void:
+	var lbl: Label = Label.new()
+	lbl.text = hint_text
+	lbl.position = Vector2(-50.0, -45.0)
+	lbl.size = Vector2(100.0, 20.0)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
+	lbl.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.02))
+	lbl.add_theme_constant_override("outline_size", 3)
+	lbl.z_index = 20
+	add_child(lbl)
+
+	var tw: Tween = create_tween()
+	tw.tween_property(lbl, "position:y", -65.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.7).set_delay(0.3)
+	tw.tween_callback(lbl.queue_free)
+
+func _spawn_local_harvest_fx(item_id: String) -> void:
+	# Local floating icon right above roof (Vector2(0, -30.0)) with no double offset
+	var fx: Node2D = Node2D.new()
+	fx.position = Vector2(0.0, -30.0)
+	fx.z_index = 25
+
+	var sp: Sprite2D = Sprite2D.new()
+	if SpriteAtlasManager.has_texture(item_id):
+		sp.texture = SpriteAtlasManager.get_texture(item_id)
+		SpriteAtlasManager.set_sprite_pixel_size(sp, Vector2(28.0, 28.0))
+	fx.add_child(sp)
+	add_child(fx)
+
+	var tw: Tween = create_tween()
+	tw.tween_property(fx, "position:y", -55.0, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(fx, "modulate:a", 0.0, 0.6).set_delay(0.2)
+	tw.tween_callback(fx.queue_free)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -164,22 +197,20 @@ func collect_all() -> bool:
 	if completed_items.is_empty():
 		return false
 	
+	var items_to_collect: Array[String] = completed_items.duplicate()
+	completed_items.clear()
 	var success_all: bool = true
-	var collected_list: Array[String] = []
 	
-	for item_id: String in completed_items:
+	for item_id: String in items_to_collect:
 		if StorageManager.can_store_item(item_id, 1):
 			StorageManager.add_item(item_id, 1)
 			StorageManager.add_xp(3)
 			EventBus.production_collected.emit(instance_id, item_id)
 			EventBus.loot_collected.emit(item_id, 1, global_position)
-			collected_list.append(item_id)
+			_spawn_local_harvest_fx(item_id)
 		else:
+			completed_items.append(item_id)
 			success_all = false
 			print("[ProductionMachine] Kho Barn đã đầy!")
-			break
-	
-	for col: String in collected_list:
-		completed_items.erase(col)
 	
 	return success_all

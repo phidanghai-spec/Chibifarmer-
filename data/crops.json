@@ -46,13 +46,46 @@
   "carrot": {
     "id": "carrot",
     "name": "Cà Rốt",
-    "growth_time_seconds": 600,
+    "growth_time_seconds": 15,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 8,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Cà rốt tươi giòn ngọt, thức ăn yêu thích của heo và du khách."
+  },
+  "strawberry": {
+    "id": "strawberry",
+    "name": "Dâu Tây",
+    "growth_time_seconds": 20,
     "harvest_yield": 2,
     "xp_reward": 3,
-    "base_price": 8,
-    "unlock_level": 9,
+    "base_price": 12,
+    "unlock_level": 1,
     "storage_type": "silo",
-    "description": "Cà rốt tươi giòn, thức ăn yêu thích của heo và khách du lịch ăn chay."
+    "description": "Dâu tây đỏ mọng thơm ngọt, dùng làm bánh và nước ép."
+  },
+  "tomato": {
+    "id": "tomato",
+    "name": "Cà Chua",
+    "growth_time_seconds": 18,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 9,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Cà chua chín đỏ mọng giàu vitamin."
+  },
+  "pumpkin": {
+    "id": "pumpkin",
+    "name": "Bí Đỏ",
+    "growth_time_seconds": 25,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 15,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Quả bí đỏ vàng cam thơm bùi, dùng nấu súp và làm bánh bí ngô."
   },
   "apple": {
     "id": "apple",
