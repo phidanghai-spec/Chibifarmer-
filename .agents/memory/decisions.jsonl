@@ -1,0 +1,5 @@
+{"timestamp": "2026-10-22T02:00:00Z", "decision": "Replace all StorageManager.get_gold() calls with direct StorageManager.gold property access to prevent runtime crashes."}
+{"timestamp": "2026-10-22T02:05:00Z", "decision": "Allow apple and mango tree harvest with both ToolType.NONE and ToolType.SICKLE."}
+{"timestamp": "2026-10-22T02:10:00Z", "decision": "Expand lake click area to Rect2(560, 560, 540, 300) covering wooden pier and water body."}
+{"timestamp": "2026-10-22T02:12:00Z", "decision": "Center FishingMinigame popup at (376, 194) with 400x260 modal on layer 30."}
+{"timestamp": "2026-10-22T02:14:00Z", "decision": "Adopt agent-sprite-forge 60fps procedural animations for visitors, critters, and cows."}

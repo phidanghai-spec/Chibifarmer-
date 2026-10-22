@@ -1,0 +1,182 @@
+extends Node2D
+class_name ProductionMachine
+
+@export var machine_id: String = "bakery" # "bakery", "feed_mill", "dairy"
+@export var machine_size: Vector2 = Vector2(96.0, 96.0)
+
+var instance_id: int = 0
+var grid_pos: Vector2i = Vector2i.ZERO
+
+# Production queue: Array of Dictionaries
+var queue: Array[Dictionary] = []
+var completed_items: Array[String] = []
+
+var _sprite: Sprite2D
+var _label_status: Label
+
+func _ready() -> void:
+	# 1. Machine Sprite
+	_sprite = Sprite2D.new()
+	if SpriteAtlasManager.has_texture(machine_id):
+		_sprite.texture = SpriteAtlasManager.get_texture(machine_id)
+		SpriteAtlasManager.set_sprite_pixel_size(_sprite, Vector2(90, 90))
+		_sprite.position = Vector2(0, -8)
+		_sprite.z_index = 1
+	add_child(_sprite)
+
+	# 2. Status Label raised higher above roof with crisp dark outline and bright yellow text
+	_label_status = Label.new()
+	_label_status.text = "SẴN SÀNG"
+	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label_status.position = Vector2(-50, -68)
+	_label_status.size = Vector2(100, 20)
+	_label_status.add_theme_font_size_override("font_size", 11)
+	_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
+	_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
+	_label_status.add_theme_constant_override("outline_size", 4)
+	add_child(_label_status)
+
+	EventBus.second_ticked.connect(_on_second_ticked)
+
+func _process(_delta: float) -> void:
+	if not queue.is_empty() and _sprite != null:
+		_sprite.position.x = sin(Time.get_ticks_msec() * 0.02) * 0.6
+	elif _sprite != null:
+		_sprite.position.x = 0
+
+func _on_second_ticked(_current_unix: int) -> void:
+	if not queue.is_empty():
+		var current_job: Dictionary = queue[0]
+		var finish_ts: int = int(current_job.get("finish_timestamp", 0))
+		if TickManager.is_finished(finish_ts):
+			completed_items.append(String(current_job.get("produce_item_id", "")))
+			EventBus.production_finished.emit(instance_id, String(current_job.get("recipe_id", "")))
+			queue.remove_at(0)
+			
+			if not queue.is_empty():
+				var next_job: Dictionary = queue[0]
+				var rec: Dictionary = DataManager.get_recipe(String(next_job["recipe_id"]))
+				var craft_time: int = mini(int(rec.get("craft_time_seconds", 30)), 60)
+				next_job["finish_timestamp"] = TickManager.calculate_finish_timestamp(craft_time)
+		else:
+			var remaining: int = TickManager.get_time_remaining(finish_ts)
+			_label_status.text = "ĐANG LÀM: %s" % TickManager.format_duration(remaining)
+			_label_status.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+
+	if queue.is_empty():
+		if not completed_items.is_empty():
+			_label_status.text = "CHỜ THU (%d)" % completed_items.size()
+			_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
+			_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
+			_label_status.add_theme_constant_override("outline_size", 4)
+		else:
+			_label_status.text = "SẴN SÀNG"
+			_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
+			_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
+			_label_status.add_theme_constant_override("outline_size", 4)
+
+func handle_machine_click() -> bool:
+	if not completed_items.is_empty():
+		var _ret: bool = collect_all()
+	else:
+		# If READY (SẴN SÀNG), immediately harvest primary product into Barn and start next batch
+		var def_item: String = ""
+		if machine_id == "bakery":
+			def_item = "bread"
+		elif machine_id == "feed_mill":
+			def_item = "cow_feed"
+		elif machine_id == "dairy":
+			def_item = "butter"
+		
+		if def_item != "" and StorageManager.can_store_item(def_item, 1):
+			StorageManager.add_item(def_item, 1)
+			StorageManager.add_xp(3)
+			EventBus.loot_collected.emit(def_item, 1, global_position)
+			# Harvested successfully
+	
+	# Auto restart new batch so loop never breaks
+	var rec_id: String = ""
+	if machine_id == "bakery":
+		rec_id = "bread"
+	elif machine_id == "feed_mill":
+		rec_id = "cow_feed"
+	elif machine_id == "dairy":
+		rec_id = "butter"
+	
+	if rec_id != "":
+		var rec: Dictionary = DataManager.get_recipe(rec_id)
+		var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
+		for ing: Variant in ings:
+			if not StorageManager.has_item(String(ing), int(ings[ing])):
+				StorageManager.add_item(String(ing), int(ings[ing]))
+		start_recipe(rec_id)
+	
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "scale", Vector2(1.08, 0.92), 0.08)
+	tw.tween_property(self, "scale", Vector2.ONE, 0.1)
+	return true
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mb: InputEventMouseButton = event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
+			var mpos: Vector2 = get_global_mouse_position()
+			if mpos.distance_to(global_position) <= 75.0:
+				if handle_machine_click():
+					get_viewport().set_input_as_handled()
+
+func start_recipe(recipe_id: String) -> bool:
+	var rec: Dictionary = DataManager.get_recipe(recipe_id)
+	if rec.is_empty():
+		return false
+	
+	var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
+	for item: Variant in ings:
+		var needed: int = int(ings[item])
+		if not StorageManager.has_item(String(item), needed):
+			print("[ProductionMachine] Thiếu nguyên liệu: ", item)
+			return false
+	
+	for item: Variant in ings:
+		var needed: int = int(ings[item])
+		StorageManager.remove_item(String(item), needed)
+	
+	var craft_time: int = mini(int(rec.get("craft_time_seconds", 30)), 60)
+	var finish_ts: int = 0
+	if queue.is_empty():
+		finish_ts = TickManager.calculate_finish_timestamp(craft_time)
+	
+	var job: Dictionary = {
+		"recipe_id": recipe_id,
+		"produce_item_id": String(rec.get("produce_item_id", "")),
+		"produce_count": int(rec.get("produce_count", 1)),
+		"xp_reward": int(rec.get("xp_reward", 2)),
+		"finish_timestamp": finish_ts
+	}
+	queue.append(job)
+	EventBus.production_started.emit(instance_id, recipe_id, finish_ts)
+	return true
+
+func collect_all() -> bool:
+	if completed_items.is_empty():
+		return false
+	
+	var success_all: bool = true
+	var collected_list: Array[String] = []
+	
+	for item_id: String in completed_items:
+		if StorageManager.can_store_item(item_id, 1):
+			StorageManager.add_item(item_id, 1)
+			StorageManager.add_xp(3)
+			EventBus.production_collected.emit(instance_id, item_id)
+			EventBus.loot_collected.emit(item_id, 1, global_position)
+			collected_list.append(item_id)
+		else:
+			success_all = false
+			print("[ProductionMachine] Kho Barn đã đầy!")
+			break
+	
+	for col: String in collected_list:
+		completed_items.erase(col)
+	
+	return success_all

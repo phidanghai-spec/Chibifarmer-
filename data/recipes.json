@@ -1,0 +1,178 @@
+{
+  "chicken_feed": {
+    "id": "chicken_feed",
+    "name": "Cám Gà",
+    "building_id": "feed_mill",
+    "ingredients": {
+      "wheat": 2,
+      "corn": 1
+    },
+    "produce_item_id": "chicken_feed",
+    "produce_count": 3,
+    "craft_time_seconds": 300,
+    "xp_reward": 1,
+    "base_price": 7,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Thức ăn nghiền mịn từ lúa mì và ngô dành cho gà."
+  },
+  "cow_feed": {
+    "id": "cow_feed",
+    "name": "Cám Bò",
+    "building_id": "feed_mill",
+    "ingredients": {
+      "corn": 1,
+      "soybean": 2
+    },
+    "produce_item_id": "cow_feed",
+    "produce_count": 3,
+    "craft_time_seconds": 600,
+    "xp_reward": 2,
+    "base_price": 14,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Thức ăn bổ dưỡng từ ngô và hạt đậu nành giúp bò cho nhiều sữa."
+  },
+  "pig_feed": {
+    "id": "pig_feed",
+    "name": "Cám Heo",
+    "building_id": "feed_mill",
+    "ingredients": {
+      "carrot": 2,
+      "soybean": 1
+    },
+    "produce_item_id": "pig_feed",
+    "produce_count": 3,
+    "craft_time_seconds": 1200,
+    "xp_reward": 3,
+    "base_price": 14,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Cám hỗn hợp cà rốt đậu nành cho heo nhanh lớn mập mạp."
+  },
+  "bread": {
+    "id": "bread",
+    "name": "Bánh Mì Nóng",
+    "building_id": "bakery",
+    "ingredients": {
+      "wheat": 3
+    },
+    "produce_item_id": "bread",
+    "produce_count": 1,
+    "craft_time_seconds": 300,
+    "xp_reward": 3,
+    "base_price": 21,
+    "unlock_level": 2,
+    "storage_type": "barn",
+    "description": "Ổ bánh mì vàng giòn rụm nướng từ bột lúa mì nguyên chất."
+  },
+  "corn_bread": {
+    "id": "corn_bread",
+    "name": "Bánh Mì Ngô",
+    "building_id": "bakery",
+    "ingredients": {
+      "corn": 2,
+      "egg": 2
+    },
+    "produce_item_id": "corn_bread",
+    "produce_count": 1,
+    "craft_time_seconds": 1800,
+    "xp_reward": 8,
+    "base_price": 72,
+    "unlock_level": 7,
+    "storage_type": "barn",
+    "description": "Bánh ngô hòa quyện cùng trứng gà tươi bùi ngọt."
+  },
+  "cookie": {
+    "id": "cookie",
+    "name": "Bánh Quy Bơ",
+    "building_id": "bakery",
+    "ingredients": {
+      "wheat": 2,
+      "egg": 2,
+      "sugarcane": 1
+    },
+    "produce_item_id": "cookie",
+    "produce_count": 1,
+    "craft_time_seconds": 3600,
+    "xp_reward": 13,
+    "base_price": 104,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Những chiếc bánh quy ngọt ngào thơm lừng hấp dẫn mọi du khách."
+  },
+  "butter": {
+    "id": "butter",
+    "name": "Bơ Sữa",
+    "building_id": "dairy",
+    "ingredients": {
+      "milk": 1
+    },
+    "produce_item_id": "butter",
+    "produce_count": 1,
+    "craft_time_seconds": 1200,
+    "xp_reward": 5,
+    "base_price": 82,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Thỏi bơ vàng tươi sánh mịn chiết xuất từ sữa bò."
+  },
+  "cheese": {
+    "id": "cheese",
+    "name": "Phô Mai",
+    "building_id": "dairy",
+    "ingredients": {
+      "milk": 3
+    },
+    "produce_item_id": "cheese",
+    "produce_count": 1,
+    "craft_time_seconds": 3600,
+    "xp_reward": 15,
+    "base_price": 122,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Khối phô mai béo ngậy được ủ chuẩn nhiệt độ xưởng."
+  },
+  "red_lure": {
+    "id": "red_lure",
+    "name": "Mồi Câu Đỏ",
+    "building_id": "lure_workbench",
+    "ingredients": {},
+    "produce_item_id": "red_lure",
+    "produce_count": 1,
+    "craft_time_seconds": 5400,
+    "xp_reward": 5,
+    "base_price": 20,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Mồi câu cá tiêu chuẩn màu đỏ tươi hấp dẫn các loài cá ven bờ."
+  },
+  "green_lure": {
+    "id": "green_lure",
+    "name": "Mồi Câu Xanh",
+    "building_id": "lure_workbench",
+    "ingredients": {},
+    "produce_item_id": "green_lure",
+    "produce_count": 1,
+    "craft_time_seconds": 7200,
+    "xp_reward": 8,
+    "base_price": 35,
+    "unlock_level": 5,
+    "storage_type": "barn",
+    "description": "Mồi câu màu rêu xanh chìm sâu bắt cá lòng hồ."
+  },
+  "gold_lure": {
+    "id": "gold_lure",
+    "name": "Mồi Câu Vàng Kim",
+    "building_id": "lure_workbench",
+    "ingredients": {},
+    "produce_item_id": "gold_lure",
+    "produce_count": 1,
+    "craft_time_seconds": 10800,
+    "xp_reward": 12,
+    "base_price": 60,
+    "unlock_level": 7,
+    "storage_type": "barn",
+    "description": "Mồi câu mạ vàng lấp lánh chuyên săn cá quý hiếm."
+  }
+}

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8y8testclicks"]
+
+[ext_resource type="Script" path="res://tests/test_interactive_clicks.gd" id="1_test"]
+
+[node name="TestInteractiveClicks" type="Node"]
+script = ExtResource("1_test")

@@ -1,0 +1,47 @@
+{
+  "direct_buyer": {
+    "id": "direct_buyer",
+    "name": "Khách Mua Tận Nhà",
+    "category": "buyer",
+    "move_speed": 60.0,
+    "spawn_weight": 35,
+    "spawn_cooldown_seconds": 60,
+    "max_concurrent": 2,
+    "request_item_types": ["crops", "animal_products", "baked_goods"],
+    "min_order_quantity": 1,
+    "max_order_quantity": 5,
+    "coin_multiplier": 1.15,
+    "xp_bonus": 5,
+    "patience_seconds": 180,
+    "description": "Người dân trong thị trấn ghé tận cửa nhà chính hỏi mua nông sản dư thừa."
+  },
+  "roadside_shopper": {
+    "id": "roadside_shopper",
+    "name": "Khách Mua Sạp Hàng",
+    "category": "shopper",
+    "move_speed": 75.0,
+    "spawn_weight": 35,
+    "spawn_cooldown_seconds": 45,
+    "max_concurrent": 3,
+    "browse_duration_seconds": 4.0,
+    "purchase_chance": 0.85,
+    "description": "Khách qua đường ghé ngang Sạp Hàng Ven Đường để chọn mua các món hàng đang được bày bán."
+  },
+  "farm_tourist": {
+    "id": "farm_tourist",
+    "name": "Du Khách Sinh Thái",
+    "category": "tourist",
+    "move_speed": 50.0,
+    "spawn_weight": 50,
+    "spawn_cooldown_seconds": 20,
+    "max_concurrent": 8,
+    "max_poi_visits": 4,
+    "poi_stop_duration_seconds": 5.0,
+    "base_tip_coins": 10,
+    "base_tip_xp": 4,
+    "attraction_coin_scale": 0.5,
+    "attraction_xp_scale": 0.2,
+    "emotes": ["heart", "camera", "sparkle", "clap"],
+    "description": "Khách du lịch thích tản bộ trên các lối đi lát gạch, chiêm ngưỡng nông trại và hào phóng để lại tiền tip."
+  }
+}

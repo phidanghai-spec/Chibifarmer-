@@ -1,0 +1,43 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
+[application]
+
+config/name="HayDay Offline Tourism"
+run/main_scene="res://scenes/main_farm.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+EventBus="*res://scripts/core/event_bus.gd"
+DataManager="*res://scripts/core/data_manager.gd"
+TickManager="*res://scripts/core/tick_manager.gd"
+StorageManager="*res://scripts/core/storage_manager.gd"
+GridManager="*res://scripts/core/grid_manager.gd"
+RoadsideShop="*res://scripts/visitors/roadside_shop.gd"
+TruckOrderSystem="*res://scripts/systems/truck_order_system.gd"
+SpriteAtlasManager="*res://scripts/core/sprite_atlas_manager.gd"
+SaveManager="*res://scripts/core/save_manager.gd"
+
+[debug]
+
+gdscript/warnings/unused_signal=0
+gdscript/warnings/shadowed_global_identifier=0
+gdscript/warnings/integer_division=0
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=2
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

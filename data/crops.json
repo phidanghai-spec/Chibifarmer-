@@ -1,0 +1,101 @@
+{
+  "wheat": {
+    "id": "wheat",
+    "name": "Lúa Mì",
+    "growth_time_seconds": 10,
+    "harvest_yield": 2,
+    "xp_reward": 1,
+    "base_price": 3,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Nông sản cơ bản nhất, dùng để sản xuất bánh mì và thức ăn chăn nuôi."
+  },
+  "corn": {
+    "id": "corn",
+    "name": "Ngô",
+    "growth_time_seconds": 20,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 7,
+    "unlock_level": 2,
+    "storage_type": "silo",
+    "description": "Ngô ngọt thơm ngon, nguyên liệu chính của cám bò và bánh ngô."
+  },
+  "soybean": {
+    "id": "soybean",
+    "name": "Đậu Nành",
+    "growth_time_seconds": 1200,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 10,
+    "unlock_level": 5,
+    "storage_type": "silo",
+    "description": "Đậu nành giàu đạm, dùng cho cám bò và thức ăn heo."
+  },
+  "sugarcane": {
+    "id": "sugarcane",
+    "name": "Mía Đường",
+    "growth_time_seconds": 1800,
+    "harvest_yield": 2,
+    "xp_reward": 4,
+    "base_price": 14,
+    "unlock_level": 7,
+    "storage_type": "silo",
+    "description": "Cây mía ngọt lịm, dùng ép đường và làm bánh ngọt cao cấp."
+  },
+  "carrot": {
+    "id": "carrot",
+    "name": "Cà Rốt",
+    "growth_time_seconds": 600,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 8,
+    "unlock_level": 9,
+    "storage_type": "silo",
+    "description": "Cà rốt tươi giòn, thức ăn yêu thích của heo và khách du lịch ăn chay."
+  },
+  "apple": {
+    "id": "apple",
+    "name": "Táo Đỏ",
+    "growth_time_seconds": 25,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 12,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Táo đỏ tươi mọng nước, thu hoạch từ cây táo trong vườn."
+  },
+  "mango": {
+    "id": "mango",
+    "name": "Xoài Chín",
+    "growth_time_seconds": 30,
+    "harvest_yield": 2,
+    "xp_reward": 5,
+    "base_price": 18,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Xoài chín thơm ngọt, thu hoạch từ cây xoài trong vườn."
+  },
+  "apple_seed": {
+    "id": "apple_seed",
+    "name": "Hạt Giống Táo",
+    "growth_time_seconds": 15,
+    "harvest_yield": 1,
+    "xp_reward": 1,
+    "base_price": 8,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Hạt giống cây táo dùng để gieo trồng cây táo mới."
+  },
+  "mango_seed": {
+    "id": "mango_seed",
+    "name": "Hạt Giống Xoài",
+    "growth_time_seconds": 15,
+    "harvest_yield": 1,
+    "xp_reward": 1,
+    "base_price": 10,
+    "unlock_level": 1,
+    "storage_type": "silo",
+    "description": "Hạt giống cây xoài dùng để gieo trồng cây xoài mới."
+  }
+}
