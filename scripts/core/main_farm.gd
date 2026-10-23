@@ -10,7 +10,12 @@ class_name MainFarm
 @onready var drag_action_manager: DragActionManager = $DragActionManager
 @onready var ui_hud: CanvasLayer = $UIHud
 
+@onready var ground_layer: Node2D = get_node_or_null("GroundLayer") as Node2D
+@onready var props_layer: Node2D = get_node_or_null("PropsLayer") as Node2D
+
 var environment_container: Node2D
+var _horizon_container: Node2D = null
+var _scenery_container: Node2D = null
 var _scenic_valley_container: Node2D = null
 var _scenic_elements: Array[Node2D] = []
 
@@ -28,6 +33,7 @@ var _barn_prop: Node2D = null
 var _silo_prop: Node2D = null
 
 const SpecializedNPCClass = preload("res://scripts/entities/specialized_npc.gd")
+const ChibiSceneryBuilderClass = preload("res://scripts/map/chibi_scenery_builder.gd")
 
 var _ghost_preview_node: Node2D = null
 var _ghost_box: Polygon2D = null
@@ -71,11 +77,26 @@ func _ready() -> void:
 	environment_container.y_sort_enabled = true
 	add_child(environment_container)
 
-	_scenic_valley_container = Node2D.new()
-	_scenic_valley_container.name = "ScenicValleyContainer"
-	_scenic_valley_container.y_sort_enabled = true
-	add_child(_scenic_valley_container)
-	_spawn_scenic_valley_environment()
+	# Chibi 2.5D Scenery System (Horizon & Border Scenery)
+	if _horizon_container == null:
+		_horizon_container = Node2D.new()
+		_horizon_container.name = "HorizonContainer"
+		_horizon_container.z_index = -12
+		if ground_layer != null:
+			ground_layer.add_child(_horizon_container)
+		else:
+			add_child(_horizon_container)
+
+	if _scenery_container == null:
+		_scenery_container = Node2D.new()
+		_scenery_container.name = "SceneryContainer"
+		_scenery_container.y_sort_enabled = true
+		if props_layer != null:
+			props_layer.add_child(_scenery_container)
+		else:
+			add_child(_scenery_container)
+
+	_scenic_valley_container = _scenery_container
 	# Connect Core System Event Signals
 	EventBus.building_placed.connect(_on_building_placed)
 	EventBus.building_removed.connect(_on_building_removed)
@@ -121,8 +142,8 @@ func _ready() -> void:
 	if GridManager.occupied_cells.is_empty():
 		_setup_initial_farm()
 
-	# Spawn Rich Chibi Nature & Environmental Scenery
-	_setup_environment_decorations()
+	# Spawn Rich Chibi 2.5D Storybook Scenery
+	_spawn_scenic_valley_environment()
 
 	# Spawn Specialized NPCs at functional buildings
 	_spawn_specialized_npcs()
@@ -904,51 +925,26 @@ func _spawn_scenic_element(sprite_id: String, pos: Vector2, size: Vector2, z_off
 	node.position = pos
 	node.y_sort_enabled = true
 	node.z_index = z_offset
-	sp.position = Vector2(0.0, -size.y * 0.45)
+	sp.position = Vector2(0.0, -size.y * 0.42)
 	node.add_child(sp)
 	
-	_scenic_valley_container.add_child(node)
+	var shadow: Polygon2D = ChibiSceneryBuilderClass.create_ellipse_shadow(size.x * 0.38, size.x * 0.16)
+	shadow.position = Vector2.ZERO
+	node.add_child(shadow)
+	node.move_child(shadow, 0)
+	
+	if _scenery_container != null:
+		_scenery_container.add_child(node)
+	elif _scenic_valley_container != null:
+		_scenic_valley_container.add_child(node)
 	_scenic_elements.append(node)
 	return node
 
 func _spawn_scenic_valley_environment() -> void:
-	# 1. Phân vùng 5: Rừng Anh Đào & Công Viên Bờ Đông (X: 1088..1376, Y: 192..864)
-	# Phía Bắc Cầu Gỗ (Y: 200..600):
-	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 210), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1145, 260), Vector2(40, 36))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1240, 240), Vector2(90, 95))
-	_spawn_scenic_element("flowerbed_round", Vector2(1160, 310), Vector2(36, 26))
-
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1135, 380), Vector2(90, 95))
-	_spawn_scenic_element("env_river_bush", Vector2(1150, 440), Vector2(40, 36))
-	_spawn_scenic_element("env_cherry_tree", Vector2(1240, 400), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1250, 490), Vector2(90, 95))
-	_spawn_scenic_element("flowerbed_roses", Vector2(1165, 490), Vector2(38, 26))
-
-	_spawn_scenic_element("env_cherry_tree", Vector2(1120, 560), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1155, 610), Vector2(40, 36))
-	_spawn_scenic_element("flowerbed_lavender", Vector2(1240, 580), Vector2(38, 26))
-
-	# Phía Nam Cầu Gỗ trên bờ Đông (lấp đầy khoảng trống góc dưới bên phải):
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1125, 720), Vector2(90, 95))
-	_spawn_scenic_element("env_river_bush", Vector2(1145, 770), Vector2(40, 36))
-	_spawn_scenic_element("env_cherry_tree", Vector2(1240, 740), Vector2(88, 92))
-	_spawn_scenic_element("flowerbed_daisies", Vector2(1165, 810), Vector2(38, 26))
-
-	_spawn_scenic_element("env_cherry_tree", Vector2(1130, 860), Vector2(88, 92))
-	_spawn_scenic_element("env_river_bush", Vector2(1150, 910), Vector2(40, 36))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(1240, 880), Vector2(90, 95))
-
-	# 2. Hàng cây phía Bắc ôm sau khu nhà xưởng (Y: 95..100):
-	_spawn_scenic_element("env_cherry_tree", Vector2(340, 95), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(520, 100), Vector2(90, 95))
-	_spawn_scenic_element("env_cherry_tree", Vector2(700, 95), Vector2(88, 92))
-	_spawn_scenic_element("env_lush_green_tree", Vector2(880, 100), Vector2(90, 95))
-
-	# 3. Bờ Tây ven sông (phía Bắc cầu gỗ):
-	_spawn_scenic_element("env_river_bush", Vector2(765, 380), Vector2(42, 38))
-	_spawn_scenic_element("flowerbed_round", Vector2(755, 550), Vector2(36, 26))
-
+	if _horizon_container == null or _scenery_container == null:
+		return
+	var builder: RefCounted = ChibiSceneryBuilderClass.new()
+	builder.call("build_scenery", _horizon_container, _scenery_container, _scenic_elements)
 	print("[MainFarm] Spawned Harmonious Hay Day Scenic Valley with ", _scenic_elements.size(), " elements!")
 
 func _spawn_specialized_npcs() -> void:

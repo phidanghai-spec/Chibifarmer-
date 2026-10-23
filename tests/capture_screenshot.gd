@@ -21,6 +21,18 @@ func _ready() -> void:
 		img.save_png("res://debug_preview.png")
 		print("[SCREENSHOT] Saved screenshot to res://debug_preview.png (Size: ", img.get_size(), ")")
 	
+	# Also capture wide panoramic view of northern horizon
+	if cam != null:
+		cam.position = Vector2(600.0, 320.0)
+		cam.zoom = Vector2(0.55, 0.55)
+		cam.set("target_zoom", Vector2(0.55, 0.55))
+	for i: int in range(15):
+		await get_tree().process_frame
+	var img_wide: Image = get_viewport().get_texture().get_image()
+	if img_wide != null and not img_wide.is_empty():
+		img_wide.save_png("res://debug_panorama.png")
+		print("[SCREENSHOT] Saved panorama screenshot to res://debug_panorama.png")
+	
 	# Open recipe modal on Bakery and capture
 	var main_farm: MainFarm = farm as MainFarm
 	if main_farm != null and not main_farm._production_machines.is_empty():
