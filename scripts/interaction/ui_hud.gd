@@ -14,6 +14,7 @@ class_name UIHud
 @onready var label_barn: Label = %LabelBarn
 @onready var progress_barn: ProgressBar = %ProgressBarn
 @onready var label_attraction: Label = %LabelAttraction
+@onready var btn_audio_toggle: Button = %BtnAudioToggle
 
 # --- Bottom Tools ---
 @onready var btn_view: Button = %BtnView
@@ -128,6 +129,16 @@ func _ready() -> void:
 		if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
 			open_storage_popup("barn")
 	)
+
+	# Audio Mute / Unmute Toggle Button
+	if btn_audio_toggle != null:
+		btn_audio_toggle.text = "🔇" if AudioManager.is_muted else "🔊"
+		btn_audio_toggle.pressed.connect(func() -> void:
+			var muted: bool = AudioManager.toggle_mute()
+			btn_audio_toggle.text = "🔇" if muted else "🔊"
+			if not muted:
+				AudioManager.play_sfx("click")
+		)
 	
 	if RoadsideShop != null:
 		RoadsideShop.shop_updated.connect(_refresh_shop_ui)
@@ -411,6 +422,7 @@ func _format_number(num: int) -> String:
 # --- Roadside Shop Modal ---
 
 func toggle_shop_popup() -> void:
+	AudioManager.play_sfx("click")
 	panel_shop.visible = not panel_shop.visible
 	if panel_shop.visible:
 		panel_truck.visible = false
@@ -508,6 +520,7 @@ func _quick_list_dialog(slot_index: int) -> void:
 # --- Truck Orders Modal ---
 
 func toggle_truck_popup() -> void:
+	AudioManager.play_sfx("click")
 	panel_truck.visible = not panel_truck.visible
 	if panel_truck.visible:
 		panel_shop.visible = false
@@ -732,6 +745,7 @@ var _storage_modal: PanelContainer = null
 var _current_storage_view: String = "silo"
 
 func open_storage_popup(storage_type: String) -> void:
+	AudioManager.play_sfx("click")
 	_current_storage_view = storage_type
 	panel_shop.visible = false
 	panel_truck.visible = false
@@ -747,16 +761,16 @@ func open_storage_popup(storage_type: String) -> void:
 func _init_storage_modal() -> void:
 	_storage_modal = PanelContainer.new()
 	_storage_modal.name = "StorageModal"
-	_storage_modal.custom_minimum_size = Vector2(460, 360)
+	_storage_modal.custom_minimum_size = Vector2(460, 390)
 	_storage_modal.anchors_preset = Control.PRESET_CENTER
 	_storage_modal.anchor_left = 0.5
 	_storage_modal.anchor_top = 0.5
 	_storage_modal.anchor_right = 0.5
 	_storage_modal.anchor_bottom = 0.5
 	_storage_modal.offset_left = -230.0
-	_storage_modal.offset_top = -180.0
+	_storage_modal.offset_top = -195.0
 	_storage_modal.offset_right = 230.0
-	_storage_modal.offset_bottom = 180.0
+	_storage_modal.offset_bottom = 195.0
 	_storage_modal.z_index = 60
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
@@ -766,8 +780,8 @@ func _init_storage_modal() -> void:
 	sb.set_corner_radius_all(10)
 	sb.content_margin_left = 16
 	sb.content_margin_right = 16
-	sb.content_margin_top = 12
-	sb.content_margin_bottom = 12
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
 	_storage_modal.add_theme_stylebox_override("panel", sb)
 	
 	add_child(_storage_modal)
@@ -825,17 +839,26 @@ func _refresh_storage_modal() -> void:
 	pbar.show_percentage = false
 	hbox_cap.add_child(pbar)
 	
-	# Item Grid in ScrollContainer
+	# Item Grid in ScrollContainer with MarginContainer padding
 	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(420, 180)
+	scroll.custom_minimum_size = Vector2(420, 210)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(scroll)
+
+	var margin_container: MarginContainer = MarginContainer.new()
+	margin_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin_container.add_theme_constant_override("margin_top", 10)
+	margin_container.add_theme_constant_override("margin_bottom", 10)
+	margin_container.add_theme_constant_override("margin_left", 6)
+	margin_container.add_theme_constant_override("margin_right", 6)
+	scroll.add_child(margin_container)
 	
 	var grid: GridContainer = GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 10)
-	scroll.add_child(grid)
+	margin_container.add_child(grid)
 	
 	var items_dict: Dictionary = StorageManager.silo_items if _current_storage_view == "silo" else StorageManager.barn_items
 	var item_count_total: int = 0

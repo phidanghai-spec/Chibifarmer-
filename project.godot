@@ -29,6 +29,7 @@ RoadsideShop="*res://scripts/visitors/roadside_shop.gd"
 TruckOrderSystem="*res://scripts/systems/truck_order_system.gd"
 SpriteAtlasManager="*res://scripts/core/sprite_atlas_manager.gd"
 SaveManager="*res://scripts/core/save_manager.gd"
+AudioManager="*res://scripts/core/audio_manager.gd"
 
 [debug]
 

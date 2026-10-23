@@ -126,6 +126,7 @@ func plant(new_crop_id: String) -> bool:
 	_harvest_icon.visible = false
 	
 	EventBus.field_planted.emit(instance_id, crop_id, finish_timestamp)
+	AudioManager.play_sfx("plant")
 	queue_redraw()
 	return true
 
@@ -157,10 +158,12 @@ func harvest() -> bool:
 	
 	if not StorageManager.can_store_item(crop_id, harvest_yield):
 		print("[FieldPlot] Kho Silo đã đầy!")
+		AudioManager.play_sfx("error")
 		return false
 	
 	StorageManager.add_item(crop_id, harvest_yield)
 	StorageManager.add_xp(xp_reward)
+	AudioManager.play_sfx("harvest")
 	EventBus.field_harvested.emit(instance_id, crop_id)
 	EventBus.loot_collected.emit(crop_id, harvest_yield, global_position)
 	

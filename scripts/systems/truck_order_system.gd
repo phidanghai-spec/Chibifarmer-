@@ -84,6 +84,7 @@ func fulfill_order(order_index: int) -> bool:
 	# 2. Reward Gold and XP
 	StorageManager.add_gold(reward_gold)
 	StorageManager.add_xp(reward_xp)
+	AudioManager.play_sfx("coin")
 	
 	EventBus.truck_order_completed.emit(order_id, reward_gold, reward_xp)
 	print("[TruckOrderSystem] Fulfilled order ", order_id, "! Earned +", reward_gold, " gold, +", reward_xp, " XP")

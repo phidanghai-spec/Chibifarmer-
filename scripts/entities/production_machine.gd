@@ -94,6 +94,7 @@ func handle_machine_click() -> bool:
 		if def_item != "" and StorageManager.can_store_item(def_item, 1):
 			StorageManager.add_item(def_item, 1)
 			StorageManager.add_xp(3)
+			AudioManager.play_sfx("harvest")
 			EventBus.loot_collected.emit(def_item, 1, global_position)
 			_spawn_local_harvest_fx(def_item)
 		
@@ -110,6 +111,7 @@ func handle_machine_click() -> bool:
 		# Machine is currently producing! Do NOT add product to inventory!
 		var hint_text: String = "Đang nướng bánh..." if machine_id == "bakery" else "Đang sản xuất..."
 		_show_floating_hint(hint_text)
+		AudioManager.play_sfx("error")
 
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "scale", Vector2(1.08, 0.92), 0.08)
@@ -205,6 +207,7 @@ func collect_all() -> bool:
 		if StorageManager.can_store_item(item_id, 1):
 			StorageManager.add_item(item_id, 1)
 			StorageManager.add_xp(3)
+			AudioManager.play_sfx("harvest")
 			EventBus.production_collected.emit(instance_id, item_id)
 			EventBus.loot_collected.emit(item_id, 1, global_position)
 			_spawn_local_harvest_fx(item_id)
@@ -212,5 +215,6 @@ func collect_all() -> bool:
 			completed_items.append(item_id)
 			success_all = false
 			print("[ProductionMachine] Kho Barn đã đầy!")
+			AudioManager.play_sfx("error")
 	
 	return success_all

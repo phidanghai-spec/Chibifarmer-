@@ -91,6 +91,7 @@ func collect_coins(slot_index: int) -> bool:
 	
 	var coins: int = int(slot.get("price", 0))
 	StorageManager.add_gold(coins)
+	AudioManager.play_sfx("coin")
 	
 	# Clear slot
 	slot["item_id"] = ""

@@ -31,8 +31,29 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+try:
+    from google import genai
+    HAS_GENAI = True
+except ImportError:
+    HAS_GENAI = False
+
 SPRITES_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "assets", "sprites"))
 ATLAS_MANAGER_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "scripts", "core", "sprite_atlas_manager.gd"))
+ENV_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
+def load_env_api_key() -> str:
+    """Đọc GEMINI_API_KEY từ file .env hoặc biến môi trường."""
+    if os.path.exists(ENV_PATH):
+        try:
+            with open(ENV_PATH, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("GEMINI_API_KEY="):
+                        return line.split("=", 1)[1].strip()
+        except Exception as e:
+            print(f"[Forge] Error reading .env: {e}")
+    return os.environ.get("GEMINI_API_KEY", "")
+
 
 def remove_background_corner_floodfill(img: Image.Image) -> Image.Image:
     """
@@ -202,8 +223,60 @@ def generate_procedural_chibi(sprite_id: str, prompt: str, width: int = 128, hei
     draw.arc([cx - 15, cy - 5, cx + 15, cy + 20], start=20, end=160, fill=(180, 60, 60, 255), width=3)
     return img
 
-def fetch_image_from_api(sprite_id: str, prompt: str, width: int, height: int, gen_type: str = "sprite", retries: int = 3) -> Image.Image:
-    """Gọi Public API (Pollinations.ai hoặc DiceBear) để tạo ảnh Chibi."""
+def fetch_image_from_gemini(sprite_id: str, prompt: str, ref_image_path: str = None) -> Image.Image:
+    """Gọi Gemini API kết hợp ảnh mẫu Style Reference Image để sinh sprite Chibi 2.5D."""
+    if not HAS_GENAI:
+        return None
+    api_key = load_env_api_key()
+    if not api_key:
+        return None
+
+    try:
+        print(f"[Forge] Initializing Gemini API Client with key from .env...")
+        client = genai.Client(api_key=api_key)
+        
+        contents = []
+        style_prompt = "2.5D Chibi Cozy Farm game sprite, warm brown outline (#4A2C18, 3px), soft volume shading, hand-painted cozy pastel illustration, isolated on pure solid white background, no text, no watermark"
+        
+        if ref_image_path and os.path.exists(ref_image_path):
+            try:
+                ref_img = Image.open(ref_image_path).convert("RGBA")
+                contents.append(ref_img)
+                print(f"[Forge] Loaded style reference image: {ref_image_path} ({ref_img.size[0]}x{ref_img.size[1]})")
+                user_content = f"Create a new chibi farm sprite for '{sprite_id}'. Description: {prompt}. Strictly follow the art style, warm brown outlines, soft ambient shadows, and cozy colors of the provided reference image. {style_prompt}."
+            except Exception as e_ref:
+                print(f"[Forge] Could not load reference image: {e_ref}")
+                user_content = f"{prompt}. {style_prompt}."
+        else:
+            user_content = f"{prompt}. {style_prompt}."
+
+        contents.append(user_content)
+        print(f"[Forge] Calling Gemini API (gemini-2.5-flash-image)...")
+        response = client.models.generate_content(
+            model='gemini-2.5-flash-image',
+            contents=contents
+        )
+        if response and response.candidates:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, "inline_data") and part.inline_data:
+                    raw_bytes = part.inline_data.data
+                    raw_img = Image.open(io.BytesIO(raw_bytes))
+                    print(f"[Forge] Received image from Gemini API ({len(raw_bytes)} bytes)!")
+                    return remove_background_corner_floodfill(raw_img)
+    except Exception as e:
+        print(f"[Forge] Gemini API notice (quota/network): {e}")
+        print("[Forge] Falling back cleanly to Public API / Procedural Engine...")
+
+    return None
+
+def fetch_image_from_api(sprite_id: str, prompt: str, width: int, height: int, gen_type: str = "sprite", ref_image_path: str = None, retries: int = 3) -> Image.Image:
+    """Gọi Gemini API, Pollinations.ai hoặc DiceBear để tạo ảnh Chibi."""
+    # 1. Thử qua Gemini API trước nếu có API Key
+    gemini_img = fetch_image_from_gemini(sprite_id, prompt, ref_image_path)
+    if gemini_img is not None:
+        return gemini_img
+
+    # 2. Avatar/NPC generator từ DiceBear
     if gen_type == "avatar":
         url = f"https://api.dicebear.com/9.x/adventurer/png?seed={urllib.parse.quote(sprite_id)}&width={width}&height={height}"
         print(f"[Forge] Calling DiceBear Avatar API: {url}")
@@ -217,7 +290,8 @@ def fetch_image_from_api(sprite_id: str, prompt: str, width: int, height: int, g
             print(f"[Forge] DiceBear API request failed: {e}")
             return generate_procedural_chibi(sprite_id, prompt, width, height)
 
-    full_prompt = f"{prompt}, cute 2.5d chibi cozy farm game sprite, Hay Day style, soft warm pastel colors, hand-painted illustration, isolated on pure solid white background, no text, no watermark"
+    # 3. Pollinations API
+    full_prompt = f"{prompt}, cute 2.5d chibi cozy farm game sprite, Hay Day style, warm brown outline #4A2C18, soft volume shading, hand-painted illustration, isolated on pure solid white background, no text, no watermark"
     print(f"[Forge] Full Prompt: {full_prompt}")
 
     for attempt in range(1, retries + 1):
@@ -270,8 +344,8 @@ def auto_register_in_sprite_atlas(sprite_id: str, png_filename: str) -> bool:
     print("[Forge] Could not find anchor in sprite_atlas_manager.gd to insert texture load call.")
     return False
 
-def forge_asset(sprite_id: str, prompt: str, width: int = 256, height: int = 256, gen_type: str = "sprite", auto_reg: bool = True) -> str:
-    """Pipeline hoàn chỉnh: Gọi API -> Tách nền -> Lưu file -> Đăng ký Atlas."""
+def forge_asset(sprite_id: str, prompt: str, width: int = 256, height: int = 256, gen_type: str = "sprite", ref_image: str = None, auto_reg: bool = True) -> str:
+    """Pipeline hoàn chỉnh: Gọi API (Gemini/Pollinations) -> Tách nền -> Lưu file -> Đăng ký Atlas."""
     os.makedirs(SPRITES_DIR, exist_ok=True)
     out_filename = f"{sprite_id}.png"
     out_filepath = os.path.join(SPRITES_DIR, out_filename)
@@ -279,7 +353,7 @@ def forge_asset(sprite_id: str, prompt: str, width: int = 256, height: int = 256
     print(f"==================================================")
     print(f"  CHIBI ASSET FORGE: Generating '{sprite_id}'")
     print(f"==================================================")
-    img = fetch_image_from_api(sprite_id, prompt, width, height, gen_type)
+    img = fetch_image_from_api(sprite_id, prompt, width, height, gen_type, ref_image)
 
     if img.mode != "RGBA":
         img = img.convert("RGBA")
@@ -294,12 +368,13 @@ def forge_asset(sprite_id: str, prompt: str, width: int = 256, height: int = 256
     return out_filepath
 
 def main():
-    parser = argparse.ArgumentParser(description="Chibi Asset Forge - Auto generation & background removal via Public API")
+    parser = argparse.ArgumentParser(description="Chibi Asset Forge - Auto generation & background removal via Gemini & Public APIs")
     parser.add_argument("--id", required=True, help="Unique sprite ID (e.g. env_river_bush)")
     parser.add_argument("--prompt", default="", help="English description of the object")
     parser.add_argument("--width", type=int, default=256, help="Target width (default: 256)")
     parser.add_argument("--height", type=int, default=256, help="Target height (default: 256)")
     parser.add_argument("--type", choices=["sprite", "avatar"], default="sprite", help="Type of generation")
+    parser.add_argument("--ref", default=None, help="Path to style reference image (e.g. assets/sprites/silo.png)")
     parser.add_argument("--no-register", action="store_true", help="Skip auto-registering into sprite_atlas_manager.gd")
 
     args = parser.parse_args()
@@ -314,8 +389,10 @@ def main():
         width=args.width,
         height=args.height,
         gen_type=args.type,
+        ref_image=args.ref,
         auto_reg=not args.no_register
     )
 
 if __name__ == "__main__":
     main()
+

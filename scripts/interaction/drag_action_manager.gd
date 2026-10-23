@@ -218,6 +218,7 @@ func _handle_build_field(cell: Vector2i) -> void:
 		cost = int(b_info.get("cost_gold", 1))
 	
 	if not StorageManager.has_gold(cost):
+		AudioManager.play_sfx("error")
 		return
 	
 	if GridManager.can_place_building("field_plot", cell):
@@ -225,7 +226,10 @@ func _handle_build_field(cell: Vector2i) -> void:
 			if main_farm != null and main_farm.has_method("auto_clear_decor_at_cell"):
 				main_farm.call("auto_clear_decor_at_cell", cell)
 			var inst_id: int = GridManager.place_building("field_plot", cell)
+			AudioManager.play_sfx("plant")
 			print("[DragActionManager] Built new field plot at cell: ", cell, " (inst_id: ", inst_id, ")")
+	else:
+		AudioManager.play_sfx("error")
 
 func _handle_build_path(cell: Vector2i) -> void:
 	if cell == _last_drag_cell:
@@ -238,6 +242,7 @@ func _handle_build_path(cell: Vector2i) -> void:
 		cost = int(p_info.get("cost_gold", 5))
 	
 	if not StorageManager.has_gold(cost):
+		AudioManager.play_sfx("error")
 		return
 	
 	if not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell):
@@ -245,7 +250,10 @@ func _handle_build_path(cell: Vector2i) -> void:
 			if main_farm != null and main_farm.has_method("auto_clear_decor_at_cell"):
 				main_farm.call("auto_clear_decor_at_cell", cell)
 			GridManager.place_path(cell)
+			AudioManager.play_sfx("plant")
 			print("[DragActionManager] Built path tile at cell: ", cell)
+	else:
+		AudioManager.play_sfx("error")
 
 func _get_field_plot_at(cell: Vector2i) -> FieldPlot:
 	if main_farm == null:

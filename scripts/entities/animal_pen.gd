@@ -325,6 +325,7 @@ func feed() -> bool:
 	state = PenState.PRODUCING
 	
 	EventBus.animal_fed.emit(instance_id, animal_id, finish_timestamp)
+	AudioManager.play_sfx("plant")
 	_timer_label.text = "⏳ " + TickManager.format_duration(duration)
 	_timer_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	_timer_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.1))
@@ -344,10 +345,12 @@ func collect() -> bool:
 	
 	if not StorageManager.can_store_item(product_id, count):
 		print("[AnimalPen] Kho Barn đã đầy!")
+		AudioManager.play_sfx("error")
 		return false
 	
 	StorageManager.add_item(product_id, count)
 	StorageManager.add_xp(xp)
+	AudioManager.play_sfx("harvest")
 	EventBus.animal_collected.emit(instance_id, product_id)
 	EventBus.loot_collected.emit(product_id, count, global_position)
 	

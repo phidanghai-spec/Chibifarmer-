@@ -26,6 +26,8 @@ var _emote_sprite: Sprite2D
 var _tip_sprite: Sprite2D
 var _label_name: Label
 var _label_demand: Label
+var _chat_label: Label
+var _dialogue_timer: Timer
 
 # Tourism Demand Mechanics
 var requested_item: String = "apple"
@@ -85,6 +87,28 @@ func _ready() -> void:
 	_label_demand.add_theme_color_override("font_outline_color", Color(0.12, 0.08, 0.02, 1.0))
 	_label_demand.add_theme_constant_override("outline_size", 4)
 	add_child(_label_demand)
+
+	# 6. Overhead Emotion & Short Dialogue Bubble
+	_chat_label = Label.new()
+	_chat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_chat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_chat_label.position = Vector2(-95, -104)
+	_chat_label.size = Vector2(190, 22)
+	_chat_label.z_index = 30
+	_chat_label.add_theme_font_size_override("font_size", 10)
+	_chat_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	_chat_label.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.05, 1.0))
+	_chat_label.add_theme_constant_override("outline_size", 3)
+	_chat_label.visible = false
+	_chat_label.modulate.a = 0.0
+	add_child(_chat_label)
+
+	_dialogue_timer = Timer.new()
+	_dialogue_timer.one_shot = false
+	_dialogue_timer.wait_time = randf_range(12.0, 18.0)
+	_dialogue_timer.autostart = true
+	_dialogue_timer.timeout.connect(_on_dialogue_timeout)
+	add_child(_dialogue_timer)
 
 func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_type: String = "sightseeing", slot_idx: int = -1) -> void:
 	var valid_types: Array[String] = [
@@ -194,6 +218,7 @@ func handle_visitor_click() -> bool:
 		_label_demand.text = "😍 Cảm ơn! +5✨"
 		_label_demand.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 		_show_emote()
+		AudioManager.play_sfx("coin")
 		
 		var tw: Tween = create_tween()
 		self.scale = Vector2(1.08, 0.92)
@@ -203,6 +228,7 @@ func handle_visitor_click() -> bool:
 	else:
 		# Player doesn't have requested item yet -> Friendly tip +10 gold for visiting
 		StorageManager.add_gold(10)
+		AudioManager.play_sfx("coin")
 		EventBus.loot_collected.emit("gold", 10, global_position)
 		
 		_label_demand.text = "Chưa có %s! Tặng 10 Vàng" % requested_name
@@ -243,6 +269,9 @@ func deactivate() -> void:
 	self.scale = Vector2.ONE
 	if _body_sprite != null:
 		_body_sprite.scale = _base_sprite_scale
+	if _chat_label != null:
+		_chat_label.visible = false
+		_chat_label.modulate.a = 0.0
 
 func _process(delta: float) -> void:
 	if state == VisitorState.INACTIVE:
@@ -349,12 +378,45 @@ func _drop_tip() -> void:
 	var reward_coins: int = 15 + int(GridManager.total_attraction_score * 0.5)
 	StorageManager.add_gold(reward_coins)
 	StorageManager.add_xp(5)
+	AudioManager.play_sfx("coin")
 	EventBus.tourist_tipped.emit(0, reward_coins, 5, position)
 	
 	var tween: Tween = create_tween()
 	tween.tween_property(_tip_sprite, "position:y", -42.0, 0.5)
 	tween.tween_interval(1.4)
 	tween.tween_property(_tip_sprite, "visible", false, 0.1)
+
+func _on_dialogue_timeout() -> void:
+	if state == VisitorState.INACTIVE or not visible:
+		return
+	
+	const PRAISE_QUOTES: Array[String] = [
+		"🌸 Hoa anh đào bên sông đẹp quá!",
+		"🍞 Bánh mì mới ra lò thơm phức!",
+		"🌉 Đi dạo qua cầu gỗ mát thật!",
+		"🍎 Vườn cây trái nhìn mê quá!",
+		"✨ Nông trại yên bình tuyệt vời!"
+	]
+	
+	var quote: String = PRAISE_QUOTES[randi() % PRAISE_QUOTES.size()]
+	_show_chat_dialogue(quote)
+	if _dialogue_timer != null:
+		_dialogue_timer.wait_time = randf_range(12.0, 18.0)
+
+func _show_chat_dialogue(text: String) -> void:
+	if _chat_label == null:
+		return
+	_chat_label.text = text
+	_chat_label.visible = true
+	_chat_label.modulate.a = 0.0
+	var tw: Tween = create_tween()
+	tw.tween_property(_chat_label, "modulate:a", 1.0, 0.35)
+	tw.tween_interval(2.65)
+	tw.tween_property(_chat_label, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(_chat_label):
+			_chat_label.visible = false
+	)
 
 func _start_walking_to_exit() -> void:
 	if manager != null and queue_slot_index >= 0:

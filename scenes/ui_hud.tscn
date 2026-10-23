@@ -325,6 +325,13 @@ theme_override_colors/font_color = Color(1, 0.7, 0.9, 1)
 theme_override_font_sizes/font_size = 15
 text = "✨ 10"
 
+[node name="BtnAudioToggle" type="Button" parent="TopRightHUD"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+text = "🔊"
+tooltip_text = "Bật / Tắt Âm Thanh"
+
 [node name="BottomPanel" type="PanelContainer" parent="."]
 mouse_filter = 2
 anchors_preset = 12

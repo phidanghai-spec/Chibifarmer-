@@ -145,6 +145,7 @@ func pull_rod() -> void:
 	StorageManager.add_item(reward_fish, 1)
 	StorageManager.add_gold(20)
 	StorageManager.add_xp(5)
+	AudioManager.play_sfx("splash")
 	
 	EventBus.loot_collected.emit(reward_fish, 1, spot_pos)
 	EventBus.loot_collected.emit("gold", 20, spot_pos)

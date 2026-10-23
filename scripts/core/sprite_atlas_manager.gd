@@ -234,6 +234,8 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("item_tomato", "res://assets/sprites/item_tomato.png")
 	_load_standalone_texture("pumpkin", "res://assets/sprites/pumpkin.png")
 	_load_standalone_texture("item_pumpkin", "res://assets/sprites/item_pumpkin.png")
+	_load_standalone_texture("apple", "res://assets/sprites/apple.png")
+	_load_standalone_texture("item_apple", "res://assets/sprites/item_apple.png")
 
 	# Barn Building Sprite
 	_load_standalone_texture("building_barn", "res://assets/sprites/building_barn.png")

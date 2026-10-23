@@ -27,6 +27,10 @@ var _truck_prop: Node2D = null
 var _barn_prop: Node2D = null
 var _silo_prop: Node2D = null
 
+var _ghost_preview_node: Node2D = null
+var _ghost_box: Polygon2D = null
+var _ghost_sprite: Sprite2D = null
+
 func _ready() -> void:
 	# Center camera around the vibrant central farm plaza immediately
 	var center_world_pos: Vector2 = Vector2(580, 540)
@@ -73,6 +77,32 @@ func _ready() -> void:
 	# Link DragActionManager
 	if drag_action_manager != null:
 		drag_action_manager.main_farm = self
+		drag_action_manager.tool_changed.connect(_on_drag_tool_changed)
+
+	# Initialize Ghost Placement Preview Node (z_index = 50, top_level = false)
+	_ghost_preview_node = Node2D.new()
+	_ghost_preview_node.name = "GhostPlacementPreview"
+	_ghost_preview_node.z_index = 50
+	_ghost_preview_node.top_level = false
+	_ghost_preview_node.visible = false
+	add_child(_ghost_preview_node)
+
+	_ghost_box = Polygon2D.new()
+	_ghost_box.name = "GhostBox"
+	var half_box: float = 16.0
+	_ghost_box.polygon = PackedVector2Array([
+		Vector2(-half_box, -half_box),
+		Vector2(half_box, -half_box),
+		Vector2(half_box, half_box),
+		Vector2(-half_box, half_box)
+	])
+	_ghost_box.color = Color(1.0, 1.0, 1.0, 0.45)
+	_ghost_preview_node.add_child(_ghost_box)
+
+	_ghost_sprite = Sprite2D.new()
+	_ghost_sprite.name = "GhostSprite"
+	_ghost_sprite.position = Vector2.ZERO
+	_ghost_preview_node.add_child(_ghost_sprite)
 
 	# Initial Farm Build if Empty
 	if GridManager.occupied_cells.is_empty():
@@ -90,6 +120,100 @@ func _ready() -> void:
 		if arg == "--screenshot" or arg == "--run-tests":
 			_capture_screenshot_and_quit()
 			break
+
+func _on_drag_tool_changed(new_tool: DragActionManager.ToolType) -> void:
+	if _ghost_preview_node == null:
+		return
+	
+	if new_tool == DragActionManager.ToolType.NONE or new_tool == DragActionManager.ToolType.SICKLE:
+		_ghost_preview_node.visible = false
+		return
+	
+	var tex_id: String = ""
+	var spr_size: Vector2 = Vector2(28.0, 28.0)
+	match new_tool:
+		DragActionManager.ToolType.BUILD_FIELD:
+			tex_id = "field_plot"
+			spr_size = Vector2(28.0, 28.0)
+		DragActionManager.ToolType.BUILD_PATH:
+			tex_id = "path_tile"
+			spr_size = Vector2(28.0, 28.0)
+		DragActionManager.ToolType.PLANT_WHEAT:
+			tex_id = "wheat"
+			spr_size = Vector2(24.0, 24.0)
+		DragActionManager.ToolType.PLANT_CORN:
+			tex_id = "corn"
+			spr_size = Vector2(24.0, 24.0)
+		DragActionManager.ToolType.PLANT_CROP:
+			tex_id = drag_action_manager.selected_crop_id
+			spr_size = Vector2(24.0, 24.0)
+		DragActionManager.ToolType.PLANT_APPLE_TREE:
+			tex_id = "apple_seed"
+			spr_size = Vector2(28.0, 28.0)
+		DragActionManager.ToolType.PLANT_MANGO_TREE:
+			tex_id = "mango_seed"
+			spr_size = Vector2(28.0, 28.0)
+	
+	if SpriteAtlasManager.has_texture(tex_id):
+		_ghost_sprite.texture = SpriteAtlasManager.get_texture(tex_id)
+		SpriteAtlasManager.set_sprite_pixel_size(_ghost_sprite, spr_size)
+		_ghost_sprite.visible = true
+	else:
+		_ghost_sprite.texture = null
+		_ghost_sprite.visible = false
+	
+	_update_ghost_placement_preview(get_global_mouse_position())
+
+func _update_ghost_placement_preview(mouse_pos: Vector2) -> void:
+	if _ghost_preview_node == null or drag_action_manager == null:
+		return
+	var cur_tool: DragActionManager.ToolType = drag_action_manager.current_tool
+	if cur_tool == DragActionManager.ToolType.NONE or cur_tool == DragActionManager.ToolType.SICKLE:
+		_ghost_preview_node.visible = false
+		return
+	
+	var cell: Vector2i = GridManager.world_to_grid(mouse_pos)
+	var snapped_pos: Vector2 = Vector2(float(cell.x) * 32.0 + 16.0, float(cell.y) * 32.0 + 16.0)
+	_ghost_preview_node.global_position = snapped_pos
+	_ghost_preview_node.visible = true
+
+	var is_valid: bool = false
+	match cur_tool:
+		DragActionManager.ToolType.BUILD_FIELD:
+			is_valid = not _is_in_water_pond(snapped_pos) and GridManager.can_place_building("field_plot", cell)
+		DragActionManager.ToolType.BUILD_PATH:
+			is_valid = not _is_in_water_pond(snapped_pos) and not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell)
+		DragActionManager.ToolType.PLANT_APPLE_TREE:
+			is_valid = _can_plant_tree_preview(snapped_pos, "apple")
+		DragActionManager.ToolType.PLANT_MANGO_TREE:
+			is_valid = _can_plant_tree_preview(snapped_pos, "mango")
+		DragActionManager.ToolType.PLANT_WHEAT, DragActionManager.ToolType.PLANT_CORN, DragActionManager.ToolType.PLANT_CROP:
+			var plot: FieldPlot = get_field_plot_at(cell)
+			is_valid = (plot != null and plot.state == FieldPlot.PlotState.EMPTY)
+
+	if is_valid:
+		_ghost_preview_node.modulate = Color(0.35, 1.0, 0.45, 0.65) # Xanh Lá Trong Suốt
+	else:
+		_ghost_preview_node.modulate = Color(1.0, 0.35, 0.35, 0.65) # Đỏ Trong Suốt
+
+func _can_plant_tree_preview(world_pos: Vector2, tree_type: String) -> bool:
+	var seed_id: String = "apple_seed" if tree_type == "apple" else "mango_seed"
+	if not StorageManager.has_item(seed_id, 1):
+		return false
+	var cell: Vector2i = GridManager.world_to_grid(world_pos)
+	if not GridManager.is_within_bounds(cell):
+		return false
+	if GridManager.is_cell_occupied(cell) or GridManager.is_path_tile(cell):
+		return false
+	if _is_in_water_pond(world_pos):
+		return false
+	var fishing_rect: Rect2 = Rect2(Vector2(560.0, 560.0), Vector2(540.0, 300.0))
+	if fishing_rect.has_point(world_pos):
+		return false
+	for d: MovableDecor in _movable_decors:
+		if is_instance_valid(d) and world_pos.distance_to(d.global_position) < 32.0:
+			return false
+	return true
 
 func _screen_to_world(scr: Vector2) -> Vector2:
 	return (scr - Vector2(576.0, 324.0)) / 1.35 + camera_2d.position
@@ -197,21 +321,27 @@ func try_plant_tree(world_pos: Vector2, tree_type: String) -> bool:
 	var seed_id: String = "apple_seed" if tree_type == "apple" else "mango_seed"
 	if not StorageManager.has_item(seed_id, 1):
 		print("[MainFarm] Không đủ hạt giống: ", seed_id)
+		AudioManager.play_sfx("error")
 		return false
 	
 	var cell: Vector2i = GridManager.world_to_grid(world_pos)
 	if not GridManager.is_within_bounds(cell):
+		AudioManager.play_sfx("error")
 		return false
 	if GridManager.is_cell_occupied(cell) or GridManager.is_path_tile(cell):
+		AudioManager.play_sfx("error")
 		return false
 	if _is_in_water_pond(world_pos):
+		AudioManager.play_sfx("error")
 		return false
 	var fishing_rect: Rect2 = Rect2(Vector2(560.0, 560.0), Vector2(540.0, 300.0))
 	if fishing_rect.has_point(world_pos):
+		AudioManager.play_sfx("error")
 		return false
 	
 	for d: MovableDecor in _movable_decors:
 		if is_instance_valid(d) and world_pos.distance_to(d.global_position) < 32.0:
+			AudioManager.play_sfx("error")
 			return false
 	
 	StorageManager.remove_item(seed_id, 1)
@@ -226,6 +356,7 @@ func try_plant_tree(world_pos: Vector2, tree_type: String) -> bool:
 	
 	GridManager.add_attraction_score(5)
 	save_custom_decorations()
+	AudioManager.play_sfx("plant")
 	print("[MainFarm] Planted new ", tree_type, " tree at ", world_pos)
 	return true
 
@@ -659,7 +790,10 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 	return false
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
+	if event is InputEventMouseMotion:
+		if drag_action_manager != null and drag_action_manager.current_tool != DragActionManager.ToolType.NONE and drag_action_manager.current_tool != DragActionManager.ToolType.SICKLE:
+			_update_ghost_placement_preview(get_global_mouse_position())
+	elif event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
 			var cur_tool: DragActionManager.ToolType = drag_action_manager.current_tool if drag_action_manager != null else DragActionManager.ToolType.NONE

@@ -374,6 +374,7 @@ func try_harvest() -> bool:
 	
 	# Add fruit: +2 quả vào Silo
 	StorageManager.add_item(fruit_id, 2)
+	AudioManager.play_sfx("harvest")
 	EventBus.loot_collected.emit(fruit_id, 2, global_position)
 	
 	# Drop seed: rớt ngẫu nhiên +1 hạt giống (apple_seed hoặc mango_seed)
