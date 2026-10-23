@@ -123,7 +123,7 @@ def main():
                 break
 
     # 2. Món ăn / rau củ từ raw_refs nếu có
-    food_sheet = os.path.join(ASSETS_DIR, "raw_refs", "script món an.jpg")
+    food_sheet = os.path.join(ASSETS_DIR, "raw_refs", "script món ăn.jpg")
     if os.path.exists(food_sheet):
         print(f"Đang phân tích và cắt: {os.path.basename(food_sheet)}...")
         res_food = slice_connected_components(food_sheet, prefix="food_crop", min_size=24, max_slices=6)

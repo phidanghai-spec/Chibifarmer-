@@ -152,7 +152,7 @@ def main():
     grid_sheets = [
         ("script thực phẩm.png", "food_sheet", 4, 3),
         ("chibi_sheet_1.png", "chibi1_sheet", 4, 3),
-        ("chibi_sheet_2_characters.png", "char_sheet", 4, 3),
+        # ("chibi_sheet_2_characters.png", "char_sheet", 4, 3), # Đã thay bằng chibi_characters_master.png chuẩn (8 nhân vật)
         ("chibi_sheet_3_buildings.png", "bldg_sheet", 4, 3),
         ("script nhà cửa.png", "house_sheet", 4, 3),
         ("script món ăn.jpg", "dishes_sheet", 6, 6),
@@ -161,7 +161,7 @@ def main():
     ]
 
     for fname, sheet_name, cols, rows in grid_sheets:
-        full_p = os.path.join(r"D:\HayDayOffline\assets\sprites", fname)
+        full_p = os.path.join(r"D:\HayDayOffline\assets\raw_refs", fname) if os.path.exists(os.path.join(r"D:\HayDayOffline\assets\raw_refs", fname)) else os.path.join(r"D:\HayDayOffline\assets\sprites", fname)
         if os.path.exists(full_p):
             print(f"[Extractor] Đang cắt lưới {cols}x{rows}: {fname}...")
             process_grid_sheet(full_p, sheet_name, cols, rows, extracted)
