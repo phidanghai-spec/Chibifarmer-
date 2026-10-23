@@ -8,7 +8,7 @@ class_name MainFarm
 @onready var animal_pens_container: Node2D = $AnimalPensContainer
 @onready var visitor_manager: VisitorManager = $VisitorManager
 @onready var drag_action_manager: DragActionManager = $DragActionManager
-@onready var ui_hud: UIHud = $UIHud
+@onready var ui_hud: CanvasLayer = $UIHud
 
 var environment_container: Node2D
 var _scenic_valley_container: Node2D = null
@@ -78,6 +78,12 @@ func _ready() -> void:
 	if drag_action_manager != null:
 		drag_action_manager.main_farm = self
 		drag_action_manager.tool_changed.connect(_on_drag_tool_changed)
+
+	# Link Stock Alert System
+	if ui_hud != null:
+		var alert_node: Node = ui_hud.get_node_or_null("StockAlertSystem")
+		if alert_node != null:
+			alert_node.set("main_farm", self)
 
 	# Initialize Ghost Placement Preview Node (z_index = 50, top_level = false)
 	_ghost_preview_node = Node2D.new()
@@ -482,7 +488,7 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 	elif sprite_id == "barn" or sprite_id == "building_barn":
 		_barn_prop = node_wrapper
 		var lbl_barn: Label = Label.new()
-		lbl_barn.text = "📦 NHÀ KHO"
+		lbl_barn.text = SaveManager.get_building_name("building_barn", "📦 NHÀ KHO")
 		lbl_barn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_barn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_barn.position = Vector2(-60.0, -max_size.y * 0.65)
@@ -496,7 +502,7 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 	elif sprite_id == "silo":
 		_silo_prop = node_wrapper
 		var lbl_silo: Label = Label.new()
-		lbl_silo.text = "🌾 KHO SILO"
+		lbl_silo.text = SaveManager.get_building_name("building_silo", "🌾 KHO SILO")
 		lbl_silo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_silo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_silo.position = Vector2(-60.0, -max_size.y * 0.65)
@@ -507,6 +513,46 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		lbl_silo.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.05, 1.0))
 		lbl_silo.add_theme_constant_override("outline_size", 3)
 		node_wrapper.add_child(lbl_silo)
+	elif sprite_id == "building_mini_zoo" or sprite_id == "mini_zoo":
+		var lbl_zoo: Label = Label.new()
+		lbl_zoo.text = SaveManager.get_building_name("mini_zoo", "🎪 KHU SỞ THÚ")
+		lbl_zoo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_zoo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_zoo.position = Vector2(-60.0, -max_size.y * 0.65)
+		lbl_zoo.size = Vector2(120.0, 20.0)
+		lbl_zoo.z_index = 10
+		lbl_zoo.add_theme_font_size_override("font_size", 11)
+		lbl_zoo.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+		lbl_zoo.add_theme_color_override("font_outline_color", Color(0.2, 0.12, 0.05, 1.0))
+		lbl_zoo.add_theme_constant_override("outline_size", 3)
+		node_wrapper.add_child(lbl_zoo)
+		
+		# Spawn Horse and Donkey inside / near Mini Zoo paddock
+		if SpriteAtlasManager.has_texture("animal_horse"):
+			var horse_sp: Sprite2D = Sprite2D.new()
+			horse_sp.name = "ZooHorse"
+			horse_sp.texture = SpriteAtlasManager.get_texture("animal_horse")
+			SpriteAtlasManager.set_sprite_pixel_size(horse_sp, Vector2(36, 36))
+			horse_sp.position = Vector2(-28.0, 18.0)
+			horse_sp.z_index = 2
+			node_wrapper.add_child(horse_sp)
+			
+			var tw_h: Tween = node_wrapper.create_tween().set_loops()
+			tw_h.tween_property(horse_sp, "scale:y", horse_sp.scale.y * 1.05, 1.2).set_trans(Tween.TRANS_SINE)
+			tw_h.tween_property(horse_sp, "scale:y", horse_sp.scale.y, 1.2).set_trans(Tween.TRANS_SINE)
+			
+		if SpriteAtlasManager.has_texture("animal_donkey"):
+			var donkey_sp: Sprite2D = Sprite2D.new()
+			donkey_sp.name = "ZooDonkey"
+			donkey_sp.texture = SpriteAtlasManager.get_texture("animal_donkey")
+			SpriteAtlasManager.set_sprite_pixel_size(donkey_sp, Vector2(34, 34))
+			donkey_sp.position = Vector2(28.0, 20.0)
+			donkey_sp.z_index = 2
+			node_wrapper.add_child(donkey_sp)
+			
+			var tw_d: Tween = node_wrapper.create_tween().set_loops()
+			tw_d.tween_property(donkey_sp, "scale:y", donkey_sp.scale.y * 1.06, 1.0).set_trans(Tween.TRANS_SINE)
+			tw_d.tween_property(donkey_sp, "scale:y", donkey_sp.scale.y, 1.0).set_trans(Tween.TRANS_SINE)
 	return sp
 
 func _spawn_production_machine(m_id: String, cell: Vector2i) -> ProductionMachine:

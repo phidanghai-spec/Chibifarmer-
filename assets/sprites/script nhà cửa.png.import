@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ihaci3x43u8p"
-path="res://.godot/imported/script nhà cửa.png-cf71308d1467a45fe1803424618c557e.ctex"
+uid="uid://bdd6a62wsokc4"
+path="res://.godot/imported/script nhà cửa.png-ffd70e861f546387e451324045cb1529.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/script nhà cửa.png"
-dest_files=["res://.godot/imported/script nhà cửa.png-cf71308d1467a45fe1803424618c557e.ctex"]
+source_file="res://assets/raw_refs/script nhà cửa.png"
+dest_files=["res://.godot/imported/script nhà cửa.png-ffd70e861f546387e451324045cb1529.ctex"]
 
 [params]
 

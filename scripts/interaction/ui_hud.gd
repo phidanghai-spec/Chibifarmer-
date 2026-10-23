@@ -38,6 +38,12 @@ class_name UIHud
 @onready var pill_silo: PanelContainer = $TopLeftHUD/PillSilo
 @onready var pill_barn: PanelContainer = $TopLeftHUD/PillBarn
 
+const StockAlertSystemClass = preload("res://scripts/systems/stock_alert_system.gd")
+
+var label_coins: Label = null
+var stock_alert_system: Control = null
+var _rename_modal: PanelContainer = null
+
 var _tool_buttons: Dictionary = {}
 var _crop_buttons: Dictionary = {}
 
@@ -110,6 +116,8 @@ func _ready() -> void:
 				child.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Connect Core EventBus signals
+	_setup_coins_hud()
+	EventBus.coins_changed.connect(_on_coins_changed)
 	EventBus.gold_changed.connect(_on_gold_changed)
 	EventBus.diamonds_changed.connect(_on_diamonds_changed)
 	EventBus.xp_changed.connect(_on_xp_changed)
@@ -117,6 +125,11 @@ func _ready() -> void:
 	EventBus.storage_updated.connect(_on_storage_updated)
 	EventBus.attraction_score_changed.connect(_on_attraction_score_changed)
 	EventBus.loot_collected.connect(_on_loot_collected)
+	
+	# Stock Alert System
+	stock_alert_system = StockAlertSystemClass.new() as Control
+	stock_alert_system.name = "StockAlertSystem"
+	add_child(stock_alert_system)
 	
 	# Enable clicking on Silo and Barn progress pills to open Storage Management
 	pill_silo.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -252,6 +265,7 @@ func _highlight_active_button(active_tool: DragActionManager.ToolType) -> void:
 			btn.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func _refresh_all_hud() -> void:
+	_on_coins_changed(StorageManager.coins, 0)
 	_on_gold_changed(StorageManager.gold, 0)
 	_on_diamonds_changed(StorageManager.diamonds, 0)
 	var needed_xp: int = StorageManager.get_required_xp(StorageManager.level)
@@ -364,9 +378,63 @@ func _refresh_seed_counts() -> void:
 		else:
 			btn_seeds.text = "🌱 Hạt Giống"
 
+func _setup_coins_hud() -> void:
+	var top_hud: VBoxContainer = find_child("TopLeftHUD", true, false) as VBoxContainer
+	if top_hud != null and label_coins == null:
+		var row_coins: HBoxContainer = HBoxContainer.new()
+		row_coins.name = "RowCoins"
+		row_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		
+		var pill_coins: PanelContainer = PanelContainer.new()
+		pill_coins.name = "PillCoins"
+		pill_coins.custom_minimum_size = Vector2(170, 36)
+		pill_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		
+		var sb: StyleBoxFlat = StyleBoxFlat.new()
+		sb.bg_color = Color(1.0, 0.99, 0.96, 0.96)
+		sb.border_color = Color(0.42, 0.30, 0.21, 1.0)
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(16)
+		sb.shadow_color = Color(0.42, 0.30, 0.21, 0.18)
+		sb.shadow_size = 4
+		sb.content_margin_left = 8
+		sb.content_margin_right = 8
+		pill_coins.add_theme_stylebox_override("panel", sb)
+		
+		var hbox: HBoxContainer = HBoxContainer.new()
+		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hbox.add_theme_constant_override("separation", 6)
+		pill_coins.add_child(hbox)
+		
+		var icon_lbl: Label = Label.new()
+		icon_lbl.text = "🪙"
+		icon_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_lbl.add_theme_font_size_override("font_size", 16)
+		hbox.add_child(icon_lbl)
+		
+		label_coins = Label.new()
+		label_coins.name = "LabelCoins"
+		label_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label_coins.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label_coins.add_theme_color_override("font_color", Color(0.24, 0.15, 0.14))
+		label_coins.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+		label_coins.add_theme_constant_override("outline_size", 2)
+		label_coins.add_theme_font_size_override("font_size", 16)
+		label_coins.text = "%s Xu" % _format_number(StorageManager.coins)
+		hbox.add_child(label_coins)
+		
+		row_coins.add_child(pill_coins)
+		top_hud.add_child(row_coins)
+		top_hud.move_child(row_coins, 0)
+
+func _on_coins_changed(new_coins: int, _delta: int) -> void:
+	if label_coins != null:
+		label_coins.text = "%s Xu" % _format_number(new_coins)
+
 func _on_gold_changed(new_gold: int, _delta: int) -> void:
 	if label_gold != null:
-		label_gold.text = "%s" % _format_number(new_gold)
+		label_gold.text = "👑 %s Vàng" % _format_number(new_gold)
 
 func _on_diamonds_changed(new_diamonds: int, _delta: int) -> void:
 	if label_diamonds != null:
@@ -801,12 +869,26 @@ func _refresh_storage_modal() -> void:
 	var hbox_head: HBoxContainer = HBoxContainer.new()
 	vbox.add_child(hbox_head)
 	
+	var default_title: String = "🌾 QUẢN LÝ KHO SILO" if _current_storage_view == "silo" else "📦 QUẢN LÝ KHO BARN"
+	var building_key: String = "building_silo" if _current_storage_view == "silo" else "building_barn"
+	var display_title: String = SaveManager.get_building_name(building_key, default_title)
+	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "🌾 QUẢN LÝ KHO SILO" if _current_storage_view == "silo" else "📦 QUẢN LÝ KHO BARN"
+	lbl_title.text = display_title
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_title.add_theme_font_size_override("font_size", 16)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_head.add_child(lbl_title)
+	
+	var btn_rename: Button = Button.new()
+	btn_rename.text = "✏️ Đổi Tên"
+	btn_rename.custom_minimum_size = Vector2(80, 26)
+	btn_rename.pressed.connect(func() -> void:
+		open_rename_modal(building_key, default_title, func(_new_name: String) -> void:
+			_refresh_storage_modal()
+		)
+	)
+	hbox_head.add_child(btn_rename)
 	
 	var btn_close: Button = Button.new()
 	btn_close.text = "✕"
@@ -931,3 +1013,91 @@ func _refresh_storage_modal() -> void:
 			EventBus.gold_changed.emit(StorageManager.gold, -300)
 	)
 	vbox.add_child(btn_upgrade)
+
+func open_rename_modal(building_id: String, default_name: String, on_renamed: Callable = Callable()) -> void:
+	AudioManager.play_sfx("click")
+	if _rename_modal != null and is_instance_valid(_rename_modal):
+		_rename_modal.queue_free()
+	
+	_rename_modal = PanelContainer.new()
+	_rename_modal.name = "RenameModal"
+	_rename_modal.custom_minimum_size = Vector2(340, 180)
+	_rename_modal.anchors_preset = Control.PRESET_CENTER
+	_rename_modal.anchor_left = 0.5
+	_rename_modal.anchor_top = 0.5
+	_rename_modal.anchor_right = 0.5
+	_rename_modal.anchor_bottom = 0.5
+	_rename_modal.offset_left = -170.0
+	_rename_modal.offset_top = -90.0
+	_rename_modal.offset_right = 170.0
+	_rename_modal.offset_bottom = 90.0
+	_rename_modal.z_index = 80
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(12)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	_rename_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_rename_modal.add_child(vbox)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "✏️ Đổi Tên Công Trình"
+	lbl_title.add_theme_font_size_override("font_size", 14)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	vbox.add_child(lbl_title)
+	
+	var edit: LineEdit = LineEdit.new()
+	edit.max_length = 16
+	edit.placeholder_text = "Nhập tên (tối đa 16 ký tự)..."
+	edit.text = SaveManager.get_building_name(building_id, default_name)
+	vbox.add_child(edit)
+	
+	var hbox_btns: HBoxContainer = HBoxContainer.new()
+	hbox_btns.alignment = BoxContainer.ALIGNMENT_END
+	hbox_btns.add_theme_constant_override("separation", 8)
+	vbox.add_child(hbox_btns)
+	
+	var btn_default: Button = Button.new()
+	btn_default.text = "Mặc Định"
+	btn_default.pressed.connect(func() -> void:
+		SaveManager.set_building_name(building_id, "")
+		AudioManager.play_sfx("click")
+		if on_renamed.is_valid():
+			on_renamed.call(default_name)
+		_rename_modal.queue_free()
+	)
+	hbox_btns.add_child(btn_default)
+	
+	var btn_confirm: Button = Button.new()
+	btn_confirm.text = "Xác Nhận"
+	btn_confirm.pressed.connect(func() -> void:
+		var new_name: String = edit.text.strip_edges()
+		if new_name == "":
+			new_name = default_name
+			SaveManager.set_building_name(building_id, "")
+		else:
+			SaveManager.set_building_name(building_id, new_name)
+		AudioManager.play_sfx("click")
+		if on_renamed.is_valid():
+			on_renamed.call(new_name)
+		_rename_modal.queue_free()
+	)
+	hbox_btns.add_child(btn_confirm)
+	
+	var btn_cancel: Button = Button.new()
+	btn_cancel.text = "Đóng"
+	btn_cancel.pressed.connect(func() -> void:
+		_rename_modal.queue_free()
+	)
+	hbox_btns.add_child(btn_cancel)
+	
+	add_child(_rename_modal)
+

@@ -1,0 +1,14 @@
+{
+  "order_config": {
+    "min_items": 2,
+    "max_items": 4,
+    "min_duration_seconds": 1800,
+    "max_duration_seconds": 7200,
+    "coin_multiplier": 1.30,
+    "min_gold_reward": 1,
+    "max_gold_reward": 2,
+    "base_xp_reward": 20
+  },
+  "candidate_crops": ["wheat", "corn", "carrot", "tomato", "strawberry", "pumpkin", "apple", "mango"],
+  "candidate_products": ["bread", "butter", "egg", "milk", "bacon", "cheese", "corn_bread", "butter_cookie"]
+}

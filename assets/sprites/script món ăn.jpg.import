@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cyohp7dqudq6e"
-path="res://.godot/imported/script món ăn.jpg-5c486013c8fd6f575c95e5c8007aa609.ctex"
+uid="uid://ds0yd4fm6sbsq"
+path="res://.godot/imported/script món ăn.jpg-599334ea798f1d466a1709bd9290025b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/script món ăn.jpg"
-dest_files=["res://.godot/imported/script món ăn.jpg-5c486013c8fd6f575c95e5c8007aa609.ctex"]
+source_file="res://assets/raw_refs/script món ăn.jpg"
+dest_files=["res://.godot/imported/script món ăn.jpg-599334ea798f1d466a1709bd9290025b.ctex"]
 
 [params]
 

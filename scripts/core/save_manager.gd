@@ -3,14 +3,27 @@ extends Node
 const SAVE_PATH: String = "user://hayday_save.json"
 
 const SAVE_VERSION: int = 8
+const MAX_OFFLINE_SECONDS: int = 28800 # 8 hours limit
 
 var custom_decorations: Array = []
+var building_custom_names: Dictionary = {} # building_id -> String
 
 var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
 
 func _ready() -> void:
 	load_game()
+
+func get_building_name(building_id: String, default_name: String) -> String:
+	return String(building_custom_names.get(building_id, default_name))
+
+func set_building_name(building_id: String, new_name: String) -> void:
+	var trimmed: String = new_name.strip_edges()
+	if trimmed == "":
+		building_custom_names.erase(building_id)
+	else:
+		building_custom_names[building_id] = trimmed.substr(0, 16)
+	save_game()
 
 func _process(delta: float) -> void:
 	_accum_save += delta
@@ -33,6 +46,7 @@ func save_game() -> void:
 		"version": SAVE_VERSION,
 		"save_timestamp": TickManager.now(),
 		"economy": {
+			"coins": StorageManager.coins,
 			"gold": StorageManager.gold,
 			"diamonds": StorageManager.diamonds,
 			"xp": StorageManager.xp,
@@ -42,6 +56,7 @@ func save_game() -> void:
 			"silo_items": StorageManager.silo_items.duplicate(),
 			"barn_items": StorageManager.barn_items.duplicate()
 		},
+		"building_custom_names": building_custom_names.duplicate(),
 		"attraction_score": GridManager.total_attraction_score
 	}
 	
@@ -87,12 +102,14 @@ func load_game() -> bool:
 		return false
 	
 	var saved_ts: int = int(data.get("save_timestamp", 0))
-	var offline_elapsed: int = maxi(0, TickManager.now() - saved_ts)
-	print("[SaveManager] Game loaded! Offline time elapsed: ", offline_elapsed, " seconds.")
+	var raw_offline: int = maxi(0, TickManager.now() - saved_ts)
+	var offline_elapsed: int = mini(raw_offline, MAX_OFFLINE_SECONDS)
+	print("[SaveManager] Game loaded! Offline time elapsed: ", offline_elapsed, "s (clamped from ", raw_offline, "s).")
 	
 	# Restore Economy
 	var econ: Dictionary = data.get("economy", {}) as Dictionary
 	if not econ.is_empty():
+		StorageManager.coins = int(econ.get("coins", StorageManager.coins))
 		StorageManager.gold = int(econ.get("gold", StorageManager.gold))
 		StorageManager.diamonds = int(econ.get("diamonds", StorageManager.diamonds))
 		StorageManager.xp = int(econ.get("xp", StorageManager.xp))
@@ -111,11 +128,18 @@ func load_game() -> bool:
 		if not b_items.is_empty():
 			StorageManager.barn_items = b_items
 		
+		EventBus.coins_changed.emit(StorageManager.coins, 0)
 		EventBus.gold_changed.emit(StorageManager.gold, 0)
 		EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 		EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
 		EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
 		EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
+	
+	# Restore Building Custom Names
+	if data.has("building_custom_names"):
+		building_custom_names = (data["building_custom_names"] as Dictionary).duplicate()
+	else:
+		building_custom_names = {}
 	
 	# Restore Roadside Shop
 	# Restore Custom Decorations

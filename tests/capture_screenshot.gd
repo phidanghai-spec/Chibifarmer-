@@ -30,10 +30,10 @@ func _ready() -> void:
 		print("[SCREENSHOT] Saved screenshot to res://debug_preview.png (Size: ", img.get_size(), ")")
 	
 	# Open Barn Storage Modal and capture
-	var hud: UIHud = farm.get_node_or_null("UIHud") as UIHud
+	var hud: CanvasLayer = farm.get_node_or_null("UIHud") as CanvasLayer
 	if hud != null:
-		hud.open_storage_popup("barn")
-		for i: int in range(10):
+		hud.call("open_storage_popup", "barn")
+		for i: int in range(12):
 			await get_tree().process_frame
 		var img_barn: Image = get_viewport().get_texture().get_image()
 		if img_barn != null and not img_barn.is_empty():
@@ -41,8 +41,8 @@ func _ready() -> void:
 			print("[SCREENSHOT] Saved barn storage screenshot to res://debug_barn_storage.png")
 		
 		# Open Silo Storage Modal and capture
-		hud.open_storage_popup("silo")
-		for i: int in range(10):
+		hud.call("open_storage_popup", "silo")
+		for i: int in range(12):
 			await get_tree().process_frame
 		var img_silo: Image = get_viewport().get_texture().get_image()
 		if img_silo != null and not img_silo.is_empty():
@@ -52,8 +52,8 @@ func _ready() -> void:
 		# Close storage and toggle seeds menu
 		if hud.get("_storage_modal") != null:
 			(hud.get("_storage_modal") as CanvasItem).visible = false
-		hud.toggle_seeds_menu()
-		for i: int in range(10):
+		hud.call("toggle_seeds_menu")
+		for i: int in range(12):
 			await get_tree().process_frame
 		var img_seeds: Image = get_viewport().get_texture().get_image()
 		if img_seeds != null and not img_seeds.is_empty():

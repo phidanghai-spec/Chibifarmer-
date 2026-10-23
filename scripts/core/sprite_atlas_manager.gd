@@ -240,6 +240,40 @@ func load_all_atlases() -> void:
 	# Barn Building Sprite
 	_load_standalone_texture("building_barn", "res://assets/sprites/building_barn.png")
 	_load_standalone_texture("chibi_barn_red", "res://assets/sprites/chibi_barn_red.png")
+	_load_standalone_texture("building_juice_stand", "res://assets/sprites/building_juice_stand.png")
+	_load_standalone_texture("juice_stand", "res://assets/sprites/building_juice_stand.png")
+	_load_standalone_texture("building_cake_oven", "res://assets/sprites/building_cake_oven.png")
+	_load_standalone_texture("cake_oven", "res://assets/sprites/building_cake_oven.png")
+	_load_standalone_texture("building_mini_zoo", "res://assets/sprites/building_mini_zoo.png")
+	_load_standalone_texture("mini_zoo", "res://assets/sprites/building_mini_zoo.png")
+	_load_standalone_texture("building_feed_mill", "res://assets/sprites/building_feed_mill.png")
+	_load_standalone_texture("feed_mill", "res://assets/sprites/building_feed_mill.png")
+
+	# Animals
+	_load_standalone_texture("animal_horse", "res://assets/sprites/animal_horse.png")
+	_load_standalone_texture("horse", "res://assets/sprites/animal_horse.png")
+	_load_standalone_texture("critter_horse", "res://assets/sprites/critter_horse.png")
+	_load_standalone_texture("animal_donkey", "res://assets/sprites/animal_donkey.png")
+	_load_standalone_texture("donkey", "res://assets/sprites/animal_donkey.png")
+	_load_standalone_texture("critter_donkey", "res://assets/sprites/critter_donkey.png")
+	_load_standalone_texture("animal_goat", "res://assets/sprites/animal_goat.png")
+	_load_standalone_texture("goat", "res://assets/sprites/animal_goat.png")
+	_load_standalone_texture("animal_dog", "res://assets/sprites/animal_dog.png")
+	_load_standalone_texture("dog", "res://assets/sprites/animal_dog.png")
+
+	# New Recipes & Juices
+	_load_standalone_texture("butter_cookie", "res://assets/sprites/butter_cookie.png")
+	_load_standalone_texture("item_butter_cookie", "res://assets/sprites/item_butter_cookie.png")
+	_load_standalone_texture("cream_cake", "res://assets/sprites/cream_cake.png")
+	_load_standalone_texture("item_cream_cake", "res://assets/sprites/item_cream_cake.png")
+	_load_standalone_texture("corn_bread", "res://assets/sprites/corn_bread.png")
+	_load_standalone_texture("item_corn_bread", "res://assets/sprites/item_corn_bread.png")
+	_load_standalone_texture("sugarcane_juice", "res://assets/sprites/sugarcane_juice.png")
+	_load_standalone_texture("item_sugarcane_juice", "res://assets/sprites/item_sugarcane_juice.png")
+	_load_standalone_texture("apple_juice", "res://assets/sprites/apple_juice.png")
+	_load_standalone_texture("item_apple_juice", "res://assets/sprites/item_apple_juice.png")
+	_load_standalone_texture("mango_smoothie", "res://assets/sprites/mango_smoothie.png")
+	_load_standalone_texture("item_mango_smoothie", "res://assets/sprites/item_mango_smoothie.png")
 
 	# Sliced Characters
 	for i in range(1, 9):

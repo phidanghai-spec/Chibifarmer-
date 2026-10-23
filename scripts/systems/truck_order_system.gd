@@ -40,13 +40,15 @@ func _create_random_order() -> Dictionary:
 	requirements[good] = good_qty
 	total_base_val += DataManager.get_item_base_price(good) * good_qty
 	
-	# Calculate generous rewards
-	var reward_gold: int = int(total_base_val * randf_range(1.3, 1.6))
-	var reward_xp: int = int(total_base_val * randf_range(0.4, 0.7)) + 15
+	# Calculate balanced rewards: 130% coins + 1-2 gold + XP
+	var reward_coins: int = int(total_base_val * 1.3)
+	var reward_gold: int = randi_range(1, 2)
+	var reward_xp: int = int(total_base_val * 0.5) + 15
 	
 	return {
 		"order_id": order_id,
 		"requirements": requirements,
+		"reward_coins": reward_coins,
 		"reward_gold": reward_gold,
 		"reward_xp": reward_xp
 	}
@@ -72,7 +74,8 @@ func fulfill_order(order_index: int) -> bool:
 	
 	var order: Dictionary = active_orders[order_index]
 	var reqs: Dictionary = order.get("requirements", {}) as Dictionary
-	var reward_gold: int = int(order.get("reward_gold", 0))
+	var reward_coins: int = int(order.get("reward_coins", int(order.get("reward_gold", 0))))
+	var reward_gold: int = int(order.get("reward_gold", 1))
 	var reward_xp: int = int(order.get("reward_xp", 0))
 	var order_id: String = String(order.get("order_id", ""))
 	
@@ -81,13 +84,14 @@ func fulfill_order(order_index: int) -> bool:
 		var count: int = int(reqs[item_id])
 		StorageManager.remove_item(String(item_id), count)
 	
-	# 2. Reward Gold and XP
+	# 2. Reward Coins, Gold and XP
+	StorageManager.add_coins(reward_coins)
 	StorageManager.add_gold(reward_gold)
 	StorageManager.add_xp(reward_xp)
 	AudioManager.play_sfx("coin")
 	
 	EventBus.truck_order_completed.emit(order_id, reward_gold, reward_xp)
-	print("[TruckOrderSystem] Fulfilled order ", order_id, "! Earned +", reward_gold, " gold, +", reward_xp, " XP")
+	print("[TruckOrderSystem] Fulfilled order ", order_id, "! Earned +", reward_coins, " coins, +", reward_gold, " gold, +", reward_xp, " XP")
 	
 	# 3. Generate replacement order
 	active_orders[order_index] = _create_random_order()

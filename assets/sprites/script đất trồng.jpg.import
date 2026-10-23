@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://duacehmg3sre2"
-path="res://.godot/imported/script đất trồng.jpg-43ff8bb7bf464eaff0bfdfb554d052bf.ctex"
+uid="uid://bue58cwy08vqj"
+path="res://.godot/imported/script đất trồng.jpg-f0320fd6046573efd8543319011d382e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/script đất trồng.jpg"
-dest_files=["res://.godot/imported/script đất trồng.jpg-43ff8bb7bf464eaff0bfdfb554d052bf.ctex"]
+source_file="res://assets/raw_refs/script đất trồng.jpg"
+dest_files=["res://.godot/imported/script đất trồng.jpg-f0320fd6046573efd8543319011d382e.ctex"]
 
 [params]
 

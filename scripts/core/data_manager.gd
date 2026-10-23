@@ -170,3 +170,20 @@ func get_item_base_price(item_id: String) -> int:
 	if fishes.has(item_id):
 		return int((fishes[item_id] as Dictionary).get("base_price", 25))
 	return 5
+
+func get_building_name(building_id: String) -> String:
+	if buildings.has(building_id):
+		return String((buildings[building_id] as Dictionary).get("name", building_id.capitalize()))
+	match building_id:
+		"bakery": return "Lò Bánh Mì"
+		"feed_mill": return "Máy Nghiền Cám"
+		"dairy": return "Xưởng Sữa"
+		"juice_stand": return "Quầy Nước"
+		"cake_oven": return "Lò Bánh Ngọt"
+		"mini_zoo": return "Khu Sở Thú"
+		"building_barn", "barn": return "Nhà Kho Barn"
+		"building_silo", "silo": return "Kho Silo"
+		"truck", "truck_delivery": return "Bến Xe Tải"
+		"roadside_shop": return "Sạp Hàng Ven Đường"
+	return building_id.capitalize()
+

@@ -5,6 +5,7 @@ extends Node
 signal second_ticked(current_unix_time: int)
 
 # --- Economy & Progression ---
+signal coins_changed(new_coins: int, delta: int)
 signal gold_changed(new_gold: int, delta: int)
 signal diamonds_changed(new_diamonds: int, delta: int)
 signal xp_changed(current_xp: int, target_xp: int, current_level: int)

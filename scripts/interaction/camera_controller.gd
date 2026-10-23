@@ -130,3 +130,9 @@ func _clamp_camera_position() -> void:
 	
 	position.x = clampf(position.x, min_x, max_x)
 	position.y = clampf(position.y, min_y, max_y)
+
+func pan_to_target(target_world_pos: Vector2, duration: float = 0.6) -> void:
+	var tw: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "position", target_world_pos, duration)
+	tw.tween_callback(_clamp_camera_position)
+

@@ -16,6 +16,22 @@
     "storage_type": "barn",
     "description": "Thức ăn nghiền mịn từ lúa mì và ngô dành cho gà."
   },
+  "bread": {
+    "id": "bread",
+    "name": "Bánh Mì Nóng",
+    "building_id": "bakery",
+    "ingredients": {
+      "wheat": 3
+    },
+    "produce_item_id": "bread",
+    "produce_count": 1,
+    "craft_time_seconds": 300,
+    "xp_reward": 3,
+    "base_price": 21,
+    "unlock_level": 2,
+    "storage_type": "barn",
+    "description": "Ổ bánh mì vàng giòn rụm nướng từ bột lúa mì nguyên chất."
+  },
   "cow_feed": {
     "id": "cow_feed",
     "name": "Cám Bò",
@@ -32,6 +48,22 @@
     "unlock_level": 6,
     "storage_type": "barn",
     "description": "Thức ăn bổ dưỡng từ ngô và hạt đậu nành giúp bò cho nhiều sữa."
+  },
+  "butter": {
+    "id": "butter",
+    "name": "Bơ Sữa",
+    "building_id": "dairy",
+    "ingredients": {
+      "milk": 1
+    },
+    "produce_item_id": "butter",
+    "produce_count": 1,
+    "craft_time_seconds": 1200,
+    "xp_reward": 5,
+    "base_price": 50,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Thỏi bơ vàng tươi sánh mịn chiết xuất từ sữa bò."
   },
   "pig_feed": {
     "id": "pig_feed",
@@ -50,22 +82,6 @@
     "storage_type": "barn",
     "description": "Cám hỗn hợp cà rốt đậu nành cho heo nhanh lớn mập mạp."
   },
-  "bread": {
-    "id": "bread",
-    "name": "Bánh Mì Nóng",
-    "building_id": "bakery",
-    "ingredients": {
-      "wheat": 3
-    },
-    "produce_item_id": "bread",
-    "produce_count": 1,
-    "craft_time_seconds": 300,
-    "xp_reward": 3,
-    "base_price": 21,
-    "unlock_level": 2,
-    "storage_type": "barn",
-    "description": "Ổ bánh mì vàng giòn rụm nướng từ bột lúa mì nguyên chất."
-  },
   "corn_bread": {
     "id": "corn_bread",
     "name": "Bánh Mì Ngô",
@@ -78,13 +94,13 @@
     "produce_count": 1,
     "craft_time_seconds": 1800,
     "xp_reward": 8,
-    "base_price": 72,
+    "base_price": 90,
     "unlock_level": 7,
     "storage_type": "barn",
     "description": "Bánh ngô hòa quyện cùng trứng gà tươi bùi ngọt."
   },
-  "cookie": {
-    "id": "cookie",
+  "butter_cookie": {
+    "id": "butter_cookie",
     "name": "Bánh Quy Bơ",
     "building_id": "bakery",
     "ingredients": {
@@ -92,30 +108,14 @@
       "egg": 2,
       "sugarcane": 1
     },
-    "produce_item_id": "cookie",
+    "produce_item_id": "butter_cookie",
     "produce_count": 1,
     "craft_time_seconds": 3600,
     "xp_reward": 13,
-    "base_price": 104,
+    "base_price": 150,
     "unlock_level": 8,
     "storage_type": "barn",
     "description": "Những chiếc bánh quy ngọt ngào thơm lừng hấp dẫn mọi du khách."
-  },
-  "butter": {
-    "id": "butter",
-    "name": "Bơ Sữa",
-    "building_id": "dairy",
-    "ingredients": {
-      "milk": 1
-    },
-    "produce_item_id": "butter",
-    "produce_count": 1,
-    "craft_time_seconds": 1200,
-    "xp_reward": 5,
-    "base_price": 82,
-    "unlock_level": 6,
-    "storage_type": "barn",
-    "description": "Thỏi bơ vàng tươi sánh mịn chiết xuất từ sữa bò."
   },
   "cheese": {
     "id": "cheese",
@@ -128,10 +128,77 @@
     "produce_count": 1,
     "craft_time_seconds": 3600,
     "xp_reward": 15,
-    "base_price": 122,
+    "base_price": 180,
     "unlock_level": 8,
     "storage_type": "barn",
     "description": "Khối phô mai béo ngậy được ủ chuẩn nhiệt độ xưởng."
+  },
+  "cream_cake": {
+    "id": "cream_cake",
+    "name": "Bánh Kem Dâu",
+    "building_id": "cake_oven",
+    "ingredients": {
+      "strawberry": 2,
+      "egg": 2,
+      "milk": 1
+    },
+    "produce_item_id": "cream_cake",
+    "produce_count": 1,
+    "craft_time_seconds": 5400,
+    "xp_reward": 25,
+    "base_price": 260,
+    "unlock_level": 9,
+    "storage_type": "barn",
+    "description": "Bánh kem dâu tây béo ngậy trang trí dâu tươi chín mọng."
+  },
+  "sugarcane_juice": {
+    "id": "sugarcane_juice",
+    "name": "Nước Mía Đá",
+    "building_id": "juice_stand",
+    "ingredients": {
+      "sugarcane": 2
+    },
+    "produce_item_id": "sugarcane_juice",
+    "produce_count": 1,
+    "craft_time_seconds": 1800,
+    "xp_reward": 6,
+    "base_price": 38,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Ly nước mía giải khát mát lạnh mùa hè."
+  },
+  "apple_juice": {
+    "id": "apple_juice",
+    "name": "Nước Ép Táo",
+    "building_id": "juice_stand",
+    "ingredients": {
+      "apple": 2
+    },
+    "produce_item_id": "apple_juice",
+    "produce_count": 1,
+    "craft_time_seconds": 2400,
+    "xp_reward": 10,
+    "base_price": 65,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Nước ép táo đỏ ngọt thanh tự nhiên giàu vitamin."
+  },
+  "mango_smoothie": {
+    "id": "mango_smoothie",
+    "name": "Sinh Tố Xoài",
+    "building_id": "juice_stand",
+    "ingredients": {
+      "mango": 2,
+      "milk": 1
+    },
+    "produce_item_id": "mango_smoothie",
+    "produce_count": 1,
+    "craft_time_seconds": 3000,
+    "xp_reward": 15,
+    "base_price": 110,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Sinh tố xoài chín xay nhuyễn cùng sữa tươi béo thơm."
   },
   "red_lure": {
     "id": "red_lure",

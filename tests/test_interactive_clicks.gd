@@ -5,6 +5,8 @@ func _ready() -> void:
 	print("[TEST] STARTING COMPLETE 10-FEATURE AUTOMATED TEST")
 	print("==================================================")
 	
+	TickManager.dev_speed_multiplier = 60.0
+	
 	var main_scene: PackedScene = load("res://scenes/main_farm.tscn")
 	var farm: Node2D = main_scene.instantiate() as Node2D
 	add_child(farm)
@@ -314,4 +316,5 @@ func _ready() -> void:
 	else:
 		push_error("SOME TESTS FAILED")
 		
+	TickManager.dev_speed_multiplier = 1.0
 	get_tree().quit()

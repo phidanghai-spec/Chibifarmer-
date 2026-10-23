@@ -1,6 +1,7 @@
 extends Node
 
 var _accum: float = 0.0
+var dev_speed_multiplier: float = 1.0
 
 func _process(delta: float) -> void:
 	_accum += delta
@@ -12,7 +13,10 @@ func now() -> int:
 	return int(Time.get_unix_time_from_system())
 
 func calculate_finish_timestamp(duration_seconds: int) -> int:
-	return now() + duration_seconds
+	var adjusted: int = int(float(duration_seconds) / dev_speed_multiplier)
+	if adjusted < 1:
+		adjusted = 1
+	return now() + adjusted
 
 func get_time_remaining(finish_timestamp: int) -> int:
 	var current: int = now()

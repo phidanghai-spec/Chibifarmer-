@@ -8,7 +8,9 @@
     "produce_time_seconds": 1200,
     "produce_count": 1,
     "xp_reward": 2,
+    "base_price": 10,
     "unlock_level": 1,
+    "capacity": 6,
     "storage_type": "barn",
     "description": "Gà mái đẻ trứng vàng cho nông trại."
   },
@@ -21,7 +23,9 @@
     "produce_time_seconds": 3600,
     "produce_count": 1,
     "xp_reward": 3,
+    "base_price": 30,
     "unlock_level": 6,
+    "capacity": 5,
     "storage_type": "barn",
     "description": "Bò sữa hiền lành cung cấp nguồn sữa thanh trùng tinh khiết."
   },
@@ -31,10 +35,12 @@
     "pen_building_id": "pig_pen",
     "feed_item_id": "pig_feed",
     "produce_item_id": "bacon",
-    "produce_time_seconds": 14400,
+    "produce_time_seconds": 7200,
     "produce_count": 1,
     "xp_reward": 5,
+    "base_price": 80,
     "unlock_level": 10,
+    "capacity": 5,
     "storage_type": "barn",
     "description": "Heo mũm mĩm cho thịt xông khói thơm ngon béo ngậy."
   },
@@ -47,7 +53,10 @@
     "produce_time_seconds": 21600,
     "produce_count": 1,
     "xp_reward": 8,
+    "base_price": 120,
+    "locked": true,
     "unlock_level": 16,
+    "capacity": 5,
     "storage_type": "barn",
     "description": "Cừu cho bộ lông mềm mượt để dệt vải ấm áp."
   }

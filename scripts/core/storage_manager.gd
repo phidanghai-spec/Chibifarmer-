@@ -1,5 +1,6 @@
 extends Node
 
+var coins: int = 1500
 var gold: int = 5450
 var diamonds: int = 45
 var xp: int = 1240
@@ -43,11 +44,30 @@ func _init_starter_inventory() -> void:
 	
 	_emit_storage_updated("silo")
 	_emit_storage_updated("barn")
+	EventBus.coins_changed.emit(coins, 0)
 	EventBus.gold_changed.emit(gold, 0)
 	EventBus.diamonds_changed.emit(diamonds, 0)
 	EventBus.xp_changed.emit(xp, get_required_xp(level), level)
 
 # --- Currency & Progression ---
+
+func has_coins(amount: int) -> bool:
+	return coins >= amount
+
+func add_coins(amount: int) -> void:
+	if amount <= 0:
+		return
+	coins += amount
+	EventBus.coins_changed.emit(coins, amount)
+
+func spend_coins(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if coins < amount:
+		return false
+	coins -= amount
+	EventBus.coins_changed.emit(coins, -amount)
+	return true
 
 func has_gold(amount: int) -> bool:
 	return gold >= amount
@@ -85,8 +105,29 @@ func spend_diamonds(amount: int) -> bool:
 	EventBus.diamonds_changed.emit(diamonds, -amount)
 	return true
 
+const LEVEL_XP_TABLE: Dictionary = {
+	1: 20,
+	2: 30,
+	3: 45,
+	4: 75,
+	5: 170,
+	6: 250,
+	7: 380,
+	8: 520,
+	9: 720,
+	10: 950,
+	11: 1250,
+	12: 1650,
+	13: 2100,
+	14: 2600,
+	15: 3200,
+	16: 3800
+}
+
 func get_required_xp(target_level: int) -> int:
-	return int(40 * pow(target_level, 1.4))
+	if LEVEL_XP_TABLE.has(target_level):
+		return int(LEVEL_XP_TABLE[target_level])
+	return int(3800 + (target_level - 16) * 800)
 
 func add_xp(amount: int) -> void:
 	if amount <= 0:
@@ -97,9 +138,11 @@ func add_xp(amount: int) -> void:
 	while xp >= needed:
 		xp -= needed
 		level += 1
+		var gold_reward: int = 8 if level >= 8 else 5
+		add_gold(gold_reward)
 		EventBus.leveled_up.emit(level)
 		needed = get_required_xp(level)
-		print("[StorageManager] Level up! New level: ", level)
+		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng thưởng!)")
 	
 	EventBus.xp_changed.emit(xp, needed, level)
 

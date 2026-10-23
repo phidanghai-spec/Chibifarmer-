@@ -13,6 +13,8 @@ var completed_items: Array[String] = []
 
 var _sprite: Sprite2D
 var _label_status: Label
+var _label_title: Label
+var _btn_rename: Button
 
 func _ready() -> void:
 	# 1. Machine Sprite
@@ -24,7 +26,32 @@ func _ready() -> void:
 		_sprite.z_index = 1
 	add_child(_sprite)
 
-	# 2. Status Label raised higher above roof with crisp dark outline and bright yellow text
+	# 2. Title Label & Rename Button
+	_label_title = Label.new()
+	_update_title_display()
+	_label_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_label_title.position = Vector2(-75, -92)
+	_label_title.size = Vector2(130, 20)
+	_label_title.clip_text = false
+	_label_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_label_title.add_theme_font_size_override("font_size", 11)
+	_label_title.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	_label_title.add_theme_color_override("font_outline_color", Color(0.18, 0.10, 0.05, 1.0))
+	_label_title.add_theme_constant_override("outline_size", 3)
+	add_child(_label_title)
+
+	_btn_rename = Button.new()
+	_btn_rename.text = "✏️"
+	_btn_rename.tooltip_text = "Đổi tên công trình"
+	_btn_rename.position = Vector2(58, -94)
+	_btn_rename.size = Vector2(22, 22)
+	_btn_rename.custom_minimum_size = Vector2(22, 22)
+	_btn_rename.mouse_filter = Control.MOUSE_FILTER_STOP
+	_btn_rename.pressed.connect(_on_rename_pressed)
+	add_child(_btn_rename)
+
+	# 3. Status Label raised higher above roof with crisp dark outline and bright yellow text
 	_label_status = Label.new()
 	_label_status.text = "SẴN SÀNG"
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -40,6 +67,20 @@ func _ready() -> void:
 	add_child(_label_status)
 
 	EventBus.second_ticked.connect(_on_second_ticked)
+
+func _update_title_display() -> void:
+	if _label_title != null:
+		var def_name: String = DataManager.get_building_name(machine_id)
+		_label_title.text = SaveManager.get_building_name(machine_id, def_name)
+
+func _on_rename_pressed() -> void:
+	var farm: Node = get_tree().current_scene
+	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+	if hud != null:
+		var def_name: String = DataManager.get_building_name(machine_id)
+		hud.open_rename_modal(machine_id, def_name, func(_new_name: String) -> void:
+			_update_title_display()
+		)
 
 func _process(_delta: float) -> void:
 	if not queue.is_empty() and _sprite != null:

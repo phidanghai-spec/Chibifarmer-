@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dt3rnw0fmeye2"
-path="res://.godot/imported/script nhân vật+2.jpg-b8d4f22d8ebb558a4795a17f5336ce65.ctex"
+uid="uid://bqyryatjbx3xc"
+path="res://.godot/imported/script nhân vật+2.jpg-3d4fd04edc1e636c22315c527c6e5a32.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/script nhân vật+2.jpg"
-dest_files=["res://.godot/imported/script nhân vật+2.jpg-b8d4f22d8ebb558a4795a17f5336ce65.ctex"]
+source_file="res://assets/raw_refs/script nhân vật+2.jpg"
+dest_files=["res://.godot/imported/script nhân vật+2.jpg-3d4fd04edc1e636c22315c527c6e5a32.ctex"]
 
 [params]
 
