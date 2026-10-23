@@ -27,6 +27,7 @@ class_name UIHud
 @onready var btn_sickle: Button = %BtnSickle
 @onready var btn_build_field: Button = %BtnBuildField
 @onready var btn_build_path: Button = %BtnBuildPath
+@onready var btn_dismantle: Button = %BtnDismantle
 @onready var btn_open_shop: Button = %BtnOpenShop
 @onready var btn_open_truck: Button = %BtnOpenTruck
 
@@ -48,16 +49,19 @@ var _tool_buttons: Dictionary = {}
 var _crop_buttons: Dictionary = {}
 
 const ALL_CROPS: Array[Dictionary] = [
-	{"id": "wheat", "name": "🌾 Lúa Mì", "icon": "wheat"},
-	{"id": "corn", "name": "🌽 Ngô", "icon": "corn"},
-	{"id": "carrot", "name": "🥕 Cà Rốt", "icon": "carrot"},
-	{"id": "soybean", "name": "🌱 Đậu Nành", "icon": "soybean"},
-	{"id": "sugarcane", "name": "🎋 Mía Đường", "icon": "sugarcane"},
-	{"id": "strawberry", "name": "🍓 Dâu Tây", "icon": "strawberry"},
-	{"id": "tomato", "name": "🍅 Cà Chua", "icon": "tomato"},
-	{"id": "pumpkin", "name": "🎃 Bí Đỏ", "icon": "pumpkin"},
-	{"id": "apple_tree", "name": "🍎 Mầm Cây Táo", "icon": "apple_seed", "item_key": "apple_seed"},
-	{"id": "mango_tree", "name": "🥭 Mầm Cây Xoài", "icon": "mango_seed", "item_key": "mango_seed"}
+	{"id": "wheat", "name": "Lúa Mì", "icon": "wheat"},
+	{"id": "corn", "name": "Ngô", "icon": "corn"},
+	{"id": "carrot", "name": "Cà Rốt", "icon": "carrot"},
+	{"id": "soybean", "name": "Đậu Nành", "icon": "soybean"},
+	{"id": "sugarcane", "name": "Mía Đường", "icon": "sugarcane"},
+	{"id": "strawberry", "name": "Dâu Tây", "icon": "strawberry"},
+	{"id": "sunflower", "name": "Hoa Hướng Dương", "icon": "sunflower"},
+	{"id": "rose", "name": "Hoa Hồng Đỏ", "icon": "rose"},
+	{"id": "lavender", "name": "Hoa Oải Hương", "icon": "lavender"},
+	{"id": "tomato", "name": "Cà Chua", "icon": "tomato"},
+	{"id": "pumpkin", "name": "Bí Đỏ", "icon": "pumpkin"},
+	{"id": "apple_tree", "name": "Mầm Cây Táo", "icon": "apple_seed", "item_key": "apple_seed"},
+	{"id": "mango_tree", "name": "Mầm Cây Xoài", "icon": "mango_seed", "item_key": "mango_seed"}
 ]
 
 func _ready() -> void:
@@ -68,12 +72,14 @@ func _ready() -> void:
 	_tool_buttons[DragActionManager.ToolType.SICKLE] = btn_sickle
 	_tool_buttons[DragActionManager.ToolType.BUILD_FIELD] = btn_build_field
 	_tool_buttons[DragActionManager.ToolType.BUILD_PATH] = btn_build_path
+	_tool_buttons[DragActionManager.ToolType.DISMANTLE] = btn_dismantle
 	
 	_setup_extra_seed_buttons()
 	
 	btn_view.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
 		_on_tool_selected(DragActionManager.ToolType.NONE)
+		open_build_modal()
 	)
 	btn_seeds.pressed.connect(toggle_seeds_menu)
 	btn_select_wheat.pressed.connect(func() -> void: select_seed("wheat"))
@@ -89,6 +95,10 @@ func _ready() -> void:
 	btn_build_path.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
 		_on_tool_selected(DragActionManager.ToolType.BUILD_PATH)
+	)
+	btn_dismantle.pressed.connect(func() -> void:
+		if panel_seeds_menu != null: panel_seeds_menu.visible = false
+		_on_tool_selected(DragActionManager.ToolType.DISMANTLE)
 	)
 	
 	btn_open_shop.pressed.connect(toggle_shop_popup)
@@ -188,8 +198,8 @@ func _setup_tool_button_icons() -> void:
 	if SpriteAtlasManager == null:
 		return
 	
-	btn_view.text = "Trang Trí"
-	btn_view.tooltip_text = "Chế độ xem & di chuyển: Nhấn giữ kéo thả để dời cây/hoa. Chuột phải để xóa."
+	btn_view.text = "🏗️ Xây Dựng"
+	btn_view.tooltip_text = "Mở cửa sổ Xây Dựng & Trang Trí: Mua chuồng trại, lò bánh, quầy nước, cây hoa."
 	btn_sickle.text = "Liềm"
 	btn_build_field.text = "Ruộng"
 	btn_build_path.text = "Đường"
@@ -280,18 +290,49 @@ func _setup_extra_seed_buttons() -> void:
 	if vbox_seeds == null:
 		return
 	
+	if btn_select_wheat != null:
+		btn_select_wheat.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_select_wheat.expand_icon = true
+		btn_select_wheat.add_theme_constant_override("icon_max_width", 24)
+		if SpriteAtlasManager.has_texture("wheat"):
+			btn_select_wheat.icon = SpriteAtlasManager.get_texture("wheat")
+	
+	if btn_select_corn != null:
+		btn_select_corn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_select_corn.expand_icon = true
+		btn_select_corn.add_theme_constant_override("icon_max_width", 24)
+		if SpriteAtlasManager.has_texture("corn"):
+			btn_select_corn.icon = SpriteAtlasManager.get_texture("corn")
+			
+	if btn_select_apple_tree != null:
+		btn_select_apple_tree.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_select_apple_tree.expand_icon = true
+		btn_select_apple_tree.add_theme_constant_override("icon_max_width", 24)
+		if SpriteAtlasManager.has_texture("apple_seed"):
+			btn_select_apple_tree.icon = SpriteAtlasManager.get_texture("apple_seed")
+			
+	if btn_select_mango_tree != null:
+		btn_select_mango_tree.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_select_mango_tree.expand_icon = true
+		btn_select_mango_tree.add_theme_constant_override("icon_max_width", 24)
+		if SpriteAtlasManager.has_texture("mango_seed"):
+			btn_select_mango_tree.icon = SpriteAtlasManager.get_texture("mango_seed")
+	
 	_crop_buttons["wheat"] = btn_select_wheat
 	_crop_buttons["corn"] = btn_select_corn
 	_crop_buttons["apple_tree"] = btn_select_apple_tree
 	_crop_buttons["mango_tree"] = btn_select_mango_tree
 
 	var extra_crops: Array[Dictionary] = [
-		{"id": "carrot", "name": "🥕 Cà Rốt", "icon": "carrot"},
-		{"id": "soybean", "name": "🌱 Đậu Nành", "icon": "soybean"},
-		{"id": "sugarcane", "name": "🎋 Mía Đường", "icon": "sugarcane"},
-		{"id": "strawberry", "name": "🍓 Dâu Tây", "icon": "strawberry"},
-		{"id": "tomato", "name": "🍅 Cà Chua", "icon": "tomato"},
-		{"id": "pumpkin", "name": "🎃 Bí Đỏ", "icon": "pumpkin"}
+		{"id": "carrot", "name": "Cà Rốt", "icon": "carrot"},
+		{"id": "strawberry", "name": "Dâu Tây", "icon": "strawberry"},
+		{"id": "sunflower", "name": "Hoa Hướng Dương", "icon": "sunflower"},
+		{"id": "rose", "name": "Hoa Hồng Đỏ", "icon": "rose"},
+		{"id": "lavender", "name": "Hoa Oải Hương", "icon": "lavender"},
+		{"id": "soybean", "name": "Đậu Nành", "icon": "soybean"},
+		{"id": "sugarcane", "name": "Mía Đường", "icon": "sugarcane"},
+		{"id": "tomato", "name": "Cà Chua", "icon": "tomato"},
+		{"id": "pumpkin", "name": "Bí Đỏ", "icon": "pumpkin"}
 	]
 
 	for c: Dictionary in extra_crops:
@@ -324,21 +365,23 @@ func select_seed(crop_id: String) -> void:
 		panel_seeds_menu.visible = false
 	if crop_id == "wheat":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_WHEAT)
-		btn_seeds.text = "🌾 Gieo: Lúa (%d)" % StorageManager.get_item_count("wheat")
+		btn_seeds.text = "Gieo: Lúa (%d)" % StorageManager.get_item_count("wheat")
 	elif crop_id == "corn":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_CORN)
-		btn_seeds.text = "🌽 Gieo: Ngô (%d)" % StorageManager.get_item_count("corn")
+		btn_seeds.text = "Gieo: Ngô (%d)" % StorageManager.get_item_count("corn")
 	elif crop_id == "apple_tree":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_APPLE_TREE)
-		btn_seeds.text = "🍎 Trồng: Táo (%d)" % StorageManager.get_item_count("apple_seed")
+		btn_seeds.text = "Trồng: Táo (%d)" % StorageManager.get_item_count("apple_seed")
 	elif crop_id == "mango_tree":
 		_on_tool_selected(DragActionManager.ToolType.PLANT_MANGO_TREE)
-		btn_seeds.text = "🥭 Trồng: Xoài (%d)" % StorageManager.get_item_count("mango_seed")
+		btn_seeds.text = "Trồng: Xoài (%d)" % StorageManager.get_item_count("mango_seed")
 	else:
 		if drag_action_manager != null:
 			drag_action_manager.set_plant_tool(crop_id)
-		var c_name: String = DataManager.get_item_name(crop_id)
-		btn_seeds.text = "🌱 Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(crop_id)]
+		var c_name: String = DataManager.get_crop_name(crop_id)
+		if c_name == "":
+			c_name = DataManager.get_item_name(crop_id)
+		btn_seeds.text = "Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(crop_id)]
 
 func _refresh_seed_counts() -> void:
 	var wheat_count: int = StorageManager.get_item_count("wheat")
@@ -346,13 +389,13 @@ func _refresh_seed_counts() -> void:
 	var apple_seed_count: int = StorageManager.get_item_count("apple_seed")
 	var mango_seed_count: int = StorageManager.get_item_count("mango_seed")
 	if btn_select_wheat != null:
-		btn_select_wheat.text = "🌾 Lúa Mì (%d)" % wheat_count
+		btn_select_wheat.text = "Lúa Mì (%d)" % wheat_count
 	if btn_select_corn != null:
-		btn_select_corn.text = "🌽 Ngô (%d)" % corn_count
+		btn_select_corn.text = "Ngô (%d)" % corn_count
 	if btn_select_apple_tree != null:
-		btn_select_apple_tree.text = "🍎 Mầm Cây Táo (%d)" % apple_seed_count
+		btn_select_apple_tree.text = "Mầm Cây Táo (%d)" % apple_seed_count
 	if btn_select_mango_tree != null:
-		btn_select_mango_tree.text = "🥭 Mầm Cây Xoài (%d)" % mango_seed_count
+		btn_select_mango_tree.text = "Mầm Cây Xoài (%d)" % mango_seed_count
 
 	for c_dict: Dictionary in ALL_CROPS:
 		var c_id: String = String(c_dict["id"])
@@ -364,17 +407,19 @@ func _refresh_seed_counts() -> void:
 
 	if drag_action_manager != null:
 		if drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_WHEAT:
-			btn_seeds.text = "🌾 Gieo: Lúa (%d)" % wheat_count
+			btn_seeds.text = "Gieo: Lúa (%d)" % wheat_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CORN:
-			btn_seeds.text = "🌽 Gieo: Ngô (%d)" % corn_count
+			btn_seeds.text = "Gieo: Ngô (%d)" % corn_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_APPLE_TREE:
-			btn_seeds.text = "🍎 Trồng: Táo (%d)" % apple_seed_count
+			btn_seeds.text = "Trồng: Táo (%d)" % apple_seed_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_MANGO_TREE:
-			btn_seeds.text = "🥭 Trồng: Xoài (%d)" % mango_seed_count
+			btn_seeds.text = "Trồng: Xoài (%d)" % mango_seed_count
 		elif drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CROP:
 			var s_id: String = drag_action_manager.selected_crop_id
-			var c_name: String = DataManager.get_item_name(s_id)
-			btn_seeds.text = "🌱 Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(s_id)]
+			var c_name: String = DataManager.get_crop_name(s_id)
+			if c_name == "":
+				c_name = DataManager.get_item_name(s_id)
+			btn_seeds.text = "Gieo: %s (%d)" % [c_name, StorageManager.get_item_count(s_id)]
 		else:
 			btn_seeds.text = "🌱 Hạt Giống"
 
@@ -1100,4 +1145,453 @@ func open_rename_modal(building_id: String, default_name: String, on_renamed: Ca
 	hbox_btns.add_child(btn_cancel)
 	
 	add_child(_rename_modal)
+
+# --- Contextual Popups & Construction Catalog (Hay Day Episode 1 Standard) ---
+
+var _build_modal: PanelContainer = null
+var _contextual_seed_popup: PanelContainer = null
+var _recipe_modal: PanelContainer = null
+
+func open_build_modal() -> void:
+	AudioManager.play_sfx("click")
+	if _build_modal != null and is_instance_valid(_build_modal):
+		_build_modal.queue_free()
+	
+	_build_modal = PanelContainer.new()
+	_build_modal.name = "BuildModal"
+	_build_modal.custom_minimum_size = Vector2(510, 390)
+	_build_modal.anchors_preset = Control.PRESET_CENTER
+	_build_modal.anchor_left = 0.5
+	_build_modal.anchor_top = 0.5
+	_build_modal.anchor_right = 0.5
+	_build_modal.anchor_bottom = 0.5
+	_build_modal.offset_left = -255.0
+	_build_modal.offset_top = -195.0
+	_build_modal.offset_right = 255.0
+	_build_modal.offset_bottom = 195.0
+	_build_modal.z_index = 80
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 12
+	sb.content_margin_bottom = 12
+	_build_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_build_modal.add_child(vbox)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🏗️ CỬA HÀNG XÂY DỰNG & TRANG TRÍ"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 15)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "✕"
+	btn_close.custom_minimum_size = Vector2(28, 28)
+	btn_close.pressed.connect(func() -> void:
+		_build_modal.visible = false
+	)
+	hbox_head.add_child(btn_close)
+	
+	# Catalog Items
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(478, 310)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	scroll.add_child(grid)
+	
+	var catalog: Array[Dictionary] = [
+		{"id": "mini_zoo", "name": "Khu Sở Thú Thú Cưng", "desc": "Chuồng Ngựa & Lừa đi dạo", "cost": 200, "level": 8, "icon": "building_mini_zoo"},
+		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây", "cost": 120, "level": 5, "icon": "building_cake_oven"},
+		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép & sinh tố mát lạnh", "cost": 60, "level": 6, "icon": "building_juice_stand"},
+		{"id": "ice_cream", "name": "Quầy Kem Tươi", "desc": "Chế biến kem tươi ngọt béo", "cost": 180, "level": 7, "icon": "building_ice_cream"},
+		{"id": "bee_hive", "name": "Tổ Ong Mật", "desc": "Thu hoạch mật ong hoa thơm", "cost": 80, "level": 4, "icon": "building_bee_hive"},
+		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan trang trại", "cost": 25, "level": 2, "icon": "flowerbed_round"},
+		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân", "cost": 15, "level": 2, "icon": "wooden_bench"},
+		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "level": 5, "icon": "fountain"}
+	]
+	
+	for item in catalog:
+		var card: PanelContainer = _create_build_card(item)
+		grid.add_child(card)
+	
+	add_child(_build_modal)
+
+func _create_build_card(item: Dictionary) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	card.custom_minimum_size = Vector2(230, 92)
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.88)
+	sb.border_color = Color(0.80, 0.70, 0.55, 1.0)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(8)
+	card.add_theme_stylebox_override("panel", sb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+	card.add_child(hbox)
+	
+	var icon: TextureRect = TextureRect.new()
+	icon.custom_minimum_size = Vector2(56, 56)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var icon_key: String = String(item.get("icon", ""))
+	if SpriteAtlasManager.has_texture(icon_key):
+		icon.texture = SpriteAtlasManager.get_texture(icon_key)
+	hbox.add_child(icon)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_child(vbox)
+	
+	var lbl_name: Label = Label.new()
+	lbl_name.text = String(item.get("name", ""))
+	lbl_name.add_theme_font_size_override("font_size", 11)
+	lbl_name.add_theme_color_override("font_color", Color(0.3, 0.18, 0.08))
+	vbox.add_child(lbl_name)
+	
+	var cost: int = int(item.get("cost", 0))
+	var req_level: int = int(item.get("level", 1))
+	var lbl_info: Label = Label.new()
+	lbl_info.text = "Cấp %d | 💰 %d Vàng" % [req_level, cost]
+	lbl_info.add_theme_font_size_override("font_size", 10)
+	lbl_info.add_theme_color_override("font_color", Color(0.8, 0.45, 0.1))
+	vbox.add_child(lbl_info)
+	
+	var btn_buy: Button = Button.new()
+	btn_buy.custom_minimum_size = Vector2(0, 24)
+	var can_afford: bool = StorageManager.gold >= cost
+	var meets_level: bool = StorageManager.level >= req_level
+	if not meets_level:
+		btn_buy.text = "🔒 Cần Cấp %d" % req_level
+		btn_buy.disabled = true
+	elif not can_afford:
+		btn_buy.text = "Thiếu Vàng"
+		btn_buy.disabled = true
+	else:
+		btn_buy.text = "🔨 Xây Dựng"
+		btn_buy.disabled = false
+		var b_id: String = String(item.get("id", ""))
+		btn_buy.pressed.connect(func() -> void:
+			_build_modal.visible = false
+			var farm: Node = get_tree().current_scene
+			if farm != null and farm.has_method("start_building_placement"):
+				farm.call("start_building_placement", b_id, cost)
+		)
+	vbox.add_child(btn_buy)
+	
+	return card
+
+func open_contextual_seed_popup(plot: FieldPlot) -> void:
+	if not is_instance_valid(plot) or plot.state != FieldPlot.PlotState.EMPTY:
+		return
+	
+	AudioManager.play_sfx("click")
+	if _contextual_seed_popup != null and is_instance_valid(_contextual_seed_popup):
+		_contextual_seed_popup.queue_free()
+	
+	_contextual_seed_popup = PanelContainer.new()
+	_contextual_seed_popup.name = "ContextualSeedPopup"
+	_contextual_seed_popup.custom_minimum_size = Vector2(270, 110)
+	_contextual_seed_popup.z_index = 85
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.99, 0.95, 0.98)
+	sb.border_color = Color(0.60, 0.42, 0.22, 1.0)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(12)
+	sb.shadow_color = Color(0.3, 0.2, 0.1, 0.25)
+	sb.shadow_size = 6
+	sb.content_margin_left = 8
+	sb.content_margin_right = 8
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	_contextual_seed_popup.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	_contextual_seed_popup.add_child(vbox)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_head)
+	
+	var lbl: Label = Label.new()
+	lbl.text = "🌱 CHỌN HẠT GIỐNG GIEO TRỒNG"
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", Color(0.35, 0.22, 0.12))
+	hbox_head.add_child(lbl)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "✕"
+	btn_close.custom_minimum_size = Vector2(20, 20)
+	btn_close.pressed.connect(func() -> void:
+		if is_instance_valid(_contextual_seed_popup):
+			_contextual_seed_popup.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	# Seed icons horizontal scroll
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(254, 70)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+	
+	var hbox_seeds: HBoxContainer = HBoxContainer.new()
+	hbox_seeds.add_theme_constant_override("separation", 6)
+	scroll.add_child(hbox_seeds)
+	
+	var quick_crops: Array[Dictionary] = [
+		{"id": "wheat", "name": "Lúa Mì", "icon": "wheat"},
+		{"id": "corn", "name": "Ngô", "icon": "corn"},
+		{"id": "carrot", "name": "Cà Rốt", "icon": "carrot"},
+		{"id": "strawberry", "name": "Dâu Tây", "icon": "strawberry"},
+		{"id": "sunflower", "name": "Hoa Hướng Dương", "icon": "sunflower"},
+		{"id": "rose", "name": "Hoa Hồng", "icon": "rose"},
+		{"id": "lavender", "name": "Hoa Oải Hương", "icon": "lavender"},
+		{"id": "soybean", "name": "Đậu Nành", "icon": "soybean"},
+		{"id": "sugarcane", "name": "Mía", "icon": "sugarcane"}
+	]
+	
+	for qc in quick_crops:
+		var c_id: String = String(qc["id"])
+		var c_name: String = String(qc["name"])
+		var c_cnt: int = StorageManager.get_item_count(c_id)
+		
+		var s_btn: Button = Button.new()
+		s_btn.custom_minimum_size = Vector2(52, 60)
+		s_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		s_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		s_btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		s_btn.expand_icon = true
+		s_btn.add_theme_constant_override("icon_max_width", 28)
+		if SpriteAtlasManager.has_texture(String(qc["icon"])):
+			s_btn.icon = SpriteAtlasManager.get_texture(String(qc["icon"]))
+		s_btn.text = "%d" % c_cnt
+		s_btn.tooltip_text = "%s (%d)" % [c_name, c_cnt]
+		
+		if c_cnt <= 0:
+			s_btn.modulate = Color(0.6, 0.6, 0.6, 0.7)
+		
+		s_btn.pressed.connect(func() -> void:
+			if is_instance_valid(plot) and plot.state == FieldPlot.PlotState.EMPTY:
+				if StorageManager.has_item(c_id, 1):
+					plot.plant(c_id)
+					_refresh_seed_counts()
+				else:
+					AudioManager.play_sfx("error")
+			if is_instance_valid(_contextual_seed_popup):
+				_contextual_seed_popup.queue_free()
+		)
+		hbox_seeds.add_child(s_btn)
+	
+	add_child(_contextual_seed_popup)
+	
+	# Position near plot in screen coordinates
+	var screen_pos: Vector2 = Vector2.ZERO
+	var farm: Node = get_tree().current_scene
+	if farm != null and farm.has_method("_world_to_screen"):
+		screen_pos = farm.call("_world_to_screen", plot.global_position)
+	else:
+		var xform: Transform2D = get_viewport().get_canvas_transform()
+		screen_pos = xform * plot.global_position
+	
+	var vp_size: Vector2 = get_viewport().get_visible_rect().size
+	var target_x: float = clampf(screen_pos.x - 135.0, 16.0, vp_size.x - 286.0)
+	var target_y: float = clampf(screen_pos.y - 125.0, 16.0, vp_size.y - 126.0)
+	_contextual_seed_popup.position = Vector2(target_x, target_y)
+
+func open_production_recipe_modal(machine: ProductionMachine) -> void:
+	if not is_instance_valid(machine):
+		return
+	
+	AudioManager.play_sfx("click")
+	if _recipe_modal != null and is_instance_valid(_recipe_modal):
+		_recipe_modal.queue_free()
+	
+	_recipe_modal = PanelContainer.new()
+	_recipe_modal.name = "RecipeModal"
+	_recipe_modal.custom_minimum_size = Vector2(440, 320)
+	_recipe_modal.anchors_preset = Control.PRESET_CENTER
+	_recipe_modal.anchor_left = 0.5
+	_recipe_modal.anchor_top = 0.5
+	_recipe_modal.anchor_right = 0.5
+	_recipe_modal.anchor_bottom = 0.5
+	_recipe_modal.offset_left = -220.0
+	_recipe_modal.offset_top = -160.0
+	_recipe_modal.offset_right = 220.0
+	_recipe_modal.offset_bottom = 160.0
+	_recipe_modal.z_index = 80
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(12)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 12
+	sb.content_margin_bottom = 12
+	_recipe_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_recipe_modal.add_child(vbox)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_head)
+	
+	var m_name: String = DataManager.get_building_name(machine.machine_id)
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🍳 %s (CÔNG THỨC CHẾ BIẾN)" % m_name.to_upper()
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 14)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "✕"
+	btn_close.custom_minimum_size = Vector2(28, 28)
+	btn_close.pressed.connect(func() -> void:
+		_recipe_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	# Status row
+	var lbl_status: Label = Label.new()
+	var cur_status: String = "Trạng thái: "
+	if not machine.queue.is_empty():
+		var remaining: int = TickManager.get_time_remaining(int(machine.queue[0].get("finish_timestamp", 0)))
+		cur_status += "Đang làm việc (%s)" % TickManager.format_duration(remaining)
+	elif not machine.completed_items.is_empty():
+		cur_status += "Có %d món đã chín chờ thu!" % machine.completed_items.size()
+	else:
+		cur_status += "Đang rảnh rỗi (Sẵn sàng sản xuất)"
+	lbl_status.text = cur_status
+	lbl_status.add_theme_font_size_override("font_size", 11)
+	lbl_status.add_theme_color_override("font_color", Color(0.4, 0.25, 0.12))
+	vbox.add_child(lbl_status)
+	
+	# Recipes Scroll
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(408, 220)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	
+	var vbox_recipes: VBoxContainer = VBoxContainer.new()
+	vbox_recipes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_recipes.add_theme_constant_override("separation", 8)
+	scroll.add_child(vbox_recipes)
+	
+	var found_recipes: int = 0
+	for rec_key: Variant in DataManager.recipes:
+		var rec: Dictionary = DataManager.recipes[rec_key] as Dictionary
+		if String(rec.get("building_id", "")) == machine.machine_id:
+			found_recipes += 1
+			var r_card: PanelContainer = _create_recipe_row(machine, rec)
+			vbox_recipes.add_child(r_card)
+	
+	if found_recipes == 0:
+		var lbl_empty: Label = Label.new()
+		lbl_empty.text = "Chưa có công thức cho nhà máy này."
+		lbl_empty.add_theme_font_size_override("font_size", 12)
+		vbox_recipes.add_child(lbl_empty)
+	
+	add_child(_recipe_modal)
+
+func _create_recipe_row(machine: ProductionMachine, rec: Dictionary) -> PanelContainer:
+	var row: PanelContainer = PanelContainer.new()
+	row.custom_minimum_size = Vector2(400, 60)
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.85)
+	sb.border_color = Color(0.85, 0.75, 0.60, 1.0)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(8)
+	row.add_theme_stylebox_override("panel", sb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+	row.add_child(hbox)
+	
+	var prod_item: String = String(rec.get("produce_item_id", ""))
+	var icon: TextureRect = TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if SpriteAtlasManager.has_texture(prod_item):
+		icon.texture = SpriteAtlasManager.get_texture(prod_item)
+	hbox.add_child(icon)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_child(vbox)
+	
+	var lbl_name: Label = Label.new()
+	lbl_name.text = String(rec.get("name", prod_item))
+	lbl_name.add_theme_font_size_override("font_size", 11)
+	lbl_name.add_theme_color_override("font_color", Color(0.25, 0.15, 0.05))
+	vbox.add_child(lbl_name)
+	
+	# Ingredients summary
+	var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
+	var ing_strs: Array[String] = []
+	var has_all_ings: bool = true
+	for ing: Variant in ings:
+		var needed: int = int(ings[ing])
+		var current: int = StorageManager.get_item_count(String(ing))
+		if current < needed:
+			has_all_ings = false
+		ing_strs.append("%s (%d/%d)" % [DataManager.get_item_name(String(ing)), current, needed])
+	
+	var lbl_ings: Label = Label.new()
+	lbl_ings.text = "Cần: " + ", ".join(ing_strs)
+	lbl_ings.add_theme_font_size_override("font_size", 9)
+	if has_all_ings:
+		lbl_ings.add_theme_color_override("font_color", Color(0.15, 0.55, 0.20))
+	else:
+		lbl_ings.add_theme_color_override("font_color", Color(0.80, 0.25, 0.10))
+	vbox.add_child(lbl_ings)
+	
+	var btn_craft: Button = Button.new()
+	btn_craft.custom_minimum_size = Vector2(90, 32)
+	var rec_id: String = String(rec.get("id", ""))
+	if not has_all_ings:
+		btn_craft.text = "Thiếu Đồ"
+		btn_craft.disabled = true
+	else:
+		btn_craft.text = "🍳 Sản Xuất"
+		btn_craft.disabled = false
+		btn_craft.pressed.connect(func() -> void:
+			if is_instance_valid(machine):
+				machine.start_recipe(rec_id)
+				AudioManager.play_sfx("plant")
+				open_production_recipe_modal(machine)
+		)
+	hbox.add_child(btn_craft)
+	
+	return row
 

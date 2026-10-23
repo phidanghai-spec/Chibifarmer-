@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doh8yveurgsq8"
-path="res://.godot/imported/script khung cảnh.jpg-8a026201bc661ab9a341bec6b5d36463.ctex"
+path="res://.godot/imported/script khung cảnh.jpg-ccbcdbad27415d90813964769910272a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script khung cảnh.jpg"
-dest_files=["res://.godot/imported/script khung cảnh.jpg-8a026201bc661ab9a341bec6b5d36463.ctex"]
+source_file="res://assets/sprites/script khung cảnh.jpg"
+dest_files=["res://.godot/imported/script khung cảnh.jpg-ccbcdbad27415d90813964769910272a.ctex"]
 
 [params]
 

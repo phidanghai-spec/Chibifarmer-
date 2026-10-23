@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dcn7s3hcriab"
-path="res://.godot/imported/script thực phẩm.png-58bce9699ed4a6610c9a6b95b138a27d.ctex"
+path="res://.godot/imported/script thực phẩm.png-a9fc6c93c6b41a5116ec193457f92336.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script thực phẩm.png"
-dest_files=["res://.godot/imported/script thực phẩm.png-58bce9699ed4a6610c9a6b95b138a27d.ctex"]
+source_file="res://assets/sprites/script thực phẩm.png"
+dest_files=["res://.godot/imported/script thực phẩm.png-a9fc6c93c6b41a5116ec193457f92336.ctex"]
 
 [params]
 

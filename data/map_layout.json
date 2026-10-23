@@ -104,13 +104,6 @@
       "machine_id": "juice_stand",
       "cell": [22, 8],
       "tile_size": [3, 3]
-    },
-    {
-      "id": "mini_zoo",
-      "sprite_id": "building_mini_zoo",
-      "cell": [24, 13],
-      "tile_size": [3, 3],
-      "max_size": [96, 96]
     }
   ],
   "field_plots": [

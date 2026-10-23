@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://oae60ha36d4g"
-path="res://.godot/imported/script hoav2.jpg-cab7b68a76a2d24dbccecb7a47cb0873.ctex"
+path="res://.godot/imported/script hoav2.jpg-8372d29a2c3567af534eff48f363508a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script hoav2.jpg"
-dest_files=["res://.godot/imported/script hoav2.jpg-cab7b68a76a2d24dbccecb7a47cb0873.ctex"]
+source_file="res://assets/sprites/script hoav2.jpg"
+dest_files=["res://.godot/imported/script hoav2.jpg-8372d29a2c3567af534eff48f363508a.ctex"]
 
 [params]
 

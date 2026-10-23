@@ -27,9 +27,16 @@ var _truck_prop: Node2D = null
 var _barn_prop: Node2D = null
 var _silo_prop: Node2D = null
 
+const SpecializedNPCClass = preload("res://scripts/entities/specialized_npc.gd")
+
 var _ghost_preview_node: Node2D = null
 var _ghost_box: Polygon2D = null
 var _ghost_sprite: Sprite2D = null
+
+var _specialized_npcs_container: Node2D = null
+var _specialized_npcs: Array[Node2D] = []
+var _pending_build_id: String = ""
+var _pending_build_cost: int = 0
 
 func _ready() -> void:
 	# Center camera around the vibrant central farm plaza immediately
@@ -116,6 +123,9 @@ func _ready() -> void:
 
 	# Spawn Rich Chibi Nature & Environmental Scenery
 	_setup_environment_decorations()
+
+	# Spawn Specialized NPCs at functional buildings
+	_spawn_specialized_npcs()
 
 	# Tắt _process hoàn toàn để chống giật lag
 	set_process(false)
@@ -781,6 +791,20 @@ func play_truck_delivery_animation() -> void:
 		end_bounce.tween_property(_truck_prop, "scale", Vector2.ONE, 0.1)
 
 func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
+	# 0. Ô Ruộng (FieldPlot - Contextual interaction: Thu hoạch chín hoặc Bật menu hạt giống)
+	var clicked_cell: Vector2i = GridManager.world_to_grid(world_pos)
+	var plot: FieldPlot = get_field_plot_at(clicked_cell)
+	if plot != null and is_instance_valid(plot):
+		plot.handle_direct_click()
+		return true
+
+	# 0b. Specialized NPCs (Bong bóng thông báo & phản ứng nhún)
+	for npc: Node2D in _specialized_npcs:
+		if is_instance_valid(npc) and world_pos.distance_to(npc.global_position) <= 35.0:
+			if npc.has_method("_on_npc_clicked"):
+				npc.call("_on_npc_clicked")
+			return true
+
 	# 1. Cây Ăn Quả (Táo & Xoài, bán kính <= 60px)
 	for decor: MovableDecor in _movable_decors:
 		if is_instance_valid(decor) and decor.is_fruit_tree:
@@ -836,6 +860,22 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 	return false
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _pending_build_id != "":
+		if event is InputEventMouseMotion:
+			_update_ghost_building_preview(get_global_mouse_position())
+		elif event is InputEventMouseButton:
+			var mb: InputEventMouseButton = event as InputEventMouseButton
+			if mb.is_pressed():
+				if mb.button_index == MOUSE_BUTTON_LEFT:
+					_handle_building_placement_click(get_global_mouse_position())
+					get_viewport().set_input_as_handled()
+				elif mb.button_index == MOUSE_BUTTON_RIGHT:
+					_pending_build_id = ""
+					if _ghost_preview_node != null:
+						_ghost_preview_node.visible = false
+					get_viewport().set_input_as_handled()
+		return
+
 	if event is InputEventMouseMotion:
 		if drag_action_manager != null and drag_action_manager.current_tool != DragActionManager.ToolType.NONE and drag_action_manager.current_tool != DragActionManager.ToolType.SICKLE:
 			_update_ghost_placement_preview(get_global_mouse_position())
@@ -910,3 +950,178 @@ func _spawn_scenic_valley_environment() -> void:
 	_spawn_scenic_element("flowerbed_round", Vector2(755, 550), Vector2(36, 26))
 
 	print("[MainFarm] Spawned Harmonious Hay Day Scenic Valley with ", _scenic_elements.size(), " elements!")
+
+func _spawn_specialized_npcs() -> void:
+	if _specialized_npcs_container != null and is_instance_valid(_specialized_npcs_container):
+		return
+	
+	_specialized_npcs_container = Node2D.new()
+	_specialized_npcs_container.name = "SpecializedNPCsContainer"
+	_specialized_npcs_container.y_sort_enabled = true
+	add_child(_specialized_npcs_container)
+	
+	var npc_defs: Array[Dictionary] = [
+		{"id": "baker", "name": "Đầu Bếp Bánh Mì", "sprite": "npc_char_01", "pos": Vector2(440.0, 465.0)},
+		{"id": "pastry", "name": "Thợ Bánh Ngọt", "sprite": "npc_char_02", "pos": Vector2(250.0, 465.0)},
+		{"id": "barista", "name": "Nhân Viên Pha Chế", "sprite": "npc_char_03", "pos": Vector2(695.0, 305.0)},
+		{"id": "rancher", "name": "Người Chăn Nuôi", "sprite": "npc_char_04", "pos": Vector2(240.0, 720.0)},
+		{"id": "keeper", "name": "Thủ Kho", "sprite": "npc_char_05", "pos": Vector2(530.0, 305.0)}
+	]
+	
+	var alert_sys: StockAlertSystem = null
+	if ui_hud != null:
+		alert_sys = ui_hud.find_child("StockAlertSystem", true, false) as StockAlertSystem
+	
+	for d: Dictionary in npc_defs:
+		var npc: Node2D = SpecializedNPCClass.new() as Node2D
+		npc.set("npc_id", String(d["id"]))
+		npc.set("npc_name", String(d["name"]))
+		npc.set("sprite_key", String(d["sprite"]))
+		npc.position = Vector2(d["pos"])
+		_specialized_npcs_container.add_child(npc)
+		_specialized_npcs.append(npc)
+		
+		if alert_sys != null:
+			alert_sys.register_npc(String(d["id"]), npc)
+	
+	print("[MainFarm] Spawned 5 Specialized Functional NPCs!")
+
+func start_building_placement(building_id: String, cost: int) -> void:
+	_pending_build_id = building_id
+	_pending_build_cost = cost
+	
+	if drag_action_manager != null:
+		drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+	
+	if _ghost_preview_node != null:
+		var tex_key: String = building_id
+		var spr_sz: Vector2 = Vector2(64.0, 64.0)
+		if building_id == "mini_zoo":
+			tex_key = "building_mini_zoo"
+			spr_sz = Vector2(96.0, 96.0)
+		elif building_id == "cake_oven":
+			tex_key = "building_cake_oven"
+			spr_sz = Vector2(88.0, 88.0)
+		elif building_id == "juice_stand":
+			tex_key = "building_juice_stand"
+			spr_sz = Vector2(88.0, 88.0)
+		elif building_id == "ice_cream":
+			tex_key = "building_ice_cream"
+			spr_sz = Vector2(88.0, 88.0)
+		elif building_id == "bee_hive":
+			tex_key = "building_bee_hive"
+			spr_sz = Vector2(70.0, 70.0)
+		elif building_id == "flower_bed":
+			tex_key = "flowerbed_round"
+			spr_sz = Vector2(36.0, 26.0)
+		elif building_id == "wooden_bench":
+			tex_key = "wooden_bench"
+			spr_sz = Vector2(40.0, 30.0)
+		elif building_id == "fountain":
+			tex_key = "fountain"
+			spr_sz = Vector2(70.0, 70.0)
+			
+		if SpriteAtlasManager.has_texture(tex_key):
+			_ghost_sprite.texture = SpriteAtlasManager.get_texture(tex_key)
+			SpriteAtlasManager.set_sprite_pixel_size(_ghost_sprite, spr_sz)
+			_ghost_sprite.visible = true
+		_ghost_preview_node.visible = true
+		_update_ghost_building_preview(get_global_mouse_position())
+
+func _update_ghost_building_preview(mouse_pos: Vector2) -> void:
+	if _ghost_preview_node == null or _pending_build_id == "":
+		return
+	var cell: Vector2i = GridManager.world_to_grid(mouse_pos)
+	var snapped_pos: Vector2 = Vector2(float(cell.x) * 32.0 + 16.0, float(cell.y) * 32.0 + 16.0)
+	_ghost_preview_node.global_position = snapped_pos
+	_ghost_preview_node.visible = true
+	
+	var t_size: Vector2i = Vector2i(1, 1)
+	if _pending_build_id in ["mini_zoo", "cake_oven", "juice_stand", "ice_cream"]:
+		t_size = Vector2i(3, 3)
+	elif _pending_build_id in ["bee_hive", "fountain"]:
+		t_size = Vector2i(2, 2)
+		
+	var can_place: bool = true
+	for ox: int in range(t_size.x):
+		for oy: int in range(t_size.y):
+			var c: Vector2i = cell + Vector2i(ox, oy)
+			if not GridManager.is_within_bounds(c) or GridManager.is_cell_occupied(c) or GridManager.is_path_tile(c):
+				can_place = false
+				break
+			var c_pos: Vector2 = GridManager.grid_to_world(c)
+			if _is_in_water_pond(c_pos):
+				can_place = false
+				break
+		if not can_place:
+			break
+			
+	if can_place:
+		_ghost_preview_node.modulate = Color(0.35, 1.0, 0.45, 0.70)
+	else:
+		_ghost_preview_node.modulate = Color(1.0, 0.35, 0.35, 0.70)
+
+func _handle_building_placement_click(mouse_pos: Vector2) -> void:
+	if _pending_build_id == "":
+		return
+	
+	var cell: Vector2i = GridManager.world_to_grid(mouse_pos)
+	var snapped_pos: Vector2 = Vector2(float(cell.x) * 32.0 + 16.0, float(cell.y) * 32.0 + 16.0)
+	
+	var t_size: Vector2i = Vector2i(1, 1)
+	if _pending_build_id in ["mini_zoo", "cake_oven", "juice_stand", "ice_cream"]:
+		t_size = Vector2i(3, 3)
+	elif _pending_build_id in ["bee_hive", "fountain"]:
+		t_size = Vector2i(2, 2)
+	
+	var can_place: bool = true
+	for ox: int in range(t_size.x):
+		for oy: int in range(t_size.y):
+			var c: Vector2i = cell + Vector2i(ox, oy)
+			if not GridManager.is_within_bounds(c) or GridManager.is_cell_occupied(c) or GridManager.is_path_tile(c):
+				can_place = false
+				break
+			var c_pos: Vector2 = GridManager.grid_to_world(c)
+			if _is_in_water_pond(c_pos):
+				can_place = false
+				break
+		if not can_place:
+			break
+			
+	if not can_place:
+		AudioManager.play_sfx("error")
+		return
+		
+	if not StorageManager.spend_gold(_pending_build_cost):
+		AudioManager.play_sfx("error")
+		_pending_build_id = ""
+		if _ghost_preview_node != null:
+			_ghost_preview_node.visible = false
+		return
+	
+	EventBus.gold_changed.emit(StorageManager.gold, -_pending_build_cost)
+	
+	if _pending_build_id == "mini_zoo":
+		_spawn_building_prop("building_mini_zoo", cell, Vector2i(3, 3), Vector2(96, 96))
+	elif _pending_build_id == "cake_oven":
+		_spawn_production_machine("cake_oven", cell)
+	elif _pending_build_id == "juice_stand":
+		_spawn_production_machine("juice_stand", cell)
+	elif _pending_build_id == "ice_cream":
+		_spawn_production_machine("ice_cream", cell)
+	elif _pending_build_id == "bee_hive":
+		_spawn_building_prop("building_bee_hive", cell, Vector2i(2, 2), Vector2(70, 70))
+	elif _pending_build_id == "fountain":
+		_spawn_building_prop("fountain", cell, Vector2i(2, 2), Vector2(70, 70))
+	elif _pending_build_id == "flower_bed":
+		_spawn_flowerbed("flowerbed_round", snapped_pos, Vector2(36, 26))
+		save_custom_decorations()
+	elif _pending_build_id == "wooden_bench":
+		_spawn_movable_decor("wooden_bench", snapped_pos, Vector2(40, 30))
+		save_custom_decorations()
+	
+	GridManager.add_attraction_score(15)
+	AudioManager.play_sfx("plant")
+	_pending_build_id = ""
+	if _ghost_preview_node != null:
+		_ghost_preview_node.visible = false

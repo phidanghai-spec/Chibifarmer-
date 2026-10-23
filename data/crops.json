@@ -132,5 +132,38 @@
     "unlock_level": 1,
     "storage_type": "silo",
     "description": "Hạt giống cây xoài dùng để gieo trồng cây xoài mới."
+  },
+  "sunflower": {
+    "id": "sunflower",
+    "name": "Hoa Hướng Dương",
+    "growth_time_seconds": 240,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 12,
+    "unlock_level": 2,
+    "storage_type": "silo",
+    "description": "Hoa hướng dương vàng rực rỡ, thu hút ong bướm và du khách tham quan."
+  },
+  "rose": {
+    "id": "rose",
+    "name": "Hoa Hồng Đỏ",
+    "growth_time_seconds": 360,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 16,
+    "unlock_level": 3,
+    "storage_type": "silo",
+    "description": "Hoa hồng đỏ thắm kiêu sa ngát hương, làm tăng vẻ đẹp cho trang trại."
+  },
+  "lavender": {
+    "id": "lavender",
+    "name": "Hoa Oải Hương",
+    "growth_time_seconds": 480,
+    "harvest_yield": 2,
+    "xp_reward": 4,
+    "base_price": 20,
+    "unlock_level": 4,
+    "storage_type": "silo",
+    "description": "Hoa oải hương tím ngát dịu dàng, dùng để trang trí và pha chế tinh dầu."
   }
 }

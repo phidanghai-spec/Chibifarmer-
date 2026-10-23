@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://f8o8uw6urbbt"
-path="res://.godot/imported/script núi cao.jpg-0a098e8e0290a5bf39d157c980e400bd.ctex"
+path="res://.godot/imported/script núi cao.jpg-16b51f301df8656f489d77a9aa4503a5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script núi cao.jpg"
-dest_files=["res://.godot/imported/script núi cao.jpg-0a098e8e0290a5bf39d157c980e400bd.ctex"]
+source_file="res://assets/sprites/script núi cao.jpg"
+dest_files=["res://.godot/imported/script núi cao.jpg-16b51f301df8656f489d77a9aa4503a5.ctex"]
 
 [params]
 

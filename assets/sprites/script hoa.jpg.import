@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnv1i533wa1ne"
-path="res://.godot/imported/script hoa.jpg-844ed5cd5c544a3b7064091373312a31.ctex"
+path="res://.godot/imported/script hoa.jpg-e62884fab546477097d5c6d18a2ced63.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script hoa.jpg"
-dest_files=["res://.godot/imported/script hoa.jpg-844ed5cd5c544a3b7064091373312a31.ctex"]
+source_file="res://assets/sprites/script hoa.jpg"
+dest_files=["res://.godot/imported/script hoa.jpg-e62884fab546477097d5c6d18a2ced63.ctex"]
 
 [params]
 

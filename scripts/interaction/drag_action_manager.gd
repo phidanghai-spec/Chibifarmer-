@@ -10,7 +10,8 @@ enum ToolType {
 	BUILD_PATH,
 	PLANT_APPLE_TREE,
 	PLANT_MANGO_TREE,
-	PLANT_CROP
+	PLANT_CROP,
+	DISMANTLE
 }
 
 signal tool_changed(new_tool: ToolType)
@@ -99,6 +100,11 @@ func _update_cursor_sprite() -> void:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("mango_seed")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+		ToolType.DISMANTLE:
+			if SpriteAtlasManager.has_texture("sickle"):
+				_cursor_sprite.texture = SpriteAtlasManager.get_texture("sickle")
+			_cursor_sprite.visible = true
+			_cursor_sprite.modulate = Color(1.0, 0.4, 0.2)
 		_:
 			_cursor_sprite.visible = false
 
@@ -159,6 +165,8 @@ func _apply_action_at_world_pos(world_pos: Vector2) -> void:
 			_handle_build_field(cell)
 		ToolType.BUILD_PATH:
 			_handle_build_path(cell)
+		ToolType.DISMANTLE:
+			_handle_dismantle(cell)
 
 func apply_tool_to_plot(plot: FieldPlot) -> void:
 	if plot == null or _touched_plots.has(plot):
@@ -254,6 +262,48 @@ func _handle_build_path(cell: Vector2i) -> void:
 			print("[DragActionManager] Built path tile at cell: ", cell)
 	else:
 		AudioManager.play_sfx("error")
+
+func _handle_dismantle(cell: Vector2i) -> void:
+	if cell == _last_drag_cell:
+		return
+	_last_drag_cell = cell
+
+	# 1. Path Tile
+	if GridManager.is_path_tile(cell):
+		if GridManager.remove_path(cell):
+			StorageManager.add_gold(5)
+			AudioManager.play_sfx("click")
+			print("[DragActionManager] Dismantled path at cell: ", cell)
+			return
+
+	# 2. Empty Field Plot
+	var plot: FieldPlot = _get_field_plot_at(cell)
+	if plot != null and plot.state == FieldPlot.PlotState.EMPTY:
+		var inst_id: int = GridManager.occupied_cells.get(cell, 0)
+		if inst_id > 0:
+			GridManager.remove_building(inst_id)
+		else:
+			GridManager.occupied_cells.erase(cell)
+			GridManager.astar_grid.set_point_solid(cell, false)
+			if main_farm != null and main_farm.has_method("_on_building_removed"):
+				main_farm.call("_on_building_removed", inst_id, cell)
+		StorageManager.add_gold(1)
+		AudioManager.play_sfx("click")
+		print("[DragActionManager] Dismantled empty field plot at cell: ", cell)
+		return
+
+	# 3. Movable Decor
+	if main_farm != null:
+		var decors: Array = main_farm.get("_movable_decors") as Array
+		var cell_pos: Vector2 = GridManager.grid_to_world(cell)
+		for d in decors:
+			if d is MovableDecor:
+				if d.global_position.distance_to(cell_pos) <= 35.0:
+					main_farm.call("remove_movable_decor", d)
+					StorageManager.add_gold(10)
+					AudioManager.play_sfx("click")
+					print("[DragActionManager] Dismantled decor at cell: ", cell)
+					return
 
 func _get_field_plot_at(cell: Vector2i) -> FieldPlot:
 	if main_farm == null:

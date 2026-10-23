@@ -6,8 +6,8 @@ var diamonds: int = 45
 var xp: int = 1240
 var level: int = 32
 
-var silo_capacity: int = 200
-var barn_capacity: int = 200
+var silo_capacity: int = 300
+var barn_capacity: int = 300
 
 var silo_items: Dictionary = {}
 var barn_items: Dictionary = {}
@@ -25,6 +25,9 @@ func _init_starter_inventory() -> void:
 	silo_items["strawberry"] = 10
 	silo_items["tomato"] = 10
 	silo_items["pumpkin"] = 10
+	silo_items["sunflower"] = 10
+	silo_items["rose"] = 10
+	silo_items["lavender"] = 10
 	silo_items["apple"] = 5
 	silo_items["mango"] = 5
 	silo_items["apple_seed"] = 5

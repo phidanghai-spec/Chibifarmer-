@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cymqmtpth36ot"
-path="res://.godot/imported/script mây.jpg-b7ecbb8a98c87eb8c91a1dfb05942a33.ctex"
+path="res://.godot/imported/script mây.jpg-5999bfdaf502333b3eea5349be4b9bd6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script mây.jpg"
-dest_files=["res://.godot/imported/script mây.jpg-b7ecbb8a98c87eb8c91a1dfb05942a33.ctex"]
+source_file="res://assets/sprites/script mây.jpg"
+dest_files=["res://.godot/imported/script mây.jpg-5999bfdaf502333b3eea5349be4b9bd6.ctex"]
 
 [params]
 

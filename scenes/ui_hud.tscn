@@ -362,9 +362,9 @@ alignment = 1
 
 [node name="BtnView" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(90, 36)
+custom_minimum_size = Vector2(110, 36)
 layout_mode = 2
-text = "🖐️ Xem"
+text = "🏗️ Xây Dựng"
 
 [node name="BtnSeeds" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
@@ -389,6 +389,12 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 36)
 layout_mode = 2
 text = "Đường"
+
+[node name="BtnDismantle" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 36)
+layout_mode = 2
+text = "🔨 Tháo Dỡ"
 
 [node name="VSeparator" type="VSeparator" parent="BottomPanel/MarginContainer/HBoxTools"]
 mouse_filter = 2

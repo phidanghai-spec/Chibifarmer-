@@ -120,10 +120,13 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_label_status.add_theme_constant_override("outline_size", 4)
 
 func handle_machine_click() -> bool:
+	var farm: Node = get_tree().current_scene
+	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+
 	if not completed_items.is_empty():
 		var _ret: bool = collect_all()
 	elif queue.is_empty():
-		# If READY (SẴN SÀNG), immediately harvest primary product into Barn and start next batch
+		# 1-Click Harvest & Start next batch
 		var def_item: String = ""
 		if machine_id == "bakery":
 			def_item = "bread"
@@ -131,6 +134,10 @@ func handle_machine_click() -> bool:
 			def_item = "cow_feed"
 		elif machine_id == "dairy":
 			def_item = "butter"
+		elif machine_id == "cake_oven":
+			def_item = "cream_cake"
+		elif machine_id == "juice_stand":
+			def_item = "sugarcane_juice"
 		
 		if def_item != "" and StorageManager.can_store_item(def_item, 1):
 			StorageManager.add_item(def_item, 1)
@@ -139,7 +146,6 @@ func handle_machine_click() -> bool:
 			EventBus.loot_collected.emit(def_item, 1, global_position)
 			_spawn_local_harvest_fx(def_item)
 		
-		# Auto restart new batch
 		var rec_id: String = def_item
 		if rec_id != "":
 			var rec: Dictionary = DataManager.get_recipe(rec_id)
@@ -149,10 +155,12 @@ func handle_machine_click() -> bool:
 					StorageManager.add_item(String(ing), int(ings[ing]))
 			start_recipe(rec_id)
 	else:
-		# Machine is currently producing! Do NOT add product to inventory!
 		var hint_text: String = "Đang nướng bánh..." if machine_id == "bakery" else "Đang sản xuất..."
 		_show_floating_hint(hint_text)
 		AudioManager.play_sfx("error")
+
+	if hud != null:
+		hud.open_production_recipe_modal(self)
 
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "scale", Vector2(1.08, 0.92), 0.08)

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://otbhwk7br4cp"
-path="res://.godot/imported/script cây xanh.jpg-58db7d675f48a0c02110ffbd6e7ebec1.ctex"
+path="res://.godot/imported/script cây xanh.jpg-22b27d39434944f6039bf19fb3225663.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script cây xanh.jpg"
-dest_files=["res://.godot/imported/script cây xanh.jpg-58db7d675f48a0c02110ffbd6e7ebec1.ctex"]
+source_file="res://assets/sprites/script cây xanh.jpg"
+dest_files=["res://.godot/imported/script cây xanh.jpg-22b27d39434944f6039bf19fb3225663.ctex"]
 
 [params]
 

@@ -39,53 +39,48 @@ def write_wav(filename: str, samples: list[float]):
     print(f"[SFX] Generated: {filepath} ({len(samples)} samples, {len(samples)/SAMPLE_RATE:.2f}s)")
 
 def gen_click() -> list[float]:
-    # Gõ gỗ nhẹ êm tai (0.12s)
-    duration = 0.12
+    # Gõ gỗ trầm cực nhẹ êm tai (320Hz -> 260Hz, 0.10s)
+    duration = 0.10
     num_samples = int(SAMPLE_RATE * duration)
     samples = []
-    freq0 = 540.0
+    freq0 = 340.0
     for i in range(num_samples):
         t = i / float(SAMPLE_RATE)
         # Fast exponential decay
-        env = math.exp(-32.0 * t)
-        # Pitch drop slightly
-        f = freq0 * (1.0 - 0.3 * (t / duration))
+        env = math.exp(-38.0 * t)
+        f = freq0 * (1.0 - 0.25 * (t / duration))
         val = (
-            math.sin(2.0 * math.pi * f * t) * 0.7 +
-            math.sin(2.0 * math.pi * f * 2.3 * t) * 0.2 +
-            math.sin(2.0 * math.pi * f * 4.1 * t) * 0.1
+            math.sin(2.0 * math.pi * f * t) * 0.75 +
+            math.sin(2.0 * math.pi * f * 2.0 * t) * 0.2
         ) * env
-        samples.append(val * 0.75)
+        samples.append(val * 0.40)
     return samples
 
 def gen_plant() -> list[float]:
-    # Gieo hạt nốt C5 (523Hz) -> E5 (659Hz) mềm mại (0.18s)
-    duration = 0.18
+    # Gieo hạt nốt trầm ấm F4 (349Hz) -> A4 (440Hz) êm dịu (0.15s)
+    duration = 0.15
     num_samples = int(SAMPLE_RATE * duration)
     samples = []
     for i in range(num_samples):
         t = i / float(SAMPLE_RATE)
-        env = math.exp(-12.0 * t) * (1.0 - math.exp(-100.0 * t))
-        # Ascending frequency
-        freq = 523.25 + (659.25 - 523.25) * math.pow(t / duration, 0.7)
+        env = math.exp(-15.0 * t) * (1.0 - math.exp(-100.0 * t))
+        freq = 349.23 + (440.0 - 349.23) * math.pow(t / duration, 0.7)
         val = (
             math.sin(2.0 * math.pi * freq * t) * 0.8 +
-            math.sin(2.0 * math.pi * freq * 2.0 * t) * 0.15 +
-            math.sin(2.0 * math.pi * freq * 3.0 * t) * 0.05
+            math.sin(2.0 * math.pi * freq * 2.0 * t) * 0.15
         ) * env
-        samples.append(val * 0.7)
+        samples.append(val * 0.40)
     return samples
 
 def gen_harvest() -> list[float]:
-    # Hợp âm Đô - Mi - Sol ngân nhẹ C5, E5, G5 (0.30s)
-    duration = 0.30
+    # Hợp âm marimba trầm ấm F4, A4, C5 (0.24s)
+    duration = 0.24
     num_samples = int(SAMPLE_RATE * duration)
     samples = []
     notes = [
-        (0.00, 523.25, 0.7),  # C5
-        (0.05, 659.25, 0.75), # E5
-        (0.10, 783.99, 0.85), # G5
-        (0.15, 1046.50, 0.6)  # C6
+        (0.00, 349.23, 0.6),  # F4
+        (0.04, 440.00, 0.65), # A4
+        (0.08, 523.25, 0.7)   # C5
     ]
     for i in range(num_samples):
         t = i / float(SAMPLE_RATE)
@@ -93,16 +88,15 @@ def gen_harvest() -> list[float]:
         for start_t, freq, weight in notes:
             if t >= start_t:
                 dt = t - start_t
-                env = math.exp(-10.0 * dt) * (1.0 - math.exp(-80.0 * dt))
-                # Warm marimba harmonics
+                env = math.exp(-12.0 * dt) * (1.0 - math.exp(-80.0 * dt))
                 harm = (
-                    math.sin(2.0 * math.pi * freq * dt) * 0.75 +
-                    math.sin(2.0 * math.pi * freq * 2.0 * dt) * 0.18 +
-                    math.sin(2.0 * math.pi * freq * 3.01 * dt) * 0.07
+                    math.sin(2.0 * math.pi * freq * dt) * 0.8 +
+                    math.sin(2.0 * math.pi * freq * 2.0 * dt) * 0.2
                 )
                 mixed += harm * env * weight
-        samples.append(mixed * 0.5)
+        samples.append(mixed * 0.40)
     return samples
+
 
 def gen_coin() -> list[float]:
     # Chuông vàng ting-ting trong trẻo (0.24s)

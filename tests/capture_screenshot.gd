@@ -12,14 +12,6 @@ func _ready() -> void:
 		cam.zoom = Vector2(0.78, 0.78)
 		cam.set("target_zoom", Vector2(0.78, 0.78))
 	
-	# Start a production batch on Bakery to verify full countdown display
-	var main_farm: MainFarm = farm as MainFarm
-	if main_farm != null and not main_farm._production_machines.is_empty():
-		for m: ProductionMachine in main_farm._production_machines:
-			if m.machine_id == "bakery":
-				m.handle_machine_click()
-				break
-
 	# Wait for rendering pipeline
 	for i: int in range(25):
 		await get_tree().process_frame
@@ -29,9 +21,39 @@ func _ready() -> void:
 		img.save_png("res://debug_preview.png")
 		print("[SCREENSHOT] Saved screenshot to res://debug_preview.png (Size: ", img.get_size(), ")")
 	
+	# Open recipe modal on Bakery and capture
+	var main_farm: MainFarm = farm as MainFarm
+	if main_farm != null and not main_farm._production_machines.is_empty():
+		for m: ProductionMachine in main_farm._production_machines:
+			if m.machine_id == "bakery":
+				m.handle_machine_click()
+				break
+	for i: int in range(12):
+		await get_tree().process_frame
+	var img_recipe: Image = get_viewport().get_texture().get_image()
+	if img_recipe != null and not img_recipe.is_empty():
+		img_recipe.save_png("res://debug_recipe_modal.png")
+		print("[SCREENSHOT] Saved recipe modal screenshot to res://debug_recipe_modal.png")
+	
 	# Open Barn Storage Modal and capture
 	var hud: CanvasLayer = farm.get_node_or_null("UIHud") as CanvasLayer
 	if hud != null:
+		# Hide recipe modal first
+		if hud.get("_recipe_modal") != null:
+			(hud.get("_recipe_modal") as CanvasItem).visible = false
+		
+		# Open Build Modal
+		hud.call("open_build_modal")
+		for i: int in range(12):
+			await get_tree().process_frame
+		var img_build: Image = get_viewport().get_texture().get_image()
+		if img_build != null and not img_build.is_empty():
+			img_build.save_png("res://debug_build_modal.png")
+			print("[SCREENSHOT] Saved build modal screenshot to res://debug_build_modal.png")
+		
+		if hud.get("_build_modal") != null:
+			(hud.get("_build_modal") as CanvasItem).visible = false
+		
 		hud.call("open_storage_popup", "barn")
 		for i: int in range(12):
 			await get_tree().process_frame

@@ -36,15 +36,19 @@ func _ready() -> void:
 			if stream != null:
 				_sounds[k_str] = stream
 
-	# 2. Tạo Pool AudioStreamPlayer
+	# 2. Tạo Pool AudioStreamPlayer với volume_db = -14.0 dịu êm
 	for i: int in range(POOL_SIZE):
 		var p: AudioStreamPlayer = AudioStreamPlayer.new()
 		p.name = "SFXPlayer_%d" % i
 		p.bus = "Master"
+		p.volume_db = -14.0
 		add_child(p)
 		_players.append(p)
 
 	print("[AudioManager] Initialized with %d sounds and %d pooled players." % [_sounds.size(), _players.size()])
+
+var _last_play_time: Dictionary = {} # String -> float
+const MIN_INTERVAL: float = 0.25 # seconds
 
 func play_sfx(sfx_name: String) -> void:
 	if is_muted:
@@ -57,6 +61,12 @@ func play_sfx(sfx_name: String) -> void:
 		if not _sounds.has(clean_key):
 			return
 
+	var now: float = float(Time.get_ticks_msec()) / 1000.0
+	if _last_play_time.has(clean_key):
+		if now - float(_last_play_time[clean_key]) < MIN_INTERVAL:
+			return
+	_last_play_time[clean_key] = now
+
 	var stream: AudioStream = _sounds[clean_key] as AudioStream
 	if stream == null or _players.is_empty():
 		return
@@ -67,6 +77,7 @@ func play_sfx(sfx_name: String) -> void:
 	
 	player.stop()
 	player.stream = stream
+	player.volume_db = -14.0
 	player.play()
 
 func toggle_mute() -> bool:

@@ -2,7 +2,7 @@ extends Node
 
 const SAVE_PATH: String = "user://hayday_save.json"
 
-const SAVE_VERSION: int = 8
+const SAVE_VERSION: int = 10
 const MAX_OFFLINE_SECONDS: int = 28800 # 8 hours limit
 
 var custom_decorations: Array = []
@@ -40,6 +40,12 @@ func reset_save() -> void:
 		var global_p: String = ProjectSettings.globalize_path(SAVE_PATH)
 		DirAccess.remove_absolute(global_p)
 		print("[SaveManager] Reset and removed legacy save file: ", SAVE_PATH)
+	custom_decorations.clear()
+	building_custom_names.clear()
+	StorageManager.silo_capacity = 300
+	StorageManager.barn_capacity = 300
+	StorageManager._init_starter_inventory()
+	save_game()
 
 func save_game() -> void:
 	var save_data: Dictionary = {
@@ -114,8 +120,8 @@ func load_game() -> bool:
 		StorageManager.diamonds = int(econ.get("diamonds", StorageManager.diamonds))
 		StorageManager.xp = int(econ.get("xp", StorageManager.xp))
 		StorageManager.level = int(econ.get("level", StorageManager.level))
-		StorageManager.silo_capacity = int(econ.get("silo_capacity", StorageManager.silo_capacity))
-		StorageManager.barn_capacity = int(econ.get("barn_capacity", StorageManager.barn_capacity))
+		StorageManager.silo_capacity = maxi(300, int(econ.get("silo_capacity", 300)))
+		StorageManager.barn_capacity = maxi(300, int(econ.get("barn_capacity", 300)))
 		
 		var s_items: Dictionary = econ.get("silo_items", {}) as Dictionary
 		if not s_items.is_empty():

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cuqnnsck6fhrq"
-path="res://.godot/imported/script đá.jpg-fe5a70a9584250b1e61a505ec69dfd44.ctex"
+path="res://.godot/imported/script đá.jpg-20efc2ce75a2a4d3782f1d6a9225064d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/raw_refs/script đá.jpg"
-dest_files=["res://.godot/imported/script đá.jpg-fe5a70a9584250b1e61a505ec69dfd44.ctex"]
+source_file="res://assets/sprites/script đá.jpg"
+dest_files=["res://.godot/imported/script đá.jpg-20efc2ce75a2a4d3782f1d6a9225064d.ctex"]
 
 [params]
 
