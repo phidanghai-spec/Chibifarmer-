@@ -64,36 +64,30 @@ func _ready() -> void:
 	_tip_sprite.visible = false
 	add_child(_tip_sprite)
 
-	# 4. Name Tag
+	# 4. Name Tag (Hidden to remove text clutter)
 	_label_name = Label.new()
-	_label_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label_name.position = Vector2(-36, -56)
-	_label_name.size = Vector2(72, 16)
-	_label_name.add_theme_font_size_override("font_size", 10)
-	_label_name.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
-	_label_name.add_theme_color_override("font_outline_color", Color.BLACK)
-	_label_name.add_theme_constant_override("outline_size", 2)
+	_label_name.visible = false
 	add_child(_label_name)
 
-	# 5. Overhead Tourism Demand Bubble
+	# 5. Overhead Tourism Demand Bubble (Single clean line)
 	_label_demand = Label.new()
 	_label_demand.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_demand.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label_demand.position = Vector2(-65, -78)
-	_label_demand.size = Vector2(130, 20)
+	_label_demand.position = Vector2(-75, -52)
+	_label_demand.size = Vector2(150, 20)
 	_label_demand.z_index = 25
-	_label_demand.add_theme_font_size_override("font_size", 11)
+	_label_demand.add_theme_font_size_override("font_size", 10)
 	_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
 	_label_demand.add_theme_color_override("font_outline_color", Color(0.12, 0.08, 0.02, 1.0))
 	_label_demand.add_theme_constant_override("outline_size", 4)
 	add_child(_label_demand)
 
-	# 6. Overhead Emotion & Short Dialogue Bubble
+	# 6. Overhead Short Dialogue Bubble (Only for walking tourists)
 	_chat_label = Label.new()
 	_chat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_chat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_chat_label.position = Vector2(-95, -104)
-	_chat_label.size = Vector2(190, 22)
+	_chat_label.position = Vector2(-95, -52)
+	_chat_label.size = Vector2(190, 20)
 	_chat_label.z_index = 30
 	_chat_label.add_theme_font_size_override("font_size", 10)
 	_chat_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
@@ -112,14 +106,15 @@ func _ready() -> void:
 
 func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_type: String = "sightseeing", slot_idx: int = -1) -> void:
 	var valid_types: Array[String] = [
-		"visitor_farmer", "visitor_shopper", "visitor_tourist", "visitor_chef",
-		"visitor_fisherman", "visitor_florist", "visitor_postman", "visitor_miner",
+		"visitor_buyer", "visitor_shopper", "visitor_tourist",
+		"visitor_farmer", "visitor_chef", "visitor_fisherman",
+		"visitor_florist", "visitor_postman", "visitor_miner",
 		"visitor_ranger", "visitor_gardener"
 	]
 	if type_id in valid_types:
 		npc_type = type_id
 	else:
-		npc_type = "visitor_farmer"
+		npc_type = "visitor_tourist"
 	
 	queue_destination = dest_type
 	queue_slot_index = slot_idx
@@ -133,41 +128,19 @@ func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_typ
 	
 	if SpriteAtlasManager.has_texture(npc_type):
 		_body_sprite.texture = SpriteAtlasManager.get_texture(npc_type)
-		SpriteAtlasManager.set_sprite_pixel_size(_body_sprite, Vector2(44, 44))
+		SpriteAtlasManager.set_sprite_pixel_size(_body_sprite, Vector2(34, 44))
 	_base_sprite_scale = _body_sprite.scale
 	self.scale = Vector2.ONE
 	
 	match npc_type:
-		"visitor_farmer":
-			_label_name.text = "Nông Dân"
-			move_speed = 42.0
-		"visitor_shopper":
-			_label_name.text = "Khách Mua"
-			move_speed = 50.0
 		"visitor_tourist":
-			_label_name.text = "Du Khách"
 			move_speed = 38.0
-		"visitor_chef":
-			_label_name.text = "Đầu Bếp"
-			move_speed = 46.0
-		"visitor_fisherman":
-			_label_name.text = "Cậu Bé Câu Cá"
-			move_speed = 40.0
-		"visitor_florist":
-			_label_name.text = "Bé Gái Hoa"
+		"visitor_buyer":
 			move_speed = 44.0
-		"visitor_postman":
-			_label_name.text = "Chú Bưu Tá"
-			move_speed = 52.0
-		"visitor_miner":
-			_label_name.text = "Chú Thợ Mỏ"
+		"visitor_shopper":
+			move_speed = 48.0
+		_:
 			move_speed = 42.0
-		"visitor_ranger":
-			_label_name.text = "Bác Kiểm Lâm"
-			move_speed = 45.0
-		"visitor_gardener":
-			_label_name.text = "Bé Làm Vườn"
-			move_speed = 43.0
 	
 	_assign_new_demand()
 	_path = GridManager.get_tourist_path(start_pos, target_pos)
@@ -189,9 +162,13 @@ func _assign_new_demand() -> void:
 	reward_xp = int(choice["xp"])
 	
 	if _label_demand != null:
-		_label_demand.text = "🛒 Cần: 1 %s (+%d Vàng)" % [requested_name, reward_gold]
-		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-		_label_demand.visible = true
+		if npc_type == "visitor_tourist":
+			# Tourists sightseeing without buy request clutter
+			_label_demand.visible = false
+		else:
+			_label_demand.text = "🛒 Cần: 1 %s (+%d Xu)" % [requested_name, reward_gold]
+			_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
+			_label_demand.visible = true
 
 func handle_visitor_click() -> bool:
 	if state == VisitorState.INACTIVE:
@@ -238,8 +215,12 @@ func handle_visitor_click() -> bool:
 		tw.tween_interval(2.5)
 		tw.tween_callback(func() -> void:
 			if not _is_demand_satisfied and is_instance_valid(_label_demand):
-				_label_demand.text = "🛒 Cần: 1 %s (+%d Vàng)" % [requested_name, reward_gold]
-				_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
+				if npc_type == "visitor_tourist":
+					_label_demand.visible = false
+				else:
+					_label_demand.text = "🛒 Cần: 1 %s (+%d Xu)" % [requested_name, reward_gold]
+					_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
+					_label_demand.visible = true
 		)
 		return true
 
@@ -388,6 +369,10 @@ func _drop_tip() -> void:
 
 func _on_dialogue_timeout() -> void:
 	if state == VisitorState.INACTIVE or not visible:
+		return
+	if npc_type != "visitor_tourist":
+		return
+	if _label_demand != null and _label_demand.visible:
 		return
 	
 	const PRAISE_QUOTES: Array[String] = [

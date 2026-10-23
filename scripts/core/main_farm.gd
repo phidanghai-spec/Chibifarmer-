@@ -821,7 +821,7 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 
 	# 0b. Specialized NPCs (Bong bóng thông báo & phản ứng nhún)
 	for npc: Node2D in _specialized_npcs:
-		if is_instance_valid(npc) and world_pos.distance_to(npc.global_position) <= 35.0:
+		if is_instance_valid(npc) and world_pos.distance_to(npc.global_position) <= 28.0:
 			if npc.has_method("_on_npc_clicked"):
 				npc.call("_on_npc_clicked")
 			return true
@@ -957,11 +957,11 @@ func _spawn_specialized_npcs() -> void:
 	add_child(_specialized_npcs_container)
 	
 	var npc_defs: Array[Dictionary] = [
-		{"id": "baker", "name": "Đầu Bếp Bánh Mì", "sprite": "npc_char_01", "pos": Vector2(440.0, 465.0)},
-		{"id": "pastry", "name": "Thợ Bánh Ngọt", "sprite": "npc_char_02", "pos": Vector2(250.0, 465.0)},
-		{"id": "barista", "name": "Nhân Viên Pha Chế", "sprite": "npc_char_03", "pos": Vector2(695.0, 305.0)},
-		{"id": "rancher", "name": "Người Chăn Nuôi", "sprite": "npc_char_04", "pos": Vector2(240.0, 720.0)},
-		{"id": "keeper", "name": "Thủ Kho", "sprite": "npc_char_05", "pos": Vector2(530.0, 305.0)}
+		{"id": "baker", "name": "Thợ Bánh Mì", "sprite": "npc_baker", "pos": Vector2(445.0, 465.0)},
+		{"id": "pastry", "name": "Thợ Bánh Ngọt", "sprite": "npc_pastry", "pos": Vector2(250.0, 465.0)},
+		{"id": "barista", "name": "Pha Chế", "sprite": "npc_barista", "pos": Vector2(655.0, 305.0)},
+		{"id": "rancher", "name": "Người Chăn Nuôi", "sprite": "npc_rancher", "pos": Vector2(240.0, 720.0)},
+		{"id": "fisher", "name": "Người Câu Cá", "sprite": "npc_fisher", "pos": Vector2(505.0, 745.0)}
 	]
 	
 	var alert_sys: StockAlertSystem = null

@@ -289,11 +289,21 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("mango_smoothie", "res://assets/sprites/mango_smoothie.png")
 	_load_standalone_texture("item_mango_smoothie", "res://assets/sprites/item_mango_smoothie.png")
 
-	# Sliced Characters
+	# Sliced Characters & 8 New Authentic Chibi Characters
 	for i in range(1, 9):
 		var char_key: String = "npc_char_%02d" % i
 		var char_path: String = "res://assets/sprites/%s.png" % char_key
 		_load_standalone_texture(char_key, char_path)
+
+	# 8 New Chibi Characters (5 Functional Staff & 3 Visitors)
+	_load_standalone_texture("npc_baker", "res://assets/sprites/npc_baker.png")
+	_load_standalone_texture("npc_pastry", "res://assets/sprites/npc_pastry.png")
+	_load_standalone_texture("npc_barista", "res://assets/sprites/npc_barista.png")
+	_load_standalone_texture("npc_rancher", "res://assets/sprites/npc_rancher.png")
+	_load_standalone_texture("npc_fisher", "res://assets/sprites/npc_fisher.png")
+	_load_standalone_texture("visitor_buyer", "res://assets/sprites/visitor_buyer.png")
+	_load_standalone_texture("visitor_shopper", "res://assets/sprites/visitor_shopper.png")
+	_load_standalone_texture("visitor_tourist", "res://assets/sprites/visitor_tourist.png")
 
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
@@ -306,6 +316,22 @@ func _load_standalone_texture(key: String, res_path: String) -> void:
 
 func _setup_aliases() -> void:
 	# Ensure backwards compatibility and easy access for game systems
+	# Character & Visitor Aliases
+	_alias("visitor_1", "visitor_buyer")
+	_alias("npc_girl", "visitor_buyer")
+	_alias("visitor_farmer", "visitor_buyer")
+	_alias("visitor_2", "visitor_shopper")
+	_alias("visitor_miner", "visitor_shopper")
+	_alias("visitor_florist", "visitor_shopper")
+	_alias("visitor_3", "visitor_tourist")
+	_alias("visitor_4", "visitor_tourist")
+	_alias("visitor_adventurer", "visitor_tourist")
+	_alias("visitor_postman", "visitor_tourist")
+	_alias("visitor_chef", "visitor_tourist")
+	_alias("visitor_ranger", "visitor_tourist")
+	_alias("visitor_gardener", "visitor_tourist")
+	_alias("visitor_fisherman", "npc_fisher")
+
 	_alias("egg_milk", "milk_cheese")
 	_alias("chibi_coop", "chicken_coop")
 	_load_standalone_texture("barn", "res://assets/sprites/building_barn.png")

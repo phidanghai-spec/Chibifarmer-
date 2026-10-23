@@ -137,18 +137,32 @@ func _scan_stock_alerts() -> void:
 	else:
 		_update_npc_bubble("rancher", "🥛 Đầy Sữa/Trứng!", false)
 	
-	# 5. Thủ kho (npc_keeper)
-	var silo_left: int = StorageManager.silo_capacity - StorageManager.get_silo_used()
-	var barn_left: int = StorageManager.barn_capacity - StorageManager.get_barn_used()
-	if silo_left <= 10 or barn_left <= 10:
-		_active_alerts.append({
-			"id": "keeper",
-			"text": "⚠️ Thủ Kho: Kho Sắp Đầy!",
-			"pos": _get_npc_pos("keeper", Vector2(608.0, 288.0))
-		})
-		_update_npc_bubble("keeper", "📦 Kho Sắp Đầy!", true)
-	else:
-		_update_npc_bubble("keeper", "🌾 Kho Sẵn Sàng!", false)
+	# 5. Thủ kho (npc_keeper) nếu có
+	if npcs.has("keeper"):
+		var silo_left: int = StorageManager.silo_capacity - StorageManager.get_silo_used()
+		var barn_left: int = StorageManager.barn_capacity - StorageManager.get_barn_used()
+		if silo_left <= 10 or barn_left <= 10:
+			_active_alerts.append({
+				"id": "keeper",
+				"text": "⚠️ Thủ Kho: Kho Sắp Đầy!",
+				"pos": _get_npc_pos("keeper", Vector2(608.0, 288.0))
+			})
+			_update_npc_bubble("keeper", "📦 Kho Sắp Đầy!", true)
+		else:
+			_update_npc_bubble("keeper", "🌾 Kho Sẵn Sàng!", false)
+	
+	# 6. Người câu cá (npc_fisher)
+	if npcs.has("fisher"):
+		var fish_cnt: int = StorageManager.get_item_count("fish_carp")
+		if fish_cnt <= 0:
+			_active_alerts.append({
+				"id": "fisher",
+				"text": "⚠️ Cần Câu: Hết Cá Trong Kho!",
+				"pos": _get_npc_pos("fisher", Vector2(775.0, 715.0))
+			})
+			_update_npc_bubble("fisher", "🎣 Hết Cá!", true)
+		else:
+			_update_npc_bubble("fisher", "🐟 Sẵn Sàng!", false)
 	
 	if _active_alerts.is_empty():
 		_hide_banner()

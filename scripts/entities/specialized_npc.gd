@@ -22,12 +22,28 @@ var _orig_scale: Vector2 = Vector2.ONE
 func _ready() -> void:
 	y_sort_enabled = true
 	
+	# Soft circular ground shadow
+	var shadow: Polygon2D = Polygon2D.new()
+	shadow.name = "GroundShadow"
+	var pts: PackedVector2Array = PackedVector2Array()
+	var num_pts: int = 12
+	var rad_x: float = 14.0
+	var rad_y: float = 6.5
+	for i: int in range(num_pts):
+		var ang: float = (float(i) / float(num_pts)) * TAU
+		pts.append(Vector2(cos(ang) * rad_x, sin(ang) * rad_y))
+	shadow.polygon = pts
+	shadow.color = Color(0.12, 0.22, 0.10, 0.28)
+	shadow.position = Vector2(0, 0)
+	shadow.z_index = 0
+	add_child(shadow)
+	
 	_sprite = Sprite2D.new()
 	_sprite.name = "NPCSprite"
 	if SpriteAtlasManager.has_texture(sprite_key):
 		_sprite.texture = SpriteAtlasManager.get_texture(sprite_key)
-		SpriteAtlasManager.set_sprite_pixel_size(_sprite, Vector2(34, 40))
-	_sprite.position = Vector2(0, -18)
+		SpriteAtlasManager.set_sprite_pixel_size(_sprite, Vector2(36, 46))
+	_sprite.position = Vector2(0, -20)
 	_sprite.z_index = 2
 	add_child(_sprite)
 	_orig_scale = _sprite.scale

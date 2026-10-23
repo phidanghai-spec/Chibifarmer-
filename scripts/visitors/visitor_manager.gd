@@ -6,14 +6,9 @@ var _pool: Array[VisitorNPC] = []
 var _spawn_timer: float = 2.0
 
 const VISITOR_TYPES: Array[String] = [
-	"visitor_farmer",
+	"visitor_buyer",
 	"visitor_shopper",
-	"visitor_tourist",
-	"visitor_chef",
-	"visitor_fisherman",
-	"visitor_florist",
-	"visitor_postman",
-	"visitor_miner"
+	"visitor_tourist"
 ]
 
 # Separate waiting queue slots for Roadside Shop and Farmhouse (spaced 48px apart)
@@ -80,6 +75,10 @@ func _process(delta: float) -> void:
 		spawn_random_visitor()
 
 func spawn_random_visitor() -> VisitorNPC:
+	# Limit maximum simultaneous active visitors on roads to 3 for clear aesthetics
+	if get_active_visitors().size() >= 3:
+		return null
+
 	var available_npc: VisitorNPC = null
 	for npc: VisitorNPC in _pool:
 		if npc.state == VisitorNPC.VisitorState.INACTIVE:
@@ -96,7 +95,7 @@ func spawn_random_visitor() -> VisitorNPC:
 	var dest_type: String = "sightseeing"
 	var slot_idx: int = -1
 	
-	if v_type == "visitor_shopper" or v_type == "visitor_chef" or v_type == "visitor_miner":
+	if v_type == "visitor_shopper":
 		# Try to claim an individual queue slot in front of Roadside Shop
 		slot_idx = claim_shop_slot()
 		if slot_idx >= 0:
@@ -104,8 +103,8 @@ func spawn_random_visitor() -> VisitorNPC:
 			dest_type = "shop"
 		else:
 			target_pos = _get_sightseeing_position()
-	elif v_type == "visitor_farmer" or v_type == "visitor_florist" or v_type == "visitor_postman":
-		# Farmer/Postman visits farmhouse doorstep queue slots
+	elif v_type == "visitor_buyer":
+		# Buyer visits farmhouse doorstep queue slots
 		slot_idx = claim_farmhouse_slot()
 		if slot_idx >= 0:
 			target_pos = farmhouse_slot_positions[slot_idx]
@@ -113,7 +112,7 @@ func spawn_random_visitor() -> VisitorNPC:
 		else:
 			target_pos = _get_sightseeing_position()
 	else:
-		# Tourist & Fisherman sightseeing at diverse points around the farm
+		# visitor_tourist sightseeing at diverse points around the farm
 		target_pos = _get_sightseeing_position()
 	
 	available_npc.activate(v_type, start_pos, target_pos, dest_type, slot_idx)
