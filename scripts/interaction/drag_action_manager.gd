@@ -75,23 +75,25 @@ func _update_cursor_sprite() -> void:
 	if _cursor_sprite == null or SpriteAtlasManager == null:
 		return
 	
+	_cursor_sprite.modulate = Color.WHITE
+	
 	match current_tool:
 		ToolType.SICKLE:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("sickle")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
-			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(38, 38))
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(36, 36))
 		ToolType.PLANT_WHEAT:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("wheat")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
-			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
 		ToolType.PLANT_CORN:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("corn")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
-			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
 		ToolType.PLANT_CROP:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture(selected_crop_id)
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
-			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(30, 30))
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
 		ToolType.PLANT_APPLE_TREE:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("apple_seed")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
@@ -101,14 +103,43 @@ func _update_cursor_sprite() -> void:
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
 		ToolType.DISMANTLE:
-			if SpriteAtlasManager.has_texture("sickle"):
+			if SpriteAtlasManager.has_texture("tool_demolish"):
+				_cursor_sprite.texture = SpriteAtlasManager.get_texture("tool_demolish")
+			elif SpriteAtlasManager.has_texture("sickle"):
 				_cursor_sprite.texture = SpriteAtlasManager.get_texture("sickle")
-			_cursor_sprite.visible = true
-			_cursor_sprite.modulate = Color(1.0, 0.4, 0.2)
+			_cursor_sprite.visible = (_cursor_sprite.texture != null)
+			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(36, 36))
 		_:
 			_cursor_sprite.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Quick Cancel Shortcuts: Right-click or ESC key
+	if current_tool != ToolType.NONE:
+		if event is InputEventMouseButton:
+			var mb_cancel: InputEventMouseButton = event as InputEventMouseButton
+			if mb_cancel.button_index == MOUSE_BUTTON_RIGHT and mb_cancel.is_pressed():
+				set_tool(ToolType.NONE)
+				if main_farm != null:
+					if main_farm.has_method("cancel_pending_build"):
+						main_farm.call("cancel_pending_build")
+					var hud: UIHud = main_farm.find_child("UIHud", true, false) as UIHud
+					if hud != null:
+						hud.cancel_all_active_tools()
+				get_viewport().set_input_as_handled()
+				return
+		elif event is InputEventKey:
+			var ek: InputEventKey = event as InputEventKey
+			if ek.is_pressed() and (ek.keycode == KEY_ESCAPE or event.is_action_pressed("ui_cancel")):
+				set_tool(ToolType.NONE)
+				if main_farm != null:
+					if main_farm.has_method("cancel_pending_build"):
+						main_farm.call("cancel_pending_build")
+					var hud: UIHud = main_farm.find_child("UIHud", true, false) as UIHud
+					if hud != null:
+						hud.cancel_all_active_tools()
+				get_viewport().set_input_as_handled()
+				return
+
 	if current_tool == ToolType.NONE:
 		return
 	

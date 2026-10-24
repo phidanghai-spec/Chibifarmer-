@@ -78,27 +78,62 @@ func _ready() -> void:
 	
 	btn_view.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
+		if _build_modal != null and is_instance_valid(_build_modal) and _build_modal.visible:
+			_build_modal.visible = false
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+			return
+		var farm: Node = get_tree().current_scene
+		if farm != null and farm.get("_pending_build_id") != "":
+			farm.set("_pending_build_id", "")
+			var g_node: Node2D = farm.get("_ghost_preview_node") as Node2D
+			if g_node != null: g_node.visible = false
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+			return
 		_on_tool_selected(DragActionManager.ToolType.NONE)
 		open_build_modal()
 	)
-	btn_seeds.pressed.connect(toggle_seeds_menu)
+	btn_seeds.pressed.connect(func() -> void:
+		if drag_action_manager != null and (
+			drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_WHEAT or
+			drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CORN or
+			drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_CROP or
+			drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_APPLE_TREE or
+			drag_action_manager.current_tool == DragActionManager.ToolType.PLANT_MANGO_TREE
+		):
+			if panel_seeds_menu != null: panel_seeds_menu.visible = false
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+			return
+		toggle_seeds_menu()
+	)
 	btn_select_wheat.pressed.connect(func() -> void: select_seed("wheat"))
 	btn_select_corn.pressed.connect(func() -> void: select_seed("corn"))
 	btn_sickle.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
-		_on_tool_selected(DragActionManager.ToolType.SICKLE)
+		if drag_action_manager != null and drag_action_manager.current_tool == DragActionManager.ToolType.SICKLE:
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+		else:
+			_on_tool_selected(DragActionManager.ToolType.SICKLE)
 	)
 	btn_build_field.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
-		_on_tool_selected(DragActionManager.ToolType.BUILD_FIELD)
+		if drag_action_manager != null and drag_action_manager.current_tool == DragActionManager.ToolType.BUILD_FIELD:
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+		else:
+			_on_tool_selected(DragActionManager.ToolType.BUILD_FIELD)
 	)
 	btn_build_path.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
-		_on_tool_selected(DragActionManager.ToolType.BUILD_PATH)
+		if drag_action_manager != null and drag_action_manager.current_tool == DragActionManager.ToolType.BUILD_PATH:
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+		else:
+			_on_tool_selected(DragActionManager.ToolType.BUILD_PATH)
 	)
 	btn_dismantle.pressed.connect(func() -> void:
 		if panel_seeds_menu != null: panel_seeds_menu.visible = false
-		_on_tool_selected(DragActionManager.ToolType.DISMANTLE)
+		if drag_action_manager != null and drag_action_manager.current_tool == DragActionManager.ToolType.DISMANTLE:
+			_on_tool_selected(DragActionManager.ToolType.NONE)
+		else:
+			_on_tool_selected(DragActionManager.ToolType.DISMANTLE)
 	)
 	
 	btn_open_shop.pressed.connect(toggle_shop_popup)
@@ -269,10 +304,29 @@ func _on_drag_tool_changed(new_tool: DragActionManager.ToolType) -> void:
 func _highlight_active_button(active_tool: DragActionManager.ToolType) -> void:
 	for tool_key: Variant in _tool_buttons:
 		var btn: Button = _tool_buttons[tool_key] as Button
-		if int(tool_key) == int(active_tool):
-			btn.modulate = Color(1.3, 1.3, 0.8, 1.0)
+		if active_tool != DragActionManager.ToolType.NONE and int(tool_key) == int(active_tool):
+			btn.modulate = Color(1.35, 1.30, 0.65, 1.0)
 		else:
 			btn.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+func cancel_all_active_tools() -> void:
+	if panel_seeds_menu != null:
+		panel_seeds_menu.visible = false
+	if _build_modal != null and is_instance_valid(_build_modal):
+		_build_modal.visible = false
+	if _contextual_seed_popup != null and is_instance_valid(_contextual_seed_popup):
+		_contextual_seed_popup.visible = false
+	if _recipe_modal != null and is_instance_valid(_recipe_modal):
+		_recipe_modal.visible = false
+	if _storage_modal != null and is_instance_valid(_storage_modal):
+		_storage_modal.visible = false
+	if panel_shop != null:
+		panel_shop.visible = false
+	if panel_truck != null:
+		panel_truck.visible = false
+	if drag_action_manager != null:
+		drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+	_highlight_active_button(DragActionManager.ToolType.NONE)
 
 func _refresh_all_hud() -> void:
 	_on_coins_changed(StorageManager.coins, 0)
@@ -451,11 +505,15 @@ func _setup_coins_hud() -> void:
 		hbox.add_theme_constant_override("separation", 6)
 		pill_coins.add_child(hbox)
 		
-		var icon_lbl: Label = Label.new()
-		icon_lbl.text = "🪙"
-		icon_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_lbl.add_theme_font_size_override("font_size", 16)
-		hbox.add_child(icon_lbl)
+		var icon_coin_rect: TextureRect = TextureRect.new()
+		icon_coin_rect.name = "IconCoin"
+		icon_coin_rect.custom_minimum_size = Vector2(22, 22)
+		icon_coin_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_coin_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_coin_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if SpriteAtlasManager.has_texture("icon_coin"):
+			icon_coin_rect.texture = SpriteAtlasManager.get_texture("icon_coin")
+		hbox.add_child(icon_coin_rect)
 		
 		label_coins = Label.new()
 		label_coins.name = "LabelCoins"
@@ -776,81 +834,95 @@ func _on_loot_collected(item_id: String, amount: int, world_pos: Vector2) -> voi
 		screen_start = canvas_xform * world_pos
 	
 	# Destination position on HUD & Target Control for punch animation
-	var screen_target: Vector2 = Vector2(170, 152) # Default Barn
 	var target_punch_node: Control = progress_barn
+	var item_color: Color = Color(1.0, 0.95, 0.7, 1.0)
+	var text_display: String = "+%d" % amount
 	
-	if item_id == "gold":
-		screen_target = Vector2(140, 32)
-		target_punch_node = label_gold
+	if item_id == "gold" or item_id == "coins" or item_id == "coin":
+		target_punch_node = label_gold if label_gold != null else progress_barn
+		item_color = Color(1.0, 0.88, 0.2, 1.0)
+		text_display = "+%d Xu" % amount
 	elif item_id == "xp":
-		screen_target = Vector2(92, 72)
-		target_punch_node = label_level
-	elif item_id in ["wheat", "corn", "carrot", "apple", "soybean", "sugarcane"] or DataManager.get_item_storage_type(item_id) == "silo":
-		screen_target = Vector2(170, 112)
-		target_punch_node = progress_silo
+		target_punch_node = label_level if label_level != null else progress_barn
+		item_color = Color(0.45, 0.88, 1.0, 1.0)
+		text_display = "+%d XP" % amount
+	elif item_id in ["wheat", "corn", "carrot", "apple", "mango", "soybean", "sugarcane", "sunflower", "rose", "lavender", "tomato", "pumpkin", "apple_seed", "mango_seed"] or DataManager.get_item_storage_type(item_id) == "silo":
+		target_punch_node = progress_silo if progress_silo != null else progress_barn
+		item_color = Color(1.0, 0.95, 0.4, 1.0)
 	else:
-		screen_target = Vector2(170, 152)
 		target_punch_node = progress_barn
+	
+	var screen_target: Vector2 = Vector2(170, 150)
+	if is_instance_valid(target_punch_node) and target_punch_node.is_inside_tree():
+		screen_target = target_punch_node.global_position + target_punch_node.size * 0.5
 	
 	# Spawn floating loot node
 	var loot_box: HBoxContainer = HBoxContainer.new()
-	loot_box.z_index = 100
+	loot_box.z_index = 120
 	loot_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	loot_box.add_theme_constant_override("separation", 4)
+	loot_box.add_theme_constant_override("separation", 5)
 	
 	var icon_rect: TextureRect = TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(26, 26)
+	icon_rect.custom_minimum_size = Vector2(30, 30)
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	if SpriteAtlasManager.has_texture(item_id):
-		icon_rect.texture = SpriteAtlasManager.get_texture(item_id)
-	elif item_id == "gold" and SpriteAtlasManager.has_texture("icon_gold"):
-		icon_rect.texture = SpriteAtlasManager.get_texture("icon_gold")
-	elif item_id == "xp" and SpriteAtlasManager.has_texture("icon_xp"):
-		icon_rect.texture = SpriteAtlasManager.get_texture("icon_xp")
-	elif SpriteAtlasManager.has_texture("crop_basket"):
-		icon_rect.texture = SpriteAtlasManager.get_texture("crop_basket")
+	if SpriteAtlasManager != null:
+		if SpriteAtlasManager.has_texture(item_id):
+			icon_rect.texture = SpriteAtlasManager.get_texture(item_id)
+		elif (item_id == "gold" or item_id == "coins") and SpriteAtlasManager.has_texture("icon_gold"):
+			icon_rect.texture = SpriteAtlasManager.get_texture("icon_gold")
+		elif item_id == "xp" and SpriteAtlasManager.has_texture("icon_xp"):
+			icon_rect.texture = SpriteAtlasManager.get_texture("icon_xp")
+		elif SpriteAtlasManager.has_texture("crop_basket"):
+			icon_rect.texture = SpriteAtlasManager.get_texture("crop_basket")
 	loot_box.add_child(icon_rect)
 	
 	var lbl: Label = Label.new()
-	lbl.text = "+%d" % amount
+	lbl.text = text_display
 	lbl.add_theme_font_size_override("font_size", 13)
-	lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
+	lbl.add_theme_color_override("font_color", item_color)
 	lbl.add_theme_color_override("font_outline_color", Color(0.12, 0.08, 0.04, 1.0))
 	lbl.add_theme_constant_override("outline_size", 3)
 	loot_box.add_child(lbl)
 	
 	add_child(loot_box)
-	loot_box.position = screen_start
-	loot_box.scale = Vector2(0.5, 0.5)
+	loot_box.position = screen_start - Vector2(20.0, 15.0)
+	loot_box.scale = Vector2(0.4, 0.4)
 	
-	# Quadratic Bezier control points
-	var p0: Vector2 = screen_start
+	# Phase 1: Hop bounce up in place
+	var hop_target: Vector2 = loot_box.position + Vector2(0.0, -30.0)
+	var hop_tw: Tween = create_tween().set_parallel(true)
+	hop_tw.tween_property(loot_box, "position:y", hop_target.y, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	hop_tw.tween_property(loot_box, "scale", Vector2(1.15, 1.15), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	
+	# Phase 2: Quadratic Bezier Curve to HUD
+	await hop_tw.finished
+	if not is_instance_valid(loot_box):
+		return
+	
+	var p0: Vector2 = loot_box.position
 	var p2: Vector2 = screen_target
 	var p1: Vector2 = (p0 + p2) * 0.5
-	p1.y -= randf_range(70.0, 130.0)
-	p1.x += randf_range(-40.0, 40.0)
+	p1.y -= randf_range(60.0, 110.0)
+	p1.x += randf_range(-30.0, 30.0)
 	
-	# Animate pop-in
-	var tw: Tween = create_tween().set_parallel(true)
-	tw.tween_property(loot_box, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	
-	var curve_tw: Tween = create_tween()
-	curve_tw.tween_method(func(t: float) -> void:
+	var fly_tw: Tween = create_tween().set_parallel(true)
+	fly_tw.tween_method(func(t: float) -> void:
 		if is_instance_valid(loot_box):
 			var inv_t: float = 1.0 - t
 			loot_box.position = inv_t * inv_t * p0 + 2.0 * inv_t * t * p1 + t * t * p2
-	, 0.0, 1.0, 0.65).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	, 0.0, 1.0, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	fly_tw.tween_property(loot_box, "scale", Vector2(0.65, 0.65), 0.55)
 	
-	curve_tw.tween_callback(func() -> void:
-		if is_instance_valid(target_punch_node):
-			var punch: Tween = create_tween()
-			target_punch_node.pivot_offset = target_punch_node.size * 0.5
-			punch.tween_property(target_punch_node, "scale", Vector2(1.12, 1.12), 0.07)
-			punch.tween_property(target_punch_node, "scale", Vector2.ONE, 0.08)
-		if is_instance_valid(loot_box):
-			loot_box.queue_free()
-	)
+	await fly_tw.finished
+	if is_instance_valid(target_punch_node) and target_punch_node.is_inside_tree():
+		var punch: Tween = create_tween()
+		target_punch_node.pivot_offset = target_punch_node.size * 0.5
+		punch.tween_property(target_punch_node, "scale", Vector2(1.14, 1.14), 0.06)
+		punch.tween_property(target_punch_node, "scale", Vector2.ONE, 0.08)
+	
+	if is_instance_valid(loot_box):
+		loot_box.queue_free()
 
 # --- Storage Management Modal (Silo & Barn) ---
 
@@ -1218,6 +1290,7 @@ func open_build_modal() -> void:
 	scroll.add_child(grid)
 	
 	var catalog: Array[Dictionary] = [
+		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 1, "level": 1, "icon": "item_wheat"},
 		{"id": "mini_zoo", "name": "Khu Sở Thú Thú Cưng", "desc": "Chuồng Ngựa & Lừa đi dạo", "cost": 200, "level": 8, "icon": "building_mini_zoo"},
 		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây", "cost": 120, "level": 5, "icon": "building_cake_oven"},
 		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép & sinh tố mát lạnh", "cost": 60, "level": 6, "icon": "building_juice_stand"},
@@ -1293,6 +1366,9 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 		var b_id: String = String(item.get("id", ""))
 		btn_buy.pressed.connect(func() -> void:
 			_build_modal.visible = false
+			if b_id == "field_plot":
+				_on_tool_selected(DragActionManager.ToolType.BUILD_FIELD)
+				return
 			var farm: Node = get_tree().current_scene
 			if farm != null and farm.has_method("start_building_placement"):
 				farm.call("start_building_placement", b_id, cost)
@@ -1471,6 +1547,19 @@ func open_production_recipe_modal(machine: ProductionMachine) -> void:
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_head.add_child(lbl_title)
 	
+	var btn_rename: Button = Button.new()
+	btn_rename.text = "✏️ Đổi Tên"
+	btn_rename.custom_minimum_size = Vector2(75, 26)
+	btn_rename.tooltip_text = "Đổi tên công trình này"
+	btn_rename.pressed.connect(func() -> void:
+		_recipe_modal.visible = false
+		open_rename_modal(machine.machine_id, m_name, func(_new_name: String) -> void:
+			if is_instance_valid(machine):
+				machine.call("_update_title_display")
+		)
+	)
+	hbox_head.add_child(btn_rename)
+
 	var btn_close: Button = Button.new()
 	btn_close.text = "✕"
 	btn_close.custom_minimum_size = Vector2(28, 28)
@@ -1594,4 +1683,3 @@ func _create_recipe_row(machine: ProductionMachine, rec: Dictionary) -> PanelCon
 	hbox.add_child(btn_craft)
 	
 	return row
-

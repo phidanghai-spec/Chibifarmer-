@@ -105,24 +105,51 @@ static func build_farm(farm: Node2D) -> void:
 				var m_size: Vector2 = Vector2(float(sz_arr[0]), float(sz_arr[1]))
 				farm._spawn_building_prop(sp_id, cell, t_size, m_size)
 
-	# 2. Phân vùng 2: Khu Ruộng Tập Trung (Chữ nhật 4x3 ô cạnh đường gạch)
-	var plots: Array = data.get("field_plots", []) as Array
-	for p_val: Variant in plots:
-		if p_val is Dictionary:
-			var p: Dictionary = p_val as Dictionary
-			var cell_arr: Array = p.get("cell", [0, 0]) as Array
-			var coord: Vector2i = Vector2i(int(cell_arr[0]), int(cell_arr[1]))
-			_blocked[coord] = "plot"
-			_occupied[coord] = "plot"
-			if not GridManager.is_cell_occupied(coord):
-				var inst_id: int = GridManager.place_building("field_plot", coord)
-				var plot: FieldPlot = farm._spawn_field_plot(coord, inst_id)
-				var crop: String = String(p.get("crop", "empty"))
-				if crop != "empty":
-					plot.plant(crop)
-					if bool(p.get("ready", false)):
-						plot.state = FieldPlot.PlotState.READY
-						plot._show_ready_crop()
+	# 2. Phân vùng 2: Khu Ruộng Tập Trung (Nhóm khối 4x2 ô với Sprite2D nền plot_block_empty trên PlotLayer)
+	var plot_layer: Node2D = farm.find_child("PlotLayer", true, false) as Node2D
+	if plot_layer == null:
+		plot_layer = farm
+	
+	var blocks: Array = data.get("field_blocks", []) as Array
+	if blocks.is_empty():
+		# Fallback cho dữ liệu cũ nếu chưa có field_blocks
+		var legacy_plots: Array = data.get("field_plots", []) as Array
+		if not legacy_plots.is_empty():
+			blocks.append({
+				"cell": [12, 17],
+				"size": [4, 2],
+				"plots": legacy_plots
+			})
+	
+	for b_val: Variant in blocks:
+		if b_val is Dictionary:
+			var b: Dictionary = b_val as Dictionary
+			var cell_arr: Array = b.get("cell", [12, 17]) as Array
+			var top_left: Vector2i = Vector2i(int(cell_arr[0]), int(cell_arr[1]))
+			var size_arr: Array = b.get("size", [4, 2]) as Array
+			var b_size: Vector2i = Vector2i(int(size_arr[0]), int(size_arr[1]))
+			
+			# Tạo từng ô FieldPlot con trong khối (mỗi ô là một FieldPlot độc lập để trồng/thu hoạch)
+			var sub_plots: Array = b.get("plots", []) as Array
+			var plot_idx: int = 0
+			for oy: int in range(b_size.y):
+				for ox: int in range(b_size.x):
+					var coord: Vector2i = top_left + Vector2i(ox, oy)
+					_blocked[coord] = "plot"
+					_occupied[coord] = "plot"
+					if not GridManager.is_cell_occupied(coord):
+						var inst_id: int = GridManager.place_building("field_plot", coord)
+						var plot: FieldPlot = farm._spawn_field_plot(coord, inst_id)
+						var crop_info: Dictionary = {}
+						if plot_idx < sub_plots.size() and sub_plots[plot_idx] is Dictionary:
+							crop_info = sub_plots[plot_idx] as Dictionary
+						var crop: String = String(crop_info.get("crop", "empty"))
+						if crop != "empty":
+							plot.plant(crop)
+							if bool(crop_info.get("ready", false)):
+								plot.state = FieldPlot.PlotState.READY
+								plot._show_ready_crop()
+					plot_idx += 1
 
 	# 3. Phân vùng 3: Khu Chuồng Trại (Chuồng Bò, Gà, Heo thẳng hàng tại Row 22)
 	var pens: Array = data.get("animal_pens", []) as Array

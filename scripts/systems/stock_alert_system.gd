@@ -37,7 +37,7 @@ func _ready() -> void:
 	offset_top = 56.0
 	offset_right = -18.0
 	offset_bottom = 92.0
-	grow_horizontal = 0
+	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	
 	_banner_btn = Button.new()
 	_banner_btn.name = "AlertBannerButton"

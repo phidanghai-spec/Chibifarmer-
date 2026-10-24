@@ -106,19 +106,21 @@
       "tile_size": [3, 3]
     }
   ],
-  "field_plots": [
-    {"cell": [12, 17], "crop": "empty"},
-    {"cell": [13, 17], "crop": "empty"},
-    {"cell": [14, 17], "crop": "empty"},
-    {"cell": [15, 17], "crop": "empty"},
-    {"cell": [12, 18], "crop": "wheat", "ready": true},
-    {"cell": [13, 18], "crop": "wheat", "ready": false},
-    {"cell": [14, 18], "crop": "wheat", "ready": true},
-    {"cell": [15, 18], "crop": "wheat", "ready": false},
-    {"cell": [12, 19], "crop": "corn", "ready": true},
-    {"cell": [13, 19], "crop": "corn", "ready": false},
-    {"cell": [14, 19], "crop": "corn", "ready": true},
-    {"cell": [15, 19], "crop": "corn", "ready": false}
+  "field_blocks": [
+    {
+      "cell": [12, 17],
+      "size": [4, 2],
+      "plots": [
+        {"crop": "wheat", "ready": true},
+        {"crop": "wheat", "ready": false},
+        {"crop": "wheat", "ready": true},
+        {"crop": "wheat", "ready": false},
+        {"crop": "corn", "ready": true},
+        {"crop": "corn", "ready": false},
+        {"crop": "corn", "ready": true},
+        {"crop": "corn", "ready": false}
+      ]
+    }
   ],
   "animal_pens": [
     {"animal_id": "cow", "cell": [9, 22], "tile_size": [4, 3], "count": 2},

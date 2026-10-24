@@ -57,6 +57,11 @@ func _load_json(file_path: String) -> Dictionary:
 func get_crop(crop_id: String) -> Dictionary:
 	return crops.get(crop_id, {}) as Dictionary
 
+func get_crop_name(crop_id: String) -> String:
+	if crops.has(crop_id):
+		return String((crops[crop_id] as Dictionary).get("name", ""))
+	return get_item_name(crop_id)
+
 func get_animal(animal_id: String) -> Dictionary:
 	return animals.get(animal_id, {}) as Dictionary
 

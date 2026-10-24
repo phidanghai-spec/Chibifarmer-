@@ -17,13 +17,25 @@ var grid_pos: Vector2i = Vector2i.ZERO
 var instance_id: int = 0
 var is_selected: bool = false
 
+var _soil_sprite: Sprite2D
 var _label_timer: Label
 var _collision_shape: CollisionShape2D
 var _crop_sprite: Sprite2D
-var _harvest_icon: Sprite2D
 
 func _ready() -> void:
 	y_sort_enabled = true
+	
+	# 0. Soil Background Sprite (scaled 1.45x to seamlessly tile rich soil patches)
+	_soil_sprite = Sprite2D.new()
+	_soil_sprite.name = "SoilSprite"
+	if SpriteAtlasManager.has_texture("plot_soil_empty"):
+		_soil_sprite.texture = SpriteAtlasManager.get_texture("plot_soil_empty")
+	elif SpriteAtlasManager.has_texture("plot_block_empty"):
+		_soil_sprite.texture = SpriteAtlasManager.get_texture("plot_block_empty")
+	SpriteAtlasManager.set_sprite_pixel_size(_soil_sprite, plot_size * 1.45)
+	_soil_sprite.position = Vector2.ZERO
+	_soil_sprite.z_index = 0
+	add_child(_soil_sprite)
 	
 	# 1. Collision shape (Area2D covers 32x32 px)
 	_collision_shape = CollisionShape2D.new()
@@ -35,22 +47,12 @@ func _ready() -> void:
 	input_pickable = true
 	input_event.connect(_on_input_event)
 	
-	# 2. Main Crop Sprite (optional fallback)
+	# 2. Main Crop Sprite (layered above soil, shifted up -6px to reveal soil base)
 	_crop_sprite = Sprite2D.new()
 	_crop_sprite.visible = false
-	_crop_sprite.position = Vector2(0, -2)
-	_crop_sprite.z_index = 3
+	_crop_sprite.position = Vector2(0.0, -6.0)
+	_crop_sprite.z_index = 2
 	add_child(_crop_sprite)
-	
-	# 3. Harvest Sickle Icon
-	_harvest_icon = Sprite2D.new()
-	_harvest_icon.visible = false
-	if SpriteAtlasManager.has_texture("sickle"):
-		_harvest_icon.texture = SpriteAtlasManager.get_texture("sickle")
-		SpriteAtlasManager.set_sprite_pixel_size(_harvest_icon, Vector2(16, 16))
-	_harvest_icon.position = Vector2(0, -18)
-	_harvest_icon.z_index = 8
-	add_child(_harvest_icon)
 	
 	# 4. Timer Label - Hidden by default, only shown when player taps on growing plot
 	_label_timer = Label.new()
@@ -99,8 +101,7 @@ func handle_direct_click() -> void:
 		queue_redraw()
 
 func _process(_delta: float) -> void:
-	if state == PlotState.GROWING:
-		queue_redraw()
+	pass
 
 func _on_second_ticked(_current_unix: int) -> void:
 	if state == PlotState.GROWING:
@@ -109,11 +110,12 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_label_timer.text = ""
 			_label_timer.visible = false
 			is_selected = false
-			_show_ready_crop()
-		elif is_selected:
-			var remaining: int = TickManager.get_time_remaining(finish_timestamp)
-			_label_timer.text = TickManager.format_duration(remaining)
-		queue_redraw()
+			_update_crop_visual()
+		else:
+			if is_selected:
+				var remaining: int = TickManager.get_time_remaining(finish_timestamp)
+				_label_timer.text = TickManager.format_duration(remaining)
+			_update_crop_visual()
 
 func plant(new_crop_id: String) -> bool:
 	if state != PlotState.EMPTY:
@@ -139,19 +141,15 @@ func plant(new_crop_id: String) -> bool:
 	is_selected = false
 	
 	_label_timer.visible = false
-	_crop_sprite.visible = false
-	_harvest_icon.visible = false
+	_update_crop_visual()
 	
 	EventBus.field_planted.emit(instance_id, crop_id, finish_timestamp)
 	AudioManager.play_sfx("plant")
-	queue_redraw()
 	return true
 
 func _show_ready_crop() -> void:
-	_crop_sprite.visible = false
-	_harvest_icon.visible = false
 	_label_timer.visible = false
-	queue_redraw()
+	_update_crop_visual()
 
 func harvest() -> bool:
 	if state != PlotState.READY:
@@ -178,102 +176,48 @@ func harvest() -> bool:
 	finish_timestamp = 0
 	is_selected = false
 	_label_timer.visible = false
-	_crop_sprite.visible = false
-	_harvest_icon.visible = false
-	queue_redraw()
+	_update_crop_visual()
 	return true
 
-func _draw() -> void:
-	# 1. Warm pastel cream-brown soil base (#D1AE8A) with soft corners
-	var soil_fill: Color = Color(0.82, 0.68, 0.54)
-	var soil_border: Color = Color(0.68, 0.52, 0.38)
-	var bottom_shadow: Color = Color(0.64, 0.48, 0.34, 0.65)
+func _update_crop_visual() -> void:
+	if _soil_sprite != null:
+		var soil_key: String = "plot_soil_empty"
+		if state == PlotState.GROWING or state == PlotState.READY:
+			if SpriteAtlasManager.has_texture("plot_soil"):
+				soil_key = "plot_soil"
+		if SpriteAtlasManager.has_texture(soil_key):
+			_soil_sprite.texture = SpriteAtlasManager.get_texture(soil_key)
+			SpriteAtlasManager.set_sprite_pixel_size(_soil_sprite, plot_size * 1.45)
 	
-	# Rounded soil base (30x30)
-	draw_rect(Rect2(-15, -15, 30, 30), soil_fill, true)
-	draw_rect(Rect2(-13, 11, 26, 3), bottom_shadow, true)
-	draw_rect(Rect2(-15, -15, 30, 30), soil_border, false, 1.2)
+	if state == PlotState.EMPTY:
+		_crop_sprite.visible = false
+		return
 	
-	# 2. 4 cute soil mounds in a 2x2 grid (Pinterest style)
-	var quadrant_centers: Array[Vector2] = [
-		Vector2(-7, -7), Vector2(7, -7),
-		Vector2(-7, 7), Vector2(7, 7)
-	]
+	_crop_sprite.visible = true
+	var tex_key: String = ""
 	
-	var mound_color: Color = Color(0.70, 0.54, 0.38)
-	var mound_hi: Color = Color(0.88, 0.74, 0.58)
-	
-	for qc: Vector2 in quadrant_centers:
-		draw_circle(qc, 4.2, mound_color)
-		draw_circle(qc - Vector2(0, 0.8), 2.6, mound_hi)
-	
-	# 3. Stage Rendering
 	if state == PlotState.GROWING:
-		var ratio: float = TickManager.get_progress_ratio(plant_timestamp, finish_timestamp)
-		if ratio < 0.25:
-			# SEED STAGE: 4 tiny seed mounds with green/yellow speck
-			for qc: Vector2 in quadrant_centers:
-				draw_circle(qc, 1.6, Color(0.45, 0.75, 0.22))
+		var sprout_key: String = "crop_%s_sprout" % crop_id
+		if SpriteAtlasManager.has_texture(sprout_key):
+			tex_key = sprout_key
 		else:
-			# SPROUT STAGE: 4 cute chibi sprouts emerging from mounds
-			var sprout_size: float = lerpf(2.0, 4.5, ratio)
-			var stem_h: float = lerpf(2.0, 5.5, ratio)
-			var leaf_color: Color = Color(0.48, 0.82, 0.25)
-			var stem_color: Color = Color(0.35, 0.62, 0.18)
-			
-			for qc: Vector2 in quadrant_centers:
-				var base_pt: Vector2 = qc + Vector2(0, 1.5)
-				draw_line(base_pt, base_pt - Vector2(0, stem_h), stem_color, 1.2)
-				draw_circle(base_pt - Vector2(sprout_size * 0.7, stem_h * 0.7), sprout_size * 0.6, leaf_color)
-				draw_circle(base_pt - Vector2(-sprout_size * 0.7, stem_h * 0.7), sprout_size * 0.6, leaf_color)
-		
-		# Show small progress bar only if selected
-		if is_selected:
-			draw_rect(Rect2(-12, 12, 24, 3), Color(0.2, 0.2, 0.2, 0.8), true)
-			draw_rect(Rect2(-12, 12, 24 * ratio, 3), Color(0.4, 0.85, 0.3), true)
-	
+			var ratio: float = TickManager.get_progress_ratio(plant_timestamp, finish_timestamp)
+			var stage_idx: int = 0 if ratio < 0.5 else 1
+			tex_key = "crop_%s_%d" % [crop_id, stage_idx]
 	elif state == PlotState.READY:
-		# Golden glowing harvest border
-		draw_rect(Rect2(-15, -15, 30, 30), Color(1.0, 0.88, 0.30, 0.95), false, 2.0)
-		
-		# Draw 4 cute ripe crops in the 4 mounds
-		for qc: Vector2 in quadrant_centers:
-			_draw_ripe_crop_quadrant(qc, crop_id)
+		var ripe_key: String = "crop_%s_ripe" % crop_id
+		if SpriteAtlasManager.has_texture(ripe_key):
+			tex_key = ripe_key
+		else:
+			tex_key = "crop_%s" % crop_id
+	
+	if not SpriteAtlasManager.has_texture(tex_key):
+		tex_key = "crop_%s" % crop_id
+	if not SpriteAtlasManager.has_texture(tex_key):
+		tex_key = "item_%s" % crop_id
+	
+	if SpriteAtlasManager.has_texture(tex_key):
+		_crop_sprite.texture = SpriteAtlasManager.get_texture(tex_key)
+		SpriteAtlasManager.set_sprite_pixel_size(_crop_sprite, Vector2(26.0, 26.0))
+		_crop_sprite.position = Vector2(0.0, -6.0)
 
-func _draw_ripe_crop_quadrant(pos: Vector2, id: String) -> void:
-	if id == "carrot":
-		# Cute carrot shoulder peeking out of dirt
-		draw_circle(pos + Vector2(0, 1), 3.2, Color(0.96, 0.48, 0.12)) # Orange carrot top
-		draw_circle(pos - Vector2(1.5, 3.0), 1.6, Color(0.35, 0.75, 0.2)) # Leaf 1
-		draw_circle(pos + Vector2(0.0, 4.2), 1.8, Color(0.30, 0.70, 0.18)) # Leaf 2
-		draw_circle(pos + Vector2(1.5, 3.0), 1.6, Color(0.35, 0.75, 0.2)) # Leaf 3
-	elif id == "corn":
-		# Golden corn ear with green leaves
-		draw_circle(pos - Vector2(1.5, 1.0), 2.0, Color(0.42, 0.72, 0.22)) # Leaf
-		draw_circle(pos + Vector2(1.5, 1.0), 2.0, Color(0.42, 0.72, 0.22)) # Leaf
-		draw_rect(Rect2(pos.x - 2.0, pos.y - 4.5, 4.0, 7.0), Color(0.98, 0.82, 0.15), true) # Yellow corn
-		draw_line(pos + Vector2(0, -4.5), pos + Vector2(0, -6.0), Color(0.75, 0.55, 0.15), 1.2) # Tassel
-	elif id == "sunflower":
-		# Sunny yellow petals with orange/brown center
-		draw_circle(pos - Vector2(0, 2), 4.2, Color(1.0, 0.82, 0.15))
-		draw_circle(pos - Vector2(0, 2), 2.2, Color(0.65, 0.35, 0.12))
-	elif id == "rose":
-		# Crimson rose petals with green leaf
-		draw_circle(pos + Vector2(2.5, 0), 1.8, Color(0.35, 0.70, 0.2))
-		draw_circle(pos - Vector2(0, 1.5), 3.8, Color(0.92, 0.22, 0.25))
-		draw_circle(pos - Vector2(0, 1.5), 1.8, Color(1.0, 0.45, 0.48))
-	elif id == "lavender":
-		# Purple lavender sprig
-		draw_line(pos + Vector2(0, 2), pos - Vector2(0, 5), Color(0.35, 0.65, 0.2), 1.2)
-		draw_circle(pos - Vector2(0, 2.0), 2.2, Color(0.68, 0.42, 0.88))
-		draw_circle(pos - Vector2(0, 4.5), 1.8, Color(0.60, 0.35, 0.82))
-	elif id == "strawberry":
-		# Red strawberry with green cap
-		draw_circle(pos + Vector2(0, 1), 3.5, Color(0.94, 0.22, 0.24))
-		draw_circle(pos - Vector2(0, 2.5), 1.8, Color(0.35, 0.75, 0.2))
-	else:
-		# Wheat or default golden grains
-		draw_line(pos + Vector2(0, 2), pos - Vector2(0, 5), Color(0.72, 0.55, 0.2), 1.2)
-		draw_circle(pos - Vector2(1.2, 2.0), 1.8, Color(0.95, 0.82, 0.25))
-		draw_circle(pos + Vector2(1.2, 3.5), 1.8, Color(0.95, 0.82, 0.25))
-		draw_circle(pos - Vector2(0, 5.0), 1.6, Color(0.98, 0.88, 0.30))
