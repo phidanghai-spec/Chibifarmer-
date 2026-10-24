@@ -102,30 +102,8 @@ func build_scenery(
 
 	print("[ChibiSceneryBuilder] Successfully generated %d cozy 2.5D scenery elements!" % scenic_elements_list.size())
 
-## Nhóm 1: Dãy đồi núi thung lũng & mây bồng bềnh phía Bắc (z_index = -14..-11)
+## Nhóm 1: Mây bồng bềnh phía Bắc (z_index = -12, không có vách núi chặn để mở rộng thế giới)
 func _build_horizon_layer(container: Node2D, list: Array[Node2D]) -> void:
-	# Dải núi pastel trải dài viền Bắc (Y: 55..80)
-	var mountain_defs: Array[Dictionary] = [
-		{"id": "chibi_mountain_high", "pos": Vector2(100.0, 70.0), "size": Vector2(240.0, 135.0)},
-		{"id": "chibi_mountain_valley", "pos": Vector2(360.0, 65.0), "size": Vector2(250.0, 130.0)},
-		{"id": "chibi_mountain_high", "pos": Vector2(660.0, 60.0), "size": Vector2(240.0, 135.0)},
-		{"id": "chibi_mountain_valley", "pos": Vector2(960.0, 65.0), "size": Vector2(240.0, 130.0)},
-		{"id": "chibi_mountain_high", "pos": Vector2(1260.0, 70.0), "size": Vector2(240.0, 135.0)},
-		{"id": "chibi_mountain_valley", "pos": Vector2(1520.0, 75.0), "size": Vector2(250.0, 130.0)}
-	]
-
-	for m: Dictionary in mountain_defs:
-		var node: Node2D = _create_scenery_node(
-			String(m["id"]),
-			Vector2(m["pos"]),
-			Vector2(m["size"]),
-			-14,
-			false # Núi ở xa không cần bóng đổ mặt đất
-		)
-		if node != null:
-			container.add_child(node)
-			list.append(node)
-
 	# Mây Chibi bồng bềnh ở bầu trời cao (Y: 12..35, z_index = -12)
 	var cloud_defs: Array[Dictionary] = [
 		{"id": "chibi_cloud_1", "pos": Vector2(220.0, 18.0), "size": Vector2(115.0, 55.0)},
@@ -147,13 +125,12 @@ func _build_horizon_layer(container: Node2D, list: Array[Node2D]) -> void:
 			container.add_child(node)
 			list.append(node)
 
-## Nhóm 2: Khung viền rìa nông trại (Cây lớn, Bụi hoa, Hàng rào, Đá)
+## Nhóm 2: Khung viền rìa nông trại (Cây lớn, Bụi hoa, Hàng rào)
 func _build_border_scenery(container: Node2D, list: Array[Node2D]) -> void:
-	# 1. Hàng cây Bắc che chắn sau xưởng chế biến (Y: 95..110)
+	# 1. Hàng cây Bắc che chắn sau xưởng chế biến (Y: 95..110) - Không có đá/núi chặn
 	var north_clusters: Array[Dictionary] = [
 		{"id": "env_cherry_tree", "pos": Vector2(340.0, 95.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
 		{"id": "chibi_flower_bush_1", "pos": Vector2(385.0, 112.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
-		{"id": "chibi_rock_1", "pos": Vector2(305.0, 105.0), "size": Vector2(32.0, 24.0), "shadow": Vector2(13.0, 6.0)},
 
 		{"id": "env_lush_green_tree", "pos": Vector2(520.0, 100.0), "size": Vector2(90.0, 95.0), "shadow": Vector2(38.0, 16.0)},
 		{"id": "chibi_flower_bush_3", "pos": Vector2(565.0, 114.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
@@ -161,7 +138,6 @@ func _build_border_scenery(container: Node2D, list: Array[Node2D]) -> void:
 
 		{"id": "env_cherry_tree", "pos": Vector2(700.0, 95.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
 		{"id": "chibi_flower_bush_5", "pos": Vector2(745.0, 112.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
-		{"id": "chibi_rock_2", "pos": Vector2(665.0, 105.0), "size": Vector2(32.0, 24.0), "shadow": Vector2(13.0, 6.0)},
 
 		{"id": "env_lush_green_tree", "pos": Vector2(880.0, 100.0), "size": Vector2(90.0, 95.0), "shadow": Vector2(38.0, 16.0)},
 		{"id": "chibi_flower_bush_7", "pos": Vector2(840.0, 115.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)}

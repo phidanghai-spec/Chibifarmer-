@@ -117,6 +117,7 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("sickle", "res://assets/sprites/tool_sickle.png")
 	_load_standalone_texture("crop_basket", "res://assets/sprites/crop_basket.png")
 	_load_standalone_texture("field_plot", "res://assets/sprites/field_plot.png")
+	_load_standalone_texture("plot_block_empty", "res://assets/sprites/plots_raw/plot_block_empty.png")
 	_load_standalone_texture("cow_pasture", "res://assets/sprites/cow_barn.png")
 	_load_standalone_texture("bird_dove", "res://assets/sprites/bird_dove.png")
 	_load_standalone_texture("bird_sparrow", "res://assets/sprites/bird_sparrow.png")
@@ -195,22 +196,24 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("visitor_adventurer", "res://assets/sprites/visitor_adventurer.png")
 
 	# Barn and Silo Item Icons (128x128 RGBA Transparent)
+	_load_standalone_texture("icon_coin", "res://assets/sprites/icon_coin.png")
 	_load_standalone_texture("bread", "res://assets/sprites/bread.png")
 	_load_standalone_texture("item_bread", "res://assets/sprites/item_bread.png")
 	_load_standalone_texture("bacon", "res://assets/sprites/bacon.png")
 	_load_standalone_texture("item_bacon", "res://assets/sprites/item_bacon.png")
 	_load_standalone_texture("pork", "res://assets/sprites/pork.png")
-	_load_standalone_texture("chicken_feed", "res://assets/sprites/chicken_feed.png")
+	_load_standalone_texture("chicken_feed", "res://assets/sprites/item_chicken_feed.png")
 	_load_standalone_texture("item_chicken_feed", "res://assets/sprites/item_chicken_feed.png")
-	_load_standalone_texture("cow_feed", "res://assets/sprites/cow_feed.png")
+	_load_standalone_texture("cow_feed", "res://assets/sprites/item_cow_feed.png")
 	_load_standalone_texture("item_cow_feed", "res://assets/sprites/item_cow_feed.png")
-	_load_standalone_texture("animal_feed", "res://assets/sprites/animal_feed.png")
-	_load_standalone_texture("pig_feed", "res://assets/sprites/pig_feed.png")
+	_load_standalone_texture("animal_feed", "res://assets/sprites/item_cow_feed.png")
+	_load_standalone_texture("pig_feed", "res://assets/sprites/item_pig_feed.png")
+	_load_standalone_texture("item_pig_feed", "res://assets/sprites/item_pig_feed.png")
 	_load_standalone_texture("egg", "res://assets/sprites/egg.png")
 	_load_standalone_texture("item_egg", "res://assets/sprites/item_egg.png")
 	_load_standalone_texture("milk", "res://assets/sprites/milk.png")
 	_load_standalone_texture("item_milk", "res://assets/sprites/item_milk.png")
-	_load_standalone_texture("butter", "res://assets/sprites/butter.png")
+	_load_standalone_texture("butter", "res://assets/sprites/item_butter.png")
 	_load_standalone_texture("item_butter", "res://assets/sprites/item_butter.png")
 	_load_standalone_texture("cheese", "res://assets/sprites/cheese.png")
 	_load_standalone_texture("item_cheese", "res://assets/sprites/item_cheese.png")
@@ -236,12 +239,57 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("item_pumpkin", "res://assets/sprites/item_pumpkin.png")
 	_load_standalone_texture("apple", "res://assets/sprites/apple.png")
 	_load_standalone_texture("item_apple", "res://assets/sprites/item_apple.png")
+	_load_standalone_texture("mango", "res://assets/sprites/mango.png")
+	_load_standalone_texture("item_mango", "res://assets/sprites/mango.png")
+	_load_standalone_texture("apple_seed", "res://assets/sprites/apple_seed.png")
+	_load_standalone_texture("item_apple_seed", "res://assets/sprites/apple_seed.png")
+	_load_standalone_texture("mango_seed", "res://assets/sprites/mango_seed.png")
+	_load_standalone_texture("item_mango_seed", "res://assets/sprites/mango_seed.png")
 	_load_standalone_texture("sunflower", "res://assets/sprites/sunflower.png")
 	_load_standalone_texture("item_sunflower", "res://assets/sprites/item_sunflower.png")
 	_load_standalone_texture("rose", "res://assets/sprites/rose.png")
 	_load_standalone_texture("item_rose", "res://assets/sprites/item_rose.png")
 	_load_standalone_texture("lavender", "res://assets/sprites/lavender.png")
 	_load_standalone_texture("item_lavender", "res://assets/sprites/item_lavender.png")
+
+	# Soil and Field Plot Sprites
+	_load_standalone_texture("plot_soil_empty", "res://assets/sprites/plot_soil_empty.png")
+	_load_standalone_texture("plot_soil", "res://assets/sprites/plot_soil.png")
+
+	# Crop Growth Stages Sprites (Sprout & Ripe)
+	var all_crops: Array[String] = [
+		"wheat", "corn", "carrot", "tomato", "strawberry", 
+		"pumpkin", "soybean", "sugarcane", "sunflower", "rose", "lavender"
+	]
+	for crop_name: String in all_crops:
+		_load_standalone_texture("seed_%s" % crop_name, "res://assets/sprites/seed_%s.png" % crop_name)
+		_load_standalone_texture("item_seed_%s" % crop_name, "res://assets/sprites/seed_%s.png" % crop_name)
+		_load_standalone_texture("crop_%s_sprout" % crop_name, "res://assets/sprites/crop_%s_sprout.png" % crop_name)
+		_load_standalone_texture("crop_%s_ripe" % crop_name, "res://assets/sprites/crop_%s_ripe.png" % crop_name)
+		_load_standalone_texture("crop_%s" % crop_name, "res://assets/sprites/crop_%s_ripe.png" % crop_name)
+		_load_standalone_texture("crop_%s_ready" % crop_name, "res://assets/sprites/crop_%s_ripe.png" % crop_name)
+		_load_standalone_texture(crop_name, "res://assets/sprites/%s.png" % crop_name)
+		_load_standalone_texture("item_%s" % crop_name, "res://assets/sprites/%s.png" % crop_name)
+
+	# Fishing & Bait Sprites
+	_load_standalone_texture("bait_red", "res://assets/sprites/bait_red.png")
+	_load_standalone_texture("item_bait_red", "res://assets/sprites/bait_red.png")
+	_load_standalone_texture("bait_blue", "res://assets/sprites/bait_blue.png")
+	_load_standalone_texture("item_bait_blue", "res://assets/sprites/bait_blue.png")
+	_load_standalone_texture("bait_gold", "res://assets/sprites/bait_gold.png")
+	_load_standalone_texture("item_bait_gold", "res://assets/sprites/bait_gold.png")
+	_load_standalone_texture("fish_carp", "res://assets/sprites/fish_carp.png")
+	_load_standalone_texture("item_fish_carp", "res://assets/sprites/fish_carp.png")
+	_load_standalone_texture("fish_bass", "res://assets/sprites/fish_bass.png")
+	_load_standalone_texture("item_fish_bass", "res://assets/sprites/fish_bass.png")
+	_load_standalone_texture("fish_golden_koi", "res://assets/sprites/fish_golden_koi.png")
+	_load_standalone_texture("item_fish_golden_koi", "res://assets/sprites/fish_golden_koi.png")
+	_load_standalone_texture("wool", "res://assets/sprites/wool.png")
+	_load_standalone_texture("item_wool", "res://assets/sprites/wool.png")
+	_load_standalone_texture("animal_chicken", "res://assets/sprites/animal_chicken.png")
+	_load_standalone_texture("animal_cow", "res://assets/sprites/animal_cow.png")
+	_load_standalone_texture("animal_pig", "res://assets/sprites/animal_pig.png")
+	_load_standalone_texture("animal_sheep", "res://assets/sprites/animal_sheep.png")
 
 	# Barn & Silo & Production Buildings Sprite
 	_load_standalone_texture("building_barn", "res://assets/sprites/building_barn.png")
@@ -276,17 +324,19 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("dog", "res://assets/sprites/animal_dog.png")
 
 	# New Recipes & Juices
-	_load_standalone_texture("butter_cookie", "res://assets/sprites/butter_cookie.png")
-	_load_standalone_texture("item_butter_cookie", "res://assets/sprites/item_butter_cookie.png")
+	_load_standalone_texture("cookie", "res://assets/sprites/item_cookie.png")
+	_load_standalone_texture("item_cookie", "res://assets/sprites/item_cookie.png")
+	_load_standalone_texture("butter_cookie", "res://assets/sprites/item_cookie.png")
+	_load_standalone_texture("item_butter_cookie", "res://assets/sprites/item_cookie.png")
 	_load_standalone_texture("cream_cake", "res://assets/sprites/cream_cake.png")
 	_load_standalone_texture("item_cream_cake", "res://assets/sprites/item_cream_cake.png")
-	_load_standalone_texture("corn_bread", "res://assets/sprites/corn_bread.png")
+	_load_standalone_texture("corn_bread", "res://assets/sprites/item_corn_bread.png")
 	_load_standalone_texture("item_corn_bread", "res://assets/sprites/item_corn_bread.png")
-	_load_standalone_texture("sugarcane_juice", "res://assets/sprites/sugarcane_juice.png")
+	_load_standalone_texture("sugarcane_juice", "res://assets/sprites/item_sugarcane_juice.png")
 	_load_standalone_texture("item_sugarcane_juice", "res://assets/sprites/item_sugarcane_juice.png")
-	_load_standalone_texture("apple_juice", "res://assets/sprites/apple_juice.png")
+	_load_standalone_texture("apple_juice", "res://assets/sprites/item_apple_juice.png")
 	_load_standalone_texture("item_apple_juice", "res://assets/sprites/item_apple_juice.png")
-	_load_standalone_texture("mango_smoothie", "res://assets/sprites/mango_smoothie.png")
+	_load_standalone_texture("mango_smoothie", "res://assets/sprites/item_mango_smoothie.png")
 	_load_standalone_texture("item_mango_smoothie", "res://assets/sprites/item_mango_smoothie.png")
 
 	# Sliced Characters & 8 New Authentic Chibi Characters
@@ -305,12 +355,16 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("visitor_shopper", "res://assets/sprites/visitor_shopper.png")
 	_load_standalone_texture("visitor_tourist", "res://assets/sprites/visitor_tourist.png")
 
+	_load_standalone_texture("wooden_bench", "res://assets/sprites/wooden_bench.png")
+	_load_standalone_texture("tool_demolish", "res://assets/sprites/tool_demolish.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)
 		var img: Image = Image.new()
 		var err: Error = img.load(global_path)
 		if err == OK and not img.is_empty():
+			if key == "plot_block_empty":
+				img.resize(128, 64, Image.INTERPOLATE_LANCZOS)
 			textures[key] = ImageTexture.create_from_image(img)
 			print("[SpriteAtlasManager] Loaded authentic standalone texture: " + key)
 
@@ -346,6 +400,11 @@ func _setup_aliases() -> void:
 	_alias("cow_pen", "cow_pasture")
 	_alias("harvest_basket", "crop_basket")
 	_alias("basket", "crop_basket")
+	_alias("bench", "wooden_bench")
+	_alias("demolish", "tool_demolish")
+	_alias("tool_dismantle", "tool_demolish")
+	if not has_texture("plot_block_empty"):
+		_load_standalone_texture("plot_block_empty", "res://assets/sprites/plot_block_empty.png")
 	
 	# Environment aliases
 	# _alias("env_cherry_tree", "env_cherry_tree")

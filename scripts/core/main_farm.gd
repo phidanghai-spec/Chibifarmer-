@@ -162,7 +162,7 @@ func _on_drag_tool_changed(new_tool: DragActionManager.ToolType) -> void:
 	if _ghost_preview_node == null:
 		return
 	
-	if new_tool == DragActionManager.ToolType.NONE or new_tool == DragActionManager.ToolType.SICKLE:
+	if new_tool == DragActionManager.ToolType.NONE or new_tool == DragActionManager.ToolType.SICKLE or new_tool == DragActionManager.ToolType.DISMANTLE:
 		_ghost_preview_node.visible = false
 		return
 	
@@ -205,7 +205,7 @@ func _update_ghost_placement_preview(mouse_pos: Vector2) -> void:
 	if _ghost_preview_node == null or drag_action_manager == null:
 		return
 	var cur_tool: DragActionManager.ToolType = drag_action_manager.current_tool
-	if cur_tool == DragActionManager.ToolType.NONE or cur_tool == DragActionManager.ToolType.SICKLE:
+	if cur_tool == DragActionManager.ToolType.NONE or cur_tool == DragActionManager.ToolType.SICKLE or cur_tool == DragActionManager.ToolType.DISMANTLE:
 		_ghost_preview_node.visible = false
 		return
 	
@@ -880,6 +880,11 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 	
 	return false
 
+func cancel_pending_build() -> void:
+	_pending_build_id = ""
+	if _ghost_preview_node != null:
+		_ghost_preview_node.visible = false
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _pending_build_id != "":
 		if event is InputEventMouseMotion:
@@ -891,10 +896,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					_handle_building_placement_click(get_global_mouse_position())
 					get_viewport().set_input_as_handled()
 				elif mb.button_index == MOUSE_BUTTON_RIGHT:
-					_pending_build_id = ""
-					if _ghost_preview_node != null:
-						_ghost_preview_node.visible = false
+					cancel_pending_build()
 					get_viewport().set_input_as_handled()
+		elif event is InputEventKey:
+			var ek: InputEventKey = event as InputEventKey
+			if ek.is_pressed() and (ek.keycode == KEY_ESCAPE or event.is_action_pressed("ui_cancel")):
+				cancel_pending_build()
+				get_viewport().set_input_as_handled()
 		return
 
 	if event is InputEventMouseMotion:
@@ -955,13 +963,25 @@ func _spawn_specialized_npcs() -> void:
 	_specialized_npcs_container.name = "SpecializedNPCsContainer"
 	_specialized_npcs_container.y_sort_enabled = true
 	add_child(_specialized_npcs_container)
+
+	# Tính toán vị trí thực tế của Quầy Nước Pha Chế (juice_stand) và Nhà Câu Cá (fishing_spot)
+	var barista_pos: Vector2 = Vector2(752.0, 349.0)
+	for m: ProductionMachine in _production_machines:
+		if m.machine_id == "juice_stand":
+			barista_pos = m.position + Vector2(0.0, 45.0)
+			break
+
+	var fisher_pos: Vector2 = Vector2(790.0, 745.0) + Vector2(36.0, 12.0)
+	if fishing_spot != null:
+		var base_spot_pos: Vector2 = fishing_spot.position if fishing_spot.position != Vector2.ZERO else Vector2(790.0, 745.0)
+		fisher_pos = base_spot_pos + Vector2(36.0, 12.0)
 	
 	var npc_defs: Array[Dictionary] = [
 		{"id": "baker", "name": "Thợ Bánh Mì", "sprite": "npc_baker", "pos": Vector2(445.0, 465.0)},
 		{"id": "pastry", "name": "Thợ Bánh Ngọt", "sprite": "npc_pastry", "pos": Vector2(250.0, 465.0)},
-		{"id": "barista", "name": "Pha Chế", "sprite": "npc_barista", "pos": Vector2(655.0, 305.0)},
+		{"id": "barista", "name": "Pha Chế", "sprite": "npc_barista", "pos": barista_pos},
 		{"id": "rancher", "name": "Người Chăn Nuôi", "sprite": "npc_rancher", "pos": Vector2(240.0, 720.0)},
-		{"id": "fisher", "name": "Người Câu Cá", "sprite": "npc_fisher", "pos": Vector2(505.0, 745.0)}
+		{"id": "fisher", "name": "Người Câu Cá", "sprite": "npc_fisher", "pos": fisher_pos}
 	]
 	
 	var alert_sys: StockAlertSystem = null
@@ -980,7 +1000,7 @@ func _spawn_specialized_npcs() -> void:
 		if alert_sys != null:
 			alert_sys.register_npc(String(d["id"]), npc)
 	
-	print("[MainFarm] Spawned 5 Specialized Functional NPCs!")
+	print("[MainFarm] Spawned 5 Specialized Functional NPCs at correct building positions!")
 
 func start_building_placement(building_id: String, cost: int) -> void:
 	_pending_build_id = building_id

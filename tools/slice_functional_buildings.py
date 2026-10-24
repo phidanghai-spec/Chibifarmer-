@@ -15,7 +15,7 @@ from scipy import ndimage
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
-INPUT_PATH = "assets/sprites/script nhà chức năng.jpg"
+INPUT_PATH = "assets/raw_refs/script nhà chức năng.jpg"
 OUTPUT_DIR = "assets/sprites"
 ALL_BUILDINGS_DIR = "assets/sprites/functional_buildings"
 

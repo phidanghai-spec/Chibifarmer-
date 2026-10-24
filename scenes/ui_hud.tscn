@@ -101,11 +101,11 @@ script = ExtResource("1_hud")
 
 [node name="TopLeftHUD" type="VBoxContainer" parent="."]
 mouse_filter = 2
-offset_left = 18.0
-offset_top = 16.0
-offset_right = 240.0
-offset_bottom = 230.0
-theme_override_constants/separation = 8
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 236.0
+offset_bottom = 180.0
+theme_override_constants/separation = 4
 
 [node name="RowGold" type="HBoxContainer" parent="TopLeftHUD"]
 mouse_filter = 2
@@ -113,25 +113,25 @@ layout_mode = 2
 
 [node name="PillGold" type="PanelContainer" parent="TopLeftHUD/RowGold"]
 mouse_filter = 2
-custom_minimum_size = Vector2(170, 36)
+custom_minimum_size = Vector2(160, 30)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD/RowGold/PillGold"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_right = 6
 
 [node name="HBox" type="HBoxContainer" parent="TopLeftHUD/RowGold/PillGold/Margin"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="IconGold" type="TextureRect" parent="TopLeftHUD/RowGold/PillGold/Margin/HBox"]
 mouse_filter = 2
 unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -142,23 +142,23 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.2, 0.08, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "5,450"
 horizontal_alignment = 1
 
 [node name="BtnPlusGold" type="Button" parent="TopLeftHUD/RowGold/PillGold/Margin/HBox"]
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 text = "+"
 
 [node name="RowLevelDiamonds" type="HBoxContainer" parent="TopLeftHUD"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="BadgeLevel" type="PanelContainer" parent="TopLeftHUD/RowLevelDiamonds"]
 mouse_filter = 2
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_star")
 
@@ -169,27 +169,27 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "32"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PillDiamonds" type="PanelContainer" parent="TopLeftHUD/RowLevelDiamonds"]
 mouse_filter = 2
-custom_minimum_size = Vector2(126, 36)
+custom_minimum_size = Vector2(120, 30)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_diamond")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD/RowLevelDiamonds/PillDiamonds"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_right = 6
 
 [node name="HBox" type="HBoxContainer" parent="TopLeftHUD/RowLevelDiamonds/PillDiamonds/Margin"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="LabelDiamonds" type="Label" parent="TopLeftHUD/RowLevelDiamonds/PillDiamonds/Margin/HBox"]
 mouse_filter = 2
@@ -197,30 +197,30 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
 text = "45"
 horizontal_alignment = 1
 
 [node name="IconDiamond" type="Label" parent="TopLeftHUD/RowLevelDiamonds/PillDiamonds/Margin/HBox"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 text = "💎"
 
 [node name="BtnPlusDiamond" type="Button" parent="TopLeftHUD/RowLevelDiamonds/PillDiamonds/Margin/HBox"]
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 text = "+"
 
 [node name="PillSilo" type="PanelContainer" parent="TopLeftHUD"]
-custom_minimum_size = Vector2(170, 32)
+custom_minimum_size = Vector2(160, 26)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_silo")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD/PillSilo"]
 layout_mode = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_right = 6
 
 [node name="HBox" type="HBoxContainer" parent="TopLeftHUD/PillSilo/Margin"]
 layout_mode = 2
@@ -232,7 +232,7 @@ text = "🌾"
 
 [node name="ProgressSilo" type="ProgressBar" parent="TopLeftHUD/PillSilo/Margin/HBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(50, 8)
+custom_minimum_size = Vector2(50, 6)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -246,18 +246,18 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "125/150"
 
 [node name="PillBarn" type="PanelContainer" parent="TopLeftHUD"]
-custom_minimum_size = Vector2(170, 32)
+custom_minimum_size = Vector2(160, 26)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_barn")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD/PillBarn"]
 layout_mode = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_right = 6
 
 [node name="HBox" type="HBoxContainer" parent="TopLeftHUD/PillBarn/Margin"]
 layout_mode = 2
@@ -269,7 +269,7 @@ text = "📦"
 
 [node name="ProgressBarn" type="ProgressBar" parent="TopLeftHUD/PillBarn/Margin/HBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(50, 8)
+custom_minimum_size = Vector2(50, 6)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -283,13 +283,13 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "98/150"
 
 [node name="RowXP" type="HBoxContainer" parent="TopLeftHUD"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="IconScroll" type="Label" parent="TopLeftHUD/RowXP"]
 mouse_filter = 2
@@ -299,7 +299,7 @@ text = "📜"
 [node name="ProgressXP" type="ProgressBar" parent="TopLeftHUD/RowXP"]
 mouse_filter = 2
 unique_name_in_owner = true
-custom_minimum_size = Vector2(142, 10)
+custom_minimum_size = Vector2(136, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4

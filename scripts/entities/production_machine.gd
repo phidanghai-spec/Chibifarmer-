@@ -48,6 +48,7 @@ func _ready() -> void:
 	_btn_rename.size = Vector2(22, 22)
 	_btn_rename.custom_minimum_size = Vector2(22, 22)
 	_btn_rename.mouse_filter = Control.MOUSE_FILTER_STOP
+	_btn_rename.visible = false # Mặc định ẩn trong chế độ chơi bình thường để tránh rối mắt
 	_btn_rename.pressed.connect(_on_rename_pressed)
 	add_child(_btn_rename)
 
@@ -81,6 +82,10 @@ func _on_rename_pressed() -> void:
 		hud.open_rename_modal(machine_id, def_name, func(_new_name: String) -> void:
 			_update_title_display()
 		)
+
+func set_rename_button_visible(v: bool) -> void:
+	if _btn_rename != null:
+		_btn_rename.visible = v
 
 func _process(_delta: float) -> void:
 	if not queue.is_empty() and _sprite != null:
