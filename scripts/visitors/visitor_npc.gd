@@ -6,14 +6,17 @@ enum VisitorState {
 	WALKING_IN,
 	BROWSING_SHOP,
 	SIGHTSEEING,
+	VISITING_ZOO,
 	WALKING_OUT
 }
 
 var npc_type: String = "visitor_tourist"
 var state: VisitorState = VisitorState.INACTIVE
 var move_speed: float = 40.0
-var queue_destination: String = "none" # "shop", "farmhouse", "sightseeing"
+var queue_destination: String = "none" # "shop", "farmhouse", "sightseeing", "zoo"
 var queue_slot_index: int = -1
+var _visited_zoo: bool = false
+var _target_zoo_enclosure: Node2D = null
 
 var _path: PackedVector2Array = PackedVector2Array()
 var _path_index: int = 0
@@ -40,6 +43,7 @@ var _demand_timer: float = 0.0
 var manager: VisitorManager
 
 func _ready() -> void:
+	z_index = 10
 	# 1. Main NPC Body Sprite
 	_body_sprite = Sprite2D.new()
 	_body_sprite.scale = Vector2(0.24, 0.24)
@@ -125,6 +129,8 @@ func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_typ
 	_walk_phase = randf_range(0.0, 10.0)
 	_emote_sprite.visible = false
 	_tip_sprite.visible = false
+	_visited_zoo = false
+	_target_zoo_enclosure = null
 	
 	if SpriteAtlasManager.has_texture(npc_type):
 		_body_sprite.texture = SpriteAtlasManager.get_texture(npc_type)
@@ -283,7 +289,7 @@ func _process(delta: float) -> void:
 		var step_stretch: float = 1.0 - sin(_walk_phase) * 0.03
 		_body_sprite.scale = Vector2(_base_sprite_scale.x * step_squash, _base_sprite_scale.y * step_stretch)
 		_follow_path(delta)
-	elif state == VisitorState.BROWSING_SHOP or state == VisitorState.SIGHTSEEING:
+	elif state == VisitorState.BROWSING_SHOP or state == VisitorState.SIGHTSEEING or state == VisitorState.VISITING_ZOO:
 		var wave_time: float = Time.get_ticks_msec() * 0.007
 		_body_sprite.rotation = sin(wave_time) * 0.09
 		_body_sprite.position.y = 0.0
@@ -293,7 +299,23 @@ func _process(delta: float) -> void:
 		
 		_wait_timer -= delta
 		if _wait_timer <= 0.0:
-			_start_walking_to_exit()
+			_check_next_visitor_activity()
+
+func _check_next_visitor_activity() -> void:
+	# 50% chance to visit unlocked zoo sanctuary across the bridge if not visited yet
+	if not _visited_zoo and randf() < 0.55:
+		_visited_zoo = true
+		var zoo_mgr: Node = get_tree().current_scene.find_child("ZooManager", true, false)
+		if zoo_mgr != null and zoo_mgr.has_method("get_random_unlocked_enclosure"):
+			var enc: Node2D = zoo_mgr.call("get_random_unlocked_enclosure") as Node2D
+			if enc != null:
+				_target_zoo_enclosure = enc
+				state = VisitorState.WALKING_IN
+				queue_destination = "zoo"
+				_path = GridManager.get_tourist_path(position, enc.position + Vector2(randf_range(-15, 15), 45.0))
+				_path_index = 0
+				return
+	_start_walking_to_exit()
 
 func _apply_separation_steering(delta: float) -> void:
 	if manager == null:
@@ -344,6 +366,11 @@ func _on_reached_destination() -> void:
 			_show_emote()
 			if RoadsideShop != null:
 				RoadsideShop.buy_random_available_slot()
+		elif queue_destination == "zoo":
+			state = VisitorState.VISITING_ZOO
+			_wait_timer = randf_range(3.5, 5.0)
+			_show_camera_emote()
+			_drop_zoo_tip()
 		elif queue_destination == "farmhouse":
 			state = VisitorState.SIGHTSEEING
 			_wait_timer = randf_range(4.0, 6.0)
@@ -356,6 +383,36 @@ func _on_reached_destination() -> void:
 			_drop_tip()
 	elif state == VisitorState.WALKING_OUT:
 		deactivate()
+
+func _show_camera_emote() -> void:
+	_show_chat_dialogue("📸 Chụp ảnh thú cưng đẹp quá!")
+	_show_emote()
+
+func _drop_zoo_tip() -> void:
+	_tip_sprite.visible = true
+	var base_coins: int = 15
+	var base_gold: int = 25
+	if _target_zoo_enclosure != null:
+		var a_id: String = String(_target_zoo_enclosure.get("animal_id"))
+		if SaveManager.is_animal_fed(a_id):
+			base_coins *= 2
+			base_gold *= 2
+	
+	StorageManager.coins += base_coins
+	StorageManager.add_gold(base_gold)
+	StorageManager.add_xp(8)
+	EventBus.coins_changed.emit(StorageManager.coins, base_coins)
+	AudioManager.play_sfx("coin")
+	EventBus.tourist_tipped.emit(base_coins, base_gold, 8, position)
+	
+	var qm: Node = get_tree().current_scene.find_child("QuestManager", true, false)
+	if qm != null and qm.has_method("notify_visitor_served"):
+		qm.call("notify_visitor_served")
+		
+	var tween: Tween = create_tween()
+	tween.tween_property(_tip_sprite, "position:y", -42.0, 0.5)
+	tween.tween_interval(1.4)
+	tween.tween_property(_tip_sprite, "visible", false, 0.1)
 
 func _show_emote() -> void:
 	_emote_sprite.visible = true

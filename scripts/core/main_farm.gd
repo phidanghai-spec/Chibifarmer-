@@ -12,6 +12,8 @@ class_name MainFarm
 @onready var walk_grid: Node2D = $WalkGrid
 @onready var player_avatar: Node2D = $PlayerAvatar
 @onready var player_input: Node = $PlayerInput
+@onready var zoo_manager: Node2D = get_node_or_null("ZooManager")
+@onready var quest_manager: Node = get_node_or_null("QuestManager")
 
 @onready var ground_layer: Node2D = get_node_or_null("GroundLayer") as Node2D
 @onready var props_layer: Node2D = get_node_or_null("PropsLayer") as Node2D
@@ -71,12 +73,22 @@ func _ready() -> void:
 	add_child(backdrop_sp)
 	move_child(backdrop_sp, 0)
 
-	# Complete 2.5D Y-Sort
+	# Complete 2.5D Y-Sort & Z-Index Layering (Ground & Plots = 1, Characters = 10)
 	y_sort_enabled = true
-	plots_container.y_sort_enabled = true
+	if has_node("PathLayer"):
+		(get_node("PathLayer") as Node2D).z_index = 0
+	if has_node("PlotLayer"):
+		(get_node("PlotLayer") as Node2D).z_index = 1
+	if plots_container != null:
+		plots_container.z_index = 1
+		plots_container.y_sort_enabled = true
 	buildings_container.y_sort_enabled = true
 	animal_pens_container.y_sort_enabled = true
-	visitor_manager.y_sort_enabled = true
+	if visitor_manager != null:
+		visitor_manager.z_index = 10
+		visitor_manager.y_sort_enabled = true
+	if player_avatar != null:
+		(player_avatar as Node2D).z_index = 10
 
 	# Dedicated Environment Decorations Layer with Y-Sort
 	environment_container = Node2D.new()
@@ -166,12 +178,13 @@ func _ready() -> void:
 	var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
 	for arg: String in args:
 		if arg == "--screenshot" or arg == "--run-tests":
-			var plot: FieldPlot = get_field_plot_at(Vector2i(12, 17))
-			if plot != null and player_avatar != null and walk_grid != null:
-				var path: Array[Vector2] = walk_grid.find_path(player_avatar.position, plot.global_position + Vector2(-32.0, 0.0))
-				player_avatar.go_to(path, plot)
-				camera_2d.position = plot.global_position + Vector2(-16.0, 0.0)
-				camera_2d.zoom = Vector2(1.5, 1.5)
+			var zoo_target: Vector2 = Vector2(1290.0, 390.0)
+			if player_avatar != null and walk_grid != null:
+				var path: Array[Vector2] = walk_grid.find_path(player_avatar.position, Vector2(1170.0, 480.0))
+				player_avatar.go_to(path, null)
+			if camera_2d != null:
+				camera_2d.position = zoo_target
+				camera_2d.zoom = Vector2(0.85, 0.85)
 			_capture_screenshot_and_quit()
 			break
 
@@ -782,15 +795,47 @@ func _draw() -> void:
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.42, 0.30, 0.21), false, 1.8)
 
 func _capture_screenshot_and_quit() -> void:
-	await get_tree().create_timer(3.2).timeout
+	# 1. Capture East Bank Zoo Sanctuary
+	if camera_2d != null:
+		camera_2d.position = Vector2(1320.0, 360.0)
+		camera_2d.zoom = Vector2(0.85, 0.85)
+		camera_2d.target_zoom = Vector2(0.85, 0.85)
+	
+	await get_tree().create_timer(2.5).timeout
 	await RenderingServer.frame_post_draw
 	var vp: Viewport = get_viewport()
-	var tex: ViewportTexture = vp.get_texture()
-	var img: Image = tex.get_image()
+	var img: Image = vp.get_texture().get_image()
 	if img != null and not img.is_empty():
 		var save_path: String = ProjectSettings.globalize_path("res://debug_preview.png")
-		var err: Error = img.save_png(save_path)
-		print("[MainFarm] Captured screenshot to ", save_path, " (Result: ", err, ")")
+		img.save_png(save_path)
+		print("[MainFarm] Captured zoo preview to ", save_path)
+	
+	# 2. Capture Avatar on Field Plot to verify avatar is on top of soil
+	if player_avatar != null and camera_2d != null:
+		(player_avatar as Node2D).position = Vector2(430.0, 560.0)
+		camera_2d.position = Vector2(440.0, 560.0)
+		camera_2d.zoom = Vector2(1.6, 1.6)
+		camera_2d.target_zoom = Vector2(1.6, 1.6)
+		await get_tree().create_timer(0.6).timeout
+		await RenderingServer.frame_post_draw
+		var img_plot: Image = vp.get_texture().get_image()
+		if img_plot != null and not img_plot.is_empty():
+			img_plot.save_png(ProjectSettings.globalize_path("res://debug_avatar_plot.png"))
+			print("[MainFarm] Captured avatar on plot to res://debug_avatar_plot.png")
+	
+	# 3. Capture Zoo Feed Shop Modal (3 options)
+	if ui_hud != null:
+		ui_hud.open_zoo_feed_shop_modal()
+		await get_tree().create_timer(0.6).timeout
+		await RenderingServer.frame_post_draw
+		var img_shop: Image = vp.get_texture().get_image()
+		if img_shop != null and not img_shop.is_empty():
+			img_shop.save_png(ProjectSettings.globalize_path("res://debug_feed_shop.png"))
+			print("[MainFarm] Captured Zoo Feed Shop modal to res://debug_feed_shop.png")
+		var s_modal: PanelContainer = ui_hud.get("_zoo_feed_shop_modal") as PanelContainer
+		if s_modal != null:
+			s_modal.queue_free()
+			
 	get_tree().quit()
 
 func play_truck_delivery_animation() -> void:
@@ -924,6 +969,10 @@ func interact_with_prop(prop_node: Node2D) -> void:
 		if ui_hud != null: ui_hud.toggle_truck_popup()
 	elif itype == "roadside_shop":
 		if ui_hud != null: ui_hud.open_roadside_shop_modal()
+	elif itype == "zoo_feed_shop":
+		if ui_hud != null: ui_hud.open_zoo_feed_shop_modal()
+	elif itype == "zoo_entrance":
+		if ui_hud != null: ui_hud.open_zoo_modal()
 
 func cancel_pending_build() -> void:
 	_pending_build_id = ""

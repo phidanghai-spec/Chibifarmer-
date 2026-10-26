@@ -17,6 +17,11 @@ class_name UIHud
 @onready var label_attraction: Label = %LabelAttraction
 @onready var btn_audio_toggle: Button = %BtnAudioToggle
 @onready var btn_settings: Button = %BtnSettings
+@onready var btn_zoo: Button = %BtnZoo
+@onready var badge_zoo: Label = %BadgeZoo
+@onready var btn_quests: Button = %BtnQuests
+@onready var badge_quests: Label = %BadgeQuests
+
 
 # --- Bottom Tools ---
 @onready var btn_view: Button = %BtnView
@@ -49,6 +54,10 @@ var _rename_modal: PanelContainer = null
 var _settings_modal: PanelContainer = null
 var _level_up_modal: PanelContainer = null
 var _sell_picker_modal: PanelContainer = null
+var _quests_modal: PanelContainer = null
+var _zoo_modal: PanelContainer = null
+var _zoo_feed_shop_modal: PanelContainer = null
+var _active_quest_tab: int = 0 # 0: Story, 1: Daily
 
 var _tool_buttons: Dictionary = {}
 var _crop_buttons: Dictionary = {}
@@ -206,6 +215,18 @@ func _ready() -> void:
 	if btn_settings != null:
 		btn_settings.pressed.connect(open_settings_modal)
 	
+	if btn_zoo != null:
+		btn_zoo.pressed.connect(open_zoo_modal)
+	if btn_quests != null:
+		btn_quests.pressed.connect(open_quests_modal)
+		
+	SaveManager.puzzle_pieces_changed.connect(func(_cnt: int) -> void: _refresh_badges())
+	SaveManager.zoo_updated.connect(func(_id: String) -> void: _refresh_badges())
+	SaveManager.quest_updated.connect(func(_id: String) -> void: _refresh_badges())
+	EventBus.quest_completed.connect(func(_id: String) -> void: _refresh_badges())
+	EventBus.zoo_animal_fed.connect(func(_id: String) -> void: _refresh_badges())
+	_refresh_badges()
+	
 	if RoadsideShop != null:
 		RoadsideShop.shop_updated.connect(_refresh_shop_ui)
 	if TruckOrderSystem != null:
@@ -328,6 +349,12 @@ func cancel_all_active_tools() -> void:
 		_recipe_modal.visible = false
 	if _storage_modal != null and is_instance_valid(_storage_modal):
 		_storage_modal.visible = false
+	if _quests_modal != null and is_instance_valid(_quests_modal):
+		_quests_modal.visible = false
+	if _zoo_modal != null and is_instance_valid(_zoo_modal):
+		_zoo_modal.visible = false
+	if _zoo_feed_shop_modal != null and is_instance_valid(_zoo_feed_shop_modal):
+		_zoo_feed_shop_modal.visible = false
 	if panel_shop != null:
 		panel_shop.visible = false
 	if panel_truck != null:
@@ -2190,3 +2217,1136 @@ func _create_recipe_row(machine: ProductionMachine, rec: Dictionary) -> PanelCon
 	hbox.add_child(btn_craft)
 	
 	return row
+
+# ====================================================================
+# SỞ THÚ (ZOO SANCTUARY) & BẢNG NHIỆM VỤ (QUEST SYSTEM) MODALS
+# ====================================================================
+
+func _refresh_badges() -> void:
+	var farm: Node2D = get_tree().current_scene as Node2D
+	var qm: QuestManager = null
+	if farm != null and farm.get("quest_manager") != null:
+		qm = farm.get("quest_manager") as QuestManager
+	
+	# 1. Quests notification badge
+	if badge_quests != null:
+		var unclaimed: int = qm.get_unclaimed_count() if qm != null else 0
+		if unclaimed > 0:
+			badge_quests.visible = true
+			badge_quests.text = str(unclaimed)
+		else:
+			badge_quests.visible = false
+			
+	# 2. Zoo notification badge
+	if badge_zoo != null:
+		var zoo_alerts: int = 0
+		var zoo_ids: Array[String] = ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]
+		var unlock_costs: Dictionary = {
+			"zoo_capybara": 1,
+			"zoo_panda": 2,
+			"zoo_penguin": 2,
+			"zoo_giraffe": 3
+		}
+		for a_id: String in zoo_ids:
+			if not SaveManager.is_animal_unlocked(a_id):
+				var cost: int = int(unlock_costs.get(a_id, 2))
+				if SaveManager.puzzle_pieces >= cost:
+					zoo_alerts += 1
+			else:
+				if not SaveManager.is_animal_fed(a_id):
+					if StorageManager.get_item_count("sanctuary_feed") > 0:
+						zoo_alerts += 1
+					elif a_id == "zoo_capybara" and StorageManager.get_item_count("carrot") > 0:
+						zoo_alerts += 1
+					elif a_id == "zoo_panda" and (StorageManager.get_item_count("apple") > 0 or StorageManager.get_item_count("sugarcane") > 0):
+						zoo_alerts += 1
+					elif a_id == "zoo_penguin" and (StorageManager.get_item_count("fish_carp") > 0 or StorageManager.get_item_count("fish_bass") > 0):
+						zoo_alerts += 1
+					elif a_id == "zoo_giraffe" and StorageManager.get_item_count("wheat") > 0:
+						zoo_alerts += 1
+						
+		if zoo_alerts > 0:
+			badge_zoo.visible = true
+			badge_zoo.text = str(zoo_alerts)
+		else:
+			badge_zoo.visible = false
+
+func open_quests_modal() -> void:
+	AudioManager.play_sfx("click")
+	if _quests_modal != null and is_instance_valid(_quests_modal):
+		_quests_modal.queue_free()
+		return
+	
+	cancel_all_active_tools()
+	
+	_quests_modal = PanelContainer.new()
+	_quests_modal.name = "QuestsModal"
+	_quests_modal.custom_minimum_size = Vector2(580, 480)
+	_quests_modal.anchors_preset = Control.PRESET_CENTER
+	_quests_modal.anchor_left = 0.5
+	_quests_modal.anchor_top = 0.5
+	_quests_modal.anchor_right = 0.5
+	_quests_modal.anchor_bottom = 0.5
+	_quests_modal.offset_left = -290.0
+	_quests_modal.offset_top = -240.0
+	_quests_modal.offset_right = 290.0
+	_quests_modal.offset_bottom = 240.0
+	_quests_modal.z_index = 85
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.55, 0.35, 0.18, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	sb.shadow_color = Color(0.2, 0.1, 0.05, 0.35)
+	sb.shadow_size = 8
+	_quests_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 10)
+	_quests_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "📜 BẢNG NHIỆM VỤ NÔNG TRẠI & SỞ THÚ"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 15)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	lbl_title.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "❌"
+	btn_close.custom_minimum_size = Vector2(32, 32)
+	btn_close.pressed.connect(func() -> void:
+		_quests_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	# 3 Tabs
+	var hbox_tabs: HBoxContainer = HBoxContainer.new()
+	hbox_tabs.add_theme_constant_override("separation", 8)
+	vbox_main.add_child(hbox_tabs)
+	
+	var btn_tab_story: Button = Button.new()
+	btn_tab_story.text = "📖 Cốt Truyện (12)"
+	btn_tab_story.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_tab_story.custom_minimum_size = Vector2(0, 32)
+	hbox_tabs.add_child(btn_tab_story)
+	
+	var btn_tab_daily: Button = Button.new()
+	btn_tab_daily.text = "⚡ Hàng Ngày & Rương"
+	btn_tab_daily.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_tab_daily.custom_minimum_size = Vector2(0, 32)
+	hbox_tabs.add_child(btn_tab_daily)
+	
+	var btn_tab_vip: Button = Button.new()
+	btn_tab_vip.text = "📸 Khách VIP Sở Thú"
+	btn_tab_vip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_tab_vip.custom_minimum_size = Vector2(0, 32)
+	hbox_tabs.add_child(btn_tab_vip)
+	
+	# Scroll content container
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox_main.add_child(scroll)
+	
+	var vbox_list: VBoxContainer = VBoxContainer.new()
+	vbox_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(vbox_list)
+	
+	var refresh_tabs_ui: Callable = func() -> void:
+		btn_tab_story.modulate = Color(1.2, 1.25, 0.8) if _active_quest_tab == 0 else Color(1.0, 1.0, 1.0)
+		btn_tab_daily.modulate = Color(1.2, 1.25, 0.8) if _active_quest_tab == 1 else Color(1.0, 1.0, 1.0)
+		btn_tab_vip.modulate = Color(1.2, 1.25, 0.8) if _active_quest_tab == 2 else Color(1.0, 1.0, 1.0)
+		_render_quests_list(vbox_list)
+	
+	btn_tab_story.pressed.connect(func() -> void:
+		_active_quest_tab = 0
+		AudioManager.play_sfx("click")
+		refresh_tabs_ui.call()
+	)
+	btn_tab_daily.pressed.connect(func() -> void:
+		_active_quest_tab = 1
+		AudioManager.play_sfx("click")
+		refresh_tabs_ui.call()
+	)
+	btn_tab_vip.pressed.connect(func() -> void:
+		_active_quest_tab = 2
+		AudioManager.play_sfx("click")
+		refresh_tabs_ui.call()
+	)
+	
+	refresh_tabs_ui.call()
+	add_child(_quests_modal)
+
+func _render_quests_list(vbox_list: VBoxContainer) -> void:
+	for ch in vbox_list.get_children():
+		ch.queue_free()
+		
+	var farm: Node2D = get_tree().current_scene as Node2D
+	var qm: QuestManager = null
+	if farm != null and farm.get("quest_manager") != null:
+		qm = farm.get("quest_manager") as QuestManager
+	if qm == null:
+		return
+		
+	if _active_quest_tab == 0:
+		# Tab 1: Story quests grouped by chapter
+		var last_chapter: int = -1
+		for q in qm.story_quests:
+			var chap: int = int(q.get("chapter", 1))
+			if chap != last_chapter:
+				last_chapter = chap
+				var chap_banner: PanelContainer = PanelContainer.new()
+				var b_sb: StyleBoxFlat = StyleBoxFlat.new()
+				b_sb.bg_color = Color(0.88, 0.78, 0.62, 0.95)
+				b_sb.set_corner_radius_all(6)
+				b_sb.content_margin_left = 10
+				b_sb.content_margin_right = 10
+				b_sb.content_margin_top = 4
+				b_sb.content_margin_bottom = 4
+				chap_banner.add_theme_stylebox_override("panel", b_sb)
+				
+				var chap_lbl: Label = Label.new()
+				chap_lbl.text = String(q.get("chapter_title", "Chương %d" % chap)).to_upper()
+				chap_lbl.add_theme_font_size_override("font_size", 11)
+				chap_lbl.add_theme_color_override("font_color", Color(0.35, 0.20, 0.08))
+				chap_banner.add_child(chap_lbl)
+				vbox_list.add_child(chap_banner)
+				
+			vbox_list.add_child(_build_quest_card(q, false, qm, vbox_list))
+			
+	elif _active_quest_tab == 1:
+		# Tab 2: Daily Quests + Activity Points Bar
+		vbox_list.add_child(_build_activity_points_bar(vbox_list))
+		
+		# 4 Daily Quests
+		for q_id in SaveManager.daily_quests_data:
+			var matched_q: Dictionary = {}
+			for p_q in qm.daily_quest_pool:
+				if p_q["id"] == q_id:
+					matched_q = p_q
+					break
+			if not matched_q.is_empty():
+				vbox_list.add_child(_build_quest_card(matched_q, true, qm, vbox_list))
+				
+	elif _active_quest_tab == 2:
+		# Tab 3: VIP Requests
+		var banner: PanelContainer = PanelContainer.new()
+		var b_sb: StyleBoxFlat = StyleBoxFlat.new()
+		b_sb.bg_color = Color(0.85, 0.76, 0.62, 0.95)
+		b_sb.set_corner_radius_all(6)
+		b_sb.content_margin_left = 10
+		b_sb.content_margin_right = 10
+		b_sb.content_margin_top = 6
+		b_sb.content_margin_bottom = 6
+		banner.add_theme_stylebox_override("panel", b_sb)
+		
+		var b_vbox: VBoxContainer = VBoxContainer.new()
+		banner.add_child(b_vbox)
+		
+		var b_title: Label = Label.new()
+		b_title.text = "📸 YÊU CẦU ĐẶC BIỆT TỪ DU KHÁCH VIP SỞ THÚ"
+		b_title.add_theme_font_size_override("font_size", 11)
+		b_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.08))
+		b_vbox.add_child(b_title)
+		
+		var b_sub: Label = Label.new()
+		b_sub.text = "Phục vụ các vị khách VIP để nhận Xu Du Lịch, Vàng, XP và 🧩 Mảnh Ghép Sở Thú!"
+		b_sub.add_theme_font_size_override("font_size", 9)
+		b_sub.add_theme_color_override("font_color", Color(0.48, 0.35, 0.22))
+		b_vbox.add_child(b_sub)
+		vbox_list.add_child(banner)
+		
+		for i in range(SaveManager.vip_requests.size()):
+			var req: Dictionary = SaveManager.vip_requests[i] as Dictionary
+			vbox_list.add_child(_build_vip_card(req, i, qm, vbox_list))
+
+func _build_activity_points_bar(vbox_list: VBoxContainer) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	var card_sb: StyleBoxFlat = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.95, 0.90, 0.80, 0.95)
+	card_sb.border_color = Color(0.75, 0.60, 0.40, 1.0)
+	card_sb.set_border_width_all(1)
+	card_sb.set_corner_radius_all(8)
+	card_sb.content_margin_left = 12
+	card_sb.content_margin_right = 12
+	card_sb.content_margin_top = 8
+	card_sb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", card_sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+	
+	var cur_pts: int = SaveManager.daily_activity_points
+	var lbl_pts: Label = Label.new()
+	lbl_pts.text = "⚡ ĐIỂM NĂNG ĐỘNG HÔM NAY: %d / 100 ⚡" % cur_pts
+	lbl_pts.add_theme_font_size_override("font_size", 12)
+	lbl_pts.add_theme_color_override("font_color", Color(0.35, 0.20, 0.08))
+	vbox.add_child(lbl_pts)
+	
+	# Progress Bar
+	var pbar: ProgressBar = ProgressBar.new()
+	pbar.custom_minimum_size = Vector2(0, 14)
+	pbar.min_value = 0
+	pbar.max_value = 100
+	pbar.value = cur_pts
+	pbar.show_percentage = false
+	var pbar_bg: StyleBoxFlat = StyleBoxFlat.new()
+	pbar_bg.bg_color = Color(0.85, 0.80, 0.72)
+	pbar_bg.set_corner_radius_all(4)
+	pbar.add_theme_stylebox_override("background", pbar_bg)
+	var pbar_fill: StyleBoxFlat = StyleBoxFlat.new()
+	pbar_fill.bg_color = Color(0.95, 0.65, 0.15)
+	pbar_fill.set_corner_radius_all(4)
+	pbar.add_theme_stylebox_override("fill", pbar_fill)
+	vbox.add_child(pbar)
+	
+	# 2 Chest buttons
+	var hbox_chests: HBoxContainer = HBoxContainer.new()
+	hbox_chests.add_theme_constant_override("separation", 10)
+	vbox.add_child(hbox_chests)
+	
+	# Chest 50
+	var btn_c50: Button = Button.new()
+	btn_c50.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_c50.custom_minimum_size = Vector2(0, 30)
+	if SaveManager.daily_chest_50_claimed:
+		btn_c50.text = "✅ Rương 50 ⚡ (Đã nhận)"
+		btn_c50.disabled = true
+	elif cur_pts >= 50:
+		btn_c50.text = "🎁 Mở Rương 50 ⚡ (1 🧩, 100 👑, 1 🥗)"
+		btn_c50.modulate = Color(1.2, 1.3, 0.8)
+		btn_c50.pressed.connect(func() -> void:
+			if SaveManager.claim_daily_chest(50):
+				show_floating_notice("🎉 Đã nhận Rương 50 ⚡: +1 Mảnh Ghép 🧩, +100 Vàng 👑, +1 Cỏ Dinh Dưỡng 🥗!")
+				_refresh_badges()
+				_render_quests_list(vbox_list)
+		)
+	else:
+		btn_c50.text = "🔒 Rương 50 ⚡ (1 🧩, 100 👑, 1 🥗)"
+		btn_c50.disabled = true
+	hbox_chests.add_child(btn_c50)
+	
+	# Chest 100
+	var btn_c100: Button = Button.new()
+	btn_c100.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_c100.custom_minimum_size = Vector2(0, 30)
+	if SaveManager.daily_chest_100_claimed:
+		btn_c100.text = "✅ Rương 100 ⚡ (Đã nhận)"
+		btn_c100.disabled = true
+	elif cur_pts >= 100:
+		btn_c100.text = "🎁 Mở Rương 100 ⚡ (2 🧩, 3 💎, 2 🥗)"
+		btn_c100.modulate = Color(1.2, 1.3, 0.8)
+		btn_c100.pressed.connect(func() -> void:
+			if SaveManager.claim_daily_chest(100):
+				show_floating_notice("🎉 Đã nhận Rương 100 ⚡: +2 Mảnh Ghép 🧩, +3 Kim Cương 💎, +2 Cỏ Dinh Dưỡng 🥗!")
+				_refresh_badges()
+				_render_quests_list(vbox_list)
+		)
+	else:
+		btn_c100.text = "🔒 Rương 100 ⚡ (2 🧩, 3 💎, 2 🥗)"
+		btn_c100.disabled = true
+	hbox_chests.add_child(btn_c100)
+	
+	return card
+
+func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_list: VBoxContainer) -> PanelContainer:
+	var q_id: String = q["id"]
+	var data: Dictionary = {}
+	if is_daily:
+		data = SaveManager.daily_quests_data.get(q_id, {}) as Dictionary
+	else:
+		data = SaveManager.quests_data.get(q_id, {}) as Dictionary
+		
+	var cur_prog: int = int(data.get("progress", 0))
+	var target_prog: int = int(q.get("target", 1))
+	var is_claimed: bool = bool(data.get("claimed", false))
+	var can_claim: bool = (cur_prog >= target_prog and not is_claimed)
+	var nav_pos: Vector2 = q.get("nav_pos", Vector2.ZERO) as Vector2
+	var nav_name: String = String(q.get("nav_name", "Khu Vực"))
+	
+	var card: PanelContainer = PanelContainer.new()
+	var card_sb: StyleBoxFlat = StyleBoxFlat.new()
+	card_sb.bg_color = Color(1.0, 1.0, 1.0, 0.88)
+	card_sb.border_color = Color(0.78, 0.65, 0.48, 1.0)
+	card_sb.set_border_width_all(1)
+	card_sb.set_corner_radius_all(8)
+	card_sb.content_margin_left = 12
+	card_sb.content_margin_right = 12
+	card_sb.content_margin_top = 8
+	card_sb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", card_sb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	card.add_child(hbox)
+	
+	# Left Icon
+	var icon_lbl: Label = Label.new()
+	icon_lbl.text = "🎯" if not is_daily else "☀️"
+	icon_lbl.add_theme_font_size_override("font_size", 22)
+	icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(icon_lbl)
+	
+	# Center Info
+	var vbox_info: VBoxContainer = VBoxContainer.new()
+	vbox_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_info.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_child(vbox_info)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = String(q.get("title", ""))
+	lbl_title.add_theme_font_size_override("font_size", 12)
+	lbl_title.add_theme_color_override("font_color", Color(0.28, 0.16, 0.08))
+	vbox_info.add_child(lbl_title)
+	
+	var lbl_desc: Label = Label.new()
+	lbl_desc.text = String(q.get("desc", ""))
+	lbl_desc.add_theme_font_size_override("font_size", 10)
+	lbl_desc.add_theme_color_override("font_color", Color(0.48, 0.38, 0.30))
+	vbox_info.add_child(lbl_desc)
+	
+	# Progress text & Rewards
+	var rew_parts: Array[String] = []
+	var g: int = int(q.get("reward_gold", 0))
+	var xp: int = int(q.get("reward_xp", 0))
+	var coins: int = int(q.get("reward_coins", 0))
+	var dia: int = int(q.get("reward_diamonds", 0))
+	var pieces: int = int(q.get("reward_pieces", 0))
+	if g > 0: rew_parts.append("+%d 👑" % g)
+	if coins > 0: rew_parts.append("+%d Xu" % coins)
+	if xp > 0: rew_parts.append("+%d ⭐" % xp)
+	if dia > 0: rew_parts.append("+%d 💎" % dia)
+	if pieces > 0: rew_parts.append("+%d 🧩" % pieces)
+	if is_daily: rew_parts.append("+25 ⚡")
+	
+	var lbl_rew: Label = Label.new()
+	lbl_rew.text = "Tiến độ: (%d/%d)  |  Thưởng: %s" % [mini(cur_prog, target_prog), target_prog, ", ".join(rew_parts)]
+	lbl_rew.add_theme_font_size_override("font_size", 10)
+	lbl_rew.add_theme_color_override("font_color", Color(0.18, 0.55, 0.20) if can_claim else Color(0.55, 0.40, 0.20))
+	vbox_info.add_child(lbl_rew)
+	
+	# Right Action Buttons
+	var hbox_action: HBoxContainer = HBoxContainer.new()
+	hbox_action.add_theme_constant_override("separation", 6)
+	hbox.add_child(hbox_action)
+	
+	if is_claimed:
+		var btn_done: Button = Button.new()
+		btn_done.custom_minimum_size = Vector2(90, 32)
+		btn_done.text = "✅ Đã Nhận"
+		btn_done.disabled = true
+		hbox_action.add_child(btn_done)
+	elif can_claim:
+		var btn_claim: Button = Button.new()
+		btn_claim.custom_minimum_size = Vector2(100, 32)
+		btn_claim.text = "🎁 Nhận Thưởng"
+		btn_claim.modulate = Color(1.2, 1.3, 0.8)
+		btn_claim.pressed.connect(func() -> void:
+			if is_daily:
+				qm.claim_daily_quest(q_id)
+			else:
+				qm.claim_story_quest(q_id)
+			show_floating_notice("🎉 Đã nhận thưởng: " + String(q.get("title", "")))
+			_refresh_badges()
+			_render_quests_list(vbox_list)
+		)
+		hbox_action.add_child(btn_claim)
+	else:
+		# Show navigation button "🏃 Thực Hiện" if nav_pos != Vector2.ZERO
+		if nav_pos != Vector2.ZERO:
+			var btn_nav: Button = Button.new()
+			btn_nav.custom_minimum_size = Vector2(95, 32)
+			btn_nav.text = "🏃 Thực Hiện"
+			btn_nav.tooltip_text = "Di chuyển nhân vật và camera tới %s" % nav_name
+			btn_nav.pressed.connect(func() -> void:
+				_navigate_to_world_pos(nav_pos, nav_name)
+			)
+			hbox_action.add_child(btn_nav)
+		else:
+			var btn_prog: Button = Button.new()
+			btn_prog.custom_minimum_size = Vector2(90, 32)
+			btn_prog.text = "%d / %d" % [mini(cur_prog, target_prog), target_prog]
+			btn_prog.disabled = true
+			hbox_action.add_child(btn_prog)
+	
+	return card
+
+func _build_vip_card(req: Dictionary, index: int, qm: QuestManager, vbox_list: VBoxContainer) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	var card_sb: StyleBoxFlat = StyleBoxFlat.new()
+	card_sb.bg_color = Color(1.0, 1.0, 1.0, 0.88)
+	card_sb.border_color = Color(0.78, 0.65, 0.48, 1.0)
+	card_sb.set_border_width_all(1)
+	card_sb.set_corner_radius_all(8)
+	card_sb.content_margin_left = 12
+	card_sb.content_margin_right = 12
+	card_sb.content_margin_top = 8
+	card_sb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", card_sb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	card.add_child(hbox)
+	
+	# Left Avatar
+	var avatar_lbl: Label = Label.new()
+	avatar_lbl.text = String(req.get("avatar", "📸"))
+	avatar_lbl.add_theme_font_size_override("font_size", 26)
+	avatar_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(avatar_lbl)
+	
+	# Center Details
+	var vbox_info: VBoxContainer = VBoxContainer.new()
+	vbox_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_info.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_child(vbox_info)
+	
+	var lbl_name: Label = Label.new()
+	lbl_name.text = String(req.get("name", "Du Khách VIP"))
+	lbl_name.add_theme_font_size_override("font_size", 12)
+	lbl_name.add_theme_color_override("font_color", Color(0.28, 0.16, 0.08))
+	vbox_info.add_child(lbl_name)
+	
+	var lbl_dial: Label = Label.new()
+	lbl_dial.text = '"' + String(req.get("dialogue", "")) + '"'
+	lbl_dial.add_theme_font_size_override("font_size", 10)
+	lbl_dial.add_theme_color_override("font_color", Color(0.48, 0.38, 0.30))
+	vbox_info.add_child(lbl_dial)
+	
+	# Needs list
+	var needs: Array = req.get("needs", []) as Array
+	var needs_strs: Array[String] = []
+	var has_all_items: bool = true
+	
+	for n_item in needs:
+		var d_item: Dictionary = n_item as Dictionary
+		var i_name: String = String(d_item.get("item", ""))
+		var i_req: int = int(d_item.get("count", 1))
+		var i_cur: int = StorageManager.get_item_count(i_name)
+		var item_display: String = DataManager.get_item_name(i_name)
+		if i_cur < i_req:
+			has_all_items = false
+			needs_strs.append("%s (%d/%d)" % [item_display, i_cur, i_req])
+		else:
+			needs_strs.append("%s (%d/%d)" % [item_display, i_cur, i_req])
+			
+	var lbl_needs: Label = Label.new()
+	lbl_needs.text = "Cần: " + ", ".join(needs_strs)
+	lbl_needs.add_theme_font_size_override("font_size", 10)
+	lbl_needs.add_theme_color_override("font_color", Color(0.18, 0.55, 0.20) if has_all_items else Color(0.70, 0.25, 0.15))
+	vbox_info.add_child(lbl_needs)
+	
+	# Rewards
+	var rew_parts: Array[String] = []
+	var g: int = int(req.get("reward_gold", 0))
+	var coins: int = int(req.get("reward_coins", 0))
+	var xp: int = int(req.get("reward_xp", 0))
+	var pieces: int = int(req.get("reward_pieces", 0))
+	if g > 0: rew_parts.append("+%d 👑" % g)
+	if coins > 0: rew_parts.append("+%d Xu" % coins)
+	if xp > 0: rew_parts.append("+%d ⭐" % xp)
+	if pieces > 0: rew_parts.append("+%d 🧩" % pieces)
+	
+	var lbl_rew: Label = Label.new()
+	lbl_rew.text = "Thưởng: " + ", ".join(rew_parts)
+	lbl_rew.add_theme_font_size_override("font_size", 10)
+	lbl_rew.add_theme_color_override("font_color", Color(0.55, 0.40, 0.20))
+	vbox_info.add_child(lbl_rew)
+	
+	# Right Button
+	var btn_ship: Button = Button.new()
+	btn_ship.custom_minimum_size = Vector2(110, 32)
+	if has_all_items:
+		btn_ship.text = "🤝 Giao Hàng VIP"
+		btn_ship.modulate = Color(1.2, 1.3, 0.8)
+		btn_ship.pressed.connect(func() -> void:
+			if qm.fulfill_vip_request(index):
+				show_floating_notice("🎉 Đã giao hàng thành công cho %s!" % String(req.get("name", "VIP")))
+				_refresh_badges()
+				_render_quests_list(vbox_list)
+		)
+	else:
+		btn_ship.text = "Thiếu Hàng"
+		btn_ship.disabled = true
+	hbox.add_child(btn_ship)
+	
+	return card
+
+func _navigate_to_world_pos(dest_pos: Vector2, area_name: String) -> void:
+	if _quests_modal != null and is_instance_valid(_quests_modal):
+		_quests_modal.queue_free()
+		
+	var farm: Node2D = get_tree().current_scene as Node2D
+	if farm != null:
+		var cam: Camera2D = farm.get("camera_2d") as Camera2D
+		if cam != null:
+			var tw: Tween = create_tween()
+			tw.tween_property(cam, "position", dest_pos, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			
+		var avatar: Node2D = farm.get("player_avatar") as Node2D
+		var grid: Node2D = farm.get("walk_grid") as Node2D
+		if avatar != null and grid != null and grid.has_method("find_path"):
+			var path: Array[Vector2] = grid.call("find_path", avatar.global_position, dest_pos) as Array[Vector2]
+			if avatar.has_method("go_to"):
+				avatar.call("go_to", path, null)
+				
+		show_floating_notice("🏃 Đang di chuyển tới %s..." % area_name)
+
+func open_zoo_modal() -> void:
+	AudioManager.play_sfx("click")
+	if _zoo_modal != null and is_instance_valid(_zoo_modal):
+		_zoo_modal.queue_free()
+		return
+	
+	cancel_all_active_tools()
+	
+	_zoo_modal = PanelContainer.new()
+	_zoo_modal.name = "ZooModal"
+	_zoo_modal.custom_minimum_size = Vector2(550, 460)
+	_zoo_modal.anchors_preset = Control.PRESET_CENTER
+	_zoo_modal.anchor_left = 0.5
+	_zoo_modal.anchor_top = 0.5
+	_zoo_modal.anchor_right = 0.5
+	_zoo_modal.anchor_bottom = 0.5
+	_zoo_modal.offset_left = -275.0
+	_zoo_modal.offset_top = -230.0
+	_zoo_modal.offset_right = 275.0
+	_zoo_modal.offset_bottom = 230.0
+	_zoo_modal.z_index = 85
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.55, 0.35, 0.18, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	sb.shadow_color = Color(0.2, 0.1, 0.05, 0.35)
+	sb.shadow_size = 8
+	_zoo_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 10)
+	_zoo_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🦁 SỔ TAY BẢO TỒN SỞ THÚ (BỜ ĐÔNG SÔNG)"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 14)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	lbl_title.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "❌"
+	btn_close.custom_minimum_size = Vector2(32, 32)
+	btn_close.pressed.connect(func() -> void:
+		_zoo_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	# Stats summary banner
+	var farm: Node2D = get_tree().current_scene as Node2D
+	var zoo_mgr: ZooManager = null
+	if farm != null and farm.get("zoo_manager") != null:
+		zoo_mgr = farm.get("zoo_manager") as ZooManager
+	var total_attr: int = zoo_mgr.get_total_attraction_score() if zoo_mgr != null else 30
+	
+	var hbox_stats: HBoxContainer = HBoxContainer.new()
+	hbox_stats.add_theme_constant_override("separation", 14)
+	vbox_main.add_child(hbox_stats)
+	
+	var lbl_puzzle: Label = Label.new()
+	lbl_puzzle.text = "🧩 Mảnh Ghép Sở Thú: %d" % SaveManager.puzzle_pieces
+	lbl_puzzle.add_theme_font_size_override("font_size", 12)
+	lbl_puzzle.add_theme_color_override("font_color", Color(0.20, 0.45, 0.70))
+	hbox_stats.add_child(lbl_puzzle)
+	
+	var lbl_attr: Label = Label.new()
+	lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % total_attr
+	lbl_attr.add_theme_font_size_override("font_size", 12)
+	lbl_attr.add_theme_color_override("font_color", Color(0.85, 0.40, 0.10))
+	hbox_stats.add_child(lbl_attr)
+	
+	# Scroll animal cards
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox_main.add_child(scroll)
+	
+	var vbox_cards: VBoxContainer = VBoxContainer.new()
+	vbox_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_cards.add_theme_constant_override("separation", 8)
+	scroll.add_child(vbox_cards)
+	
+	_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
+	add_child(_zoo_modal)
+
+func _render_zoo_cards(vbox_cards: VBoxContainer, lbl_puzzle: Label, lbl_attr: Label) -> void:
+	for ch in vbox_cards.get_children():
+		ch.queue_free()
+		
+	var farm: Node2D = get_tree().current_scene as Node2D
+	var zoo_mgr: ZooManager = null
+	if farm != null and farm.get("zoo_manager") != null:
+		zoo_mgr = farm.get("zoo_manager") as ZooManager
+		
+	var zoo_list: Array[Dictionary] = [
+		{
+			"id": "zoo_capybara",
+			"name": "Capybara 🍊",
+			"title": "Hồ Capybara",
+			"foods": "Cà Rốt / Bó Cỏ Dinh Dưỡng",
+			"food_keys": ["carrot", "sanctuary_feed"],
+			"pieces": 1,
+			"gold": 200,
+			"attr": 30
+		},
+		{
+			"id": "zoo_panda",
+			"name": "Gấu Trúc 🐼",
+			"title": "Rừng Trúc Gấu Trúc",
+			"foods": "Táo / Mía Đường / Bó Cỏ Dinh Dưỡng",
+			"food_keys": ["apple", "sugarcane", "sanctuary_feed"],
+			"pieces": 2,
+			"gold": 350,
+			"attr": 35
+		},
+		{
+			"id": "zoo_penguin",
+			"name": "Chim Cánh Cụt 🐧",
+			"title": "Bờ Đá Chim Cánh Cụt",
+			"foods": "Cá Chép / Cá Vược / Bó Cỏ Dinh Dưỡng",
+			"food_keys": ["fish_carp", "fish_bass", "sanctuary_feed"],
+			"pieces": 2,
+			"gold": 400,
+			"attr": 40
+		},
+		{
+			"id": "zoo_giraffe",
+			"name": "Hươu Cao Cổ 🦒",
+			"title": "Thảo Nguyên Hươu Cao Cổ",
+			"foods": "Lúa Mì / Bó Cỏ Dinh Dưỡng",
+			"food_keys": ["wheat", "sanctuary_feed"],
+			"pieces": 3,
+			"gold": 500,
+			"attr": 45
+		}
+	]
+	
+	for z in zoo_list:
+		vbox_cards.add_child(_build_zoo_card(z, zoo_mgr, vbox_cards, lbl_puzzle, lbl_attr))
+
+func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContainer, lbl_puzzle: Label, lbl_attr: Label) -> PanelContainer:
+	var a_id: String = z["id"]
+	var is_unlocked: bool = SaveManager.is_animal_unlocked(a_id)
+	var is_fed: bool = SaveManager.is_animal_fed(a_id)
+	
+	var card: PanelContainer = PanelContainer.new()
+	var card_sb: StyleBoxFlat = StyleBoxFlat.new()
+	card_sb.bg_color = Color(1.0, 1.0, 1.0, 0.88)
+	card_sb.border_color = Color(0.78, 0.65, 0.48, 1.0)
+	card_sb.set_border_width_all(1)
+	card_sb.set_corner_radius_all(8)
+	card_sb.content_margin_left = 12
+	card_sb.content_margin_right = 12
+	card_sb.content_margin_top = 8
+	card_sb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", card_sb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	card.add_child(hbox)
+	
+	# Left Animal Sprite
+	var icon_rect: TextureRect = TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(48, 48)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if SpriteAtlasManager.has_texture(a_id):
+		icon_rect.texture = SpriteAtlasManager.get_texture(a_id)
+	hbox.add_child(icon_rect)
+	
+	# Center Details
+	var vbox_info: VBoxContainer = VBoxContainer.new()
+	vbox_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_info.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_child(vbox_info)
+	
+	var lbl_name: Label = Label.new()
+	lbl_name.text = "%s - %s" % [z["title"], z["name"]]
+	lbl_name.add_theme_font_size_override("font_size", 12)
+	lbl_name.add_theme_color_override("font_color", Color(0.28, 0.16, 0.08))
+	vbox_info.add_child(lbl_name)
+	
+	var lbl_fav: Label = Label.new()
+	lbl_fav.text = "Thích: " + String(z["foods"])
+	lbl_fav.add_theme_font_size_override("font_size", 10)
+	lbl_fav.add_theme_color_override("font_color", Color(0.50, 0.38, 0.28))
+	vbox_info.add_child(lbl_fav)
+	
+	var lbl_status: Label = Label.new()
+	lbl_status.add_theme_font_size_override("font_size", 10)
+	if not is_unlocked:
+		lbl_status.text = "🔒 Chưa Mở Khóa  |  Chi phí: %d 🧩 Mảnh Ghép hoặc %d 👑 Vàng" % [z["pieces"], z["gold"]]
+		lbl_status.add_theme_color_override("font_color", Color(0.70, 0.35, 0.15))
+	elif is_fed:
+		lbl_status.text = "🟢 Đang No Bụng  |  +x2 Điểm Hấp Dẫn (+%d ✨)" % (int(z["attr"]) * 2)
+		lbl_status.add_theme_color_override("font_color", Color(0.18, 0.60, 0.20))
+	else:
+		lbl_status.text = "🟡 Đang Đói Bụng  |  Điểm Hấp Dẫn: +%d ✨" % int(z["attr"])
+		lbl_status.add_theme_color_override("font_color", Color(0.80, 0.50, 0.10))
+	vbox_info.add_child(lbl_status)
+	
+	# Right Action Buttons
+	var hbox_btns: HBoxContainer = HBoxContainer.new()
+	hbox_btns.add_theme_constant_override("separation", 6)
+	hbox.add_child(hbox_btns)
+	
+	if not is_unlocked:
+		var p_cost: int = int(z["pieces"])
+		var g_cost: int = int(z["gold"])
+		
+		var btn_unlock_p: Button = Button.new()
+		btn_unlock_p.text = "%d 🧩" % p_cost
+		btn_unlock_p.tooltip_text = "Mở khóa bằng Mảnh Ghép"
+		btn_unlock_p.disabled = (SaveManager.puzzle_pieces < p_cost)
+		btn_unlock_p.pressed.connect(func() -> void:
+			if SaveManager.spend_puzzle_pieces(p_cost):
+				SaveManager.unlock_animal(a_id)
+				AudioManager.play_sfx("level_up")
+				show_floating_notice("🎉 Đã mở khóa %s!" % z["title"])
+				lbl_puzzle.text = "🧩 Mảnh Ghép Sở Thú: %d" % SaveManager.puzzle_pieces
+				if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+				_refresh_badges()
+				_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
+		)
+		hbox_btns.add_child(btn_unlock_p)
+		
+		var btn_unlock_g: Button = Button.new()
+		btn_unlock_g.text = "%d 👑" % g_cost
+		btn_unlock_g.tooltip_text = "Mở khóa bằng Vàng"
+		btn_unlock_g.disabled = not StorageManager.has_gold(g_cost)
+		btn_unlock_g.pressed.connect(func() -> void:
+			if StorageManager.spend_gold(g_cost):
+				EventBus.gold_changed.emit(StorageManager.gold, -g_cost)
+				SaveManager.unlock_animal(a_id)
+				AudioManager.play_sfx("level_up")
+				show_floating_notice("🎉 Đã mở khóa %s!" % z["title"])
+				if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+				_refresh_badges()
+				_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
+		)
+		hbox_btns.add_child(btn_unlock_g)
+	else:
+		# Button: Walk avatar to enclosure
+		var btn_walk: Button = Button.new()
+		btn_walk.text = "🏃 Tới Chuồng"
+		btn_walk.tooltip_text = "Nhân vật tự đi bộ qua cầu gỗ sang chuồng này"
+		btn_walk.pressed.connect(func() -> void:
+			if _zoo_modal != null and is_instance_valid(_zoo_modal):
+				_zoo_modal.queue_free()
+			var farm: Node2D = get_tree().current_scene as Node2D
+			if farm != null:
+				var zm: ZooManager = farm.get("zoo_manager") as ZooManager
+				var enc: ZooEnclosure = zm.get_enclosure(a_id) if zm != null else null
+				if enc != null:
+					var dest_pos: Vector2 = enc.global_position + Vector2(0.0, 35.0)
+					var avatar: Node2D = farm.get("player_avatar") as Node2D
+					var grid: Node2D = farm.get("walk_grid") as Node2D
+					if avatar != null and grid != null and grid.has_method("find_path"):
+						var path: Array[Vector2] = grid.call("find_path", avatar.global_position, dest_pos) as Array[Vector2]
+						if avatar.has_method("go_to"):
+							avatar.call("go_to", path, enc)
+					var cam: Camera2D = farm.get("camera_2d") as Camera2D
+					if cam != null:
+						var tw: Tween = create_tween()
+						tw.tween_property(cam, "position", dest_pos, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+					show_floating_notice("🚶 Đang đi bộ tới %s..." % z["title"])
+		)
+		hbox_btns.add_child(btn_walk)
+		
+		# Button: Feed animal directly
+		var btn_feed: Button = Button.new()
+		if is_fed:
+			btn_feed.text = "❤️ Đã No"
+			btn_feed.disabled = true
+		else:
+			btn_feed.text = "🍎 Cho Ăn"
+			btn_feed.modulate = Color(1.15, 1.25, 0.8)
+			btn_feed.pressed.connect(func() -> void:
+				var food_candidates: Array = z["food_keys"]
+				var chosen_food: String = ""
+				for f_key in food_candidates:
+					if StorageManager.get_item_count(String(f_key)) > 0:
+						chosen_food = String(f_key)
+						break
+				if chosen_food != "":
+					StorageManager.remove_item(chosen_food, 1)
+					SaveManager.feed_animal(a_id, 300)
+					StorageManager.add_xp(60)
+					StorageManager.add_gold(80)
+					StorageManager.coins += 25
+					EventBus.coins_changed.emit(StorageManager.coins, 25)
+					EventBus.zoo_animal_fed.emit(a_id)
+					AudioManager.play_sfx("sell")
+					show_floating_notice("❤️ Cho %s ăn thành công! +60 XP, +80 Vàng, +25 Xu Du Lịch!" % z["name"])
+					if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+					_refresh_badges()
+					_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
+				else:
+					show_floating_notice("⚠️ Kho không có thức ăn phù hợp (%s)!" % z["foods"])
+			)
+		hbox_btns.add_child(btn_feed)
+		
+	return card
+
+func open_zoo_feed_shop_modal() -> void:
+	AudioManager.play_sfx("click")
+	if _zoo_feed_shop_modal != null and is_instance_valid(_zoo_feed_shop_modal):
+		_zoo_feed_shop_modal.queue_free()
+		return
+	
+	cancel_all_active_tools()
+	
+	_zoo_feed_shop_modal = PanelContainer.new()
+	_zoo_feed_shop_modal.name = "ZooFeedShopModal"
+	_zoo_feed_shop_modal.custom_minimum_size = Vector2(530, 420)
+	_zoo_feed_shop_modal.anchors_preset = Control.PRESET_CENTER
+	_zoo_feed_shop_modal.anchor_left = 0.5
+	_zoo_feed_shop_modal.anchor_top = 0.5
+	_zoo_feed_shop_modal.anchor_right = 0.5
+	_zoo_feed_shop_modal.anchor_bottom = 0.5
+	_zoo_feed_shop_modal.offset_left = -265.0
+	_zoo_feed_shop_modal.offset_top = -210.0
+	_zoo_feed_shop_modal.offset_right = 265.0
+	_zoo_feed_shop_modal.offset_bottom = 210.0
+	_zoo_feed_shop_modal.z_index = 90
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.55, 0.35, 0.18, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	sb.shadow_color = Color(0.2, 0.1, 0.05, 0.35)
+	sb.shadow_size = 8
+	_zoo_feed_shop_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 10)
+	_zoo_feed_shop_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🏪 QUẦY PHỤC VỤ & LƯU NIỆM SỞ THÚ"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	lbl_title.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "❌"
+	btn_close.custom_minimum_size = Vector2(30, 30)
+	btn_close.pressed.connect(func() -> void:
+		AudioManager.play_sfx("click")
+		_zoo_feed_shop_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	var lbl_sub: Label = Label.new()
+	lbl_sub.text = "Chào mừng bạn đến Quầy Phục Vụ Sở Thú! Hãy chọn dịch vụ bên dưới:"
+	lbl_sub.add_theme_font_size_override("font_size", 10)
+	lbl_sub.add_theme_color_override("font_color", Color(0.45, 0.30, 0.18))
+	vbox_main.add_child(lbl_sub)
+	
+	var vbox_options: VBoxContainer = VBoxContainer.new()
+	vbox_options.name = "OptionsContainer"
+	vbox_options.add_theme_constant_override("separation", 8)
+	vbox_main.add_child(vbox_options)
+	
+	_render_feed_shop_options(vbox_options)
+	add_child(_zoo_feed_shop_modal)
+
+func _render_feed_shop_options(container: VBoxContainer) -> void:
+	for child in container.get_children():
+		child.queue_free()
+		
+	# Card 1: Chế Biến Nhanh Bó Cỏ Dinh Dưỡng
+	var card1: PanelContainer = _create_feed_shop_card(
+		"🥗 Chế Biến Bó Cỏ Dinh Dưỡng",
+		"Đổi 2 Lúa mì + 1 Cà rốt (hoặc 120 Vàng) nhận ngay +2 Bó Cỏ Dinh Dưỡng vào kho Barn.",
+		"Lúa mì: %d/2 | Cà rốt: %d/1 | Kho Cỏ: %d" % [StorageManager.get_item_count("wheat"), StorageManager.get_item_count("carrot"), StorageManager.get_item_count("sanctuary_feed")],
+		"🥗 Chế Biến (+2 Cỏ)",
+		func() -> void:
+			var w_cnt: int = StorageManager.get_item_count("wheat")
+			var c_cnt: int = StorageManager.get_item_count("carrot")
+			if w_cnt >= 2 and c_cnt >= 1:
+				StorageManager.remove_item("wheat", 2)
+				StorageManager.remove_item("carrot", 1)
+				StorageManager.add_item("sanctuary_feed", 2)
+				AudioManager.play_sfx("harvest")
+				show_floating_notice("🥗 Chế biến thành công +2 Bó Cỏ Dinh Dưỡng từ 2 Lúa mì + 1 Cà rốt!")
+			elif StorageManager.has_gold(120):
+				StorageManager.spend_gold(120)
+				EventBus.gold_changed.emit(StorageManager.gold, -120)
+				StorageManager.add_item("sanctuary_feed", 2)
+				AudioManager.play_sfx("sell")
+				show_floating_notice("🥗 Mua nhanh +2 Bó Cỏ Dinh Dưỡng (-120 Vàng)!")
+			else:
+				AudioManager.play_sfx("error")
+				show_floating_notice("⚠️ Cần 2 Lúa mì + 1 Cà rốt (hoặc 120 Vàng)!")
+				return
+			_refresh_all_hud()
+			_render_feed_shop_options(container)
+	)
+	container.add_child(card1)
+	
+	# Card 2: Làm Quà Lưu Niệm Sở Thú
+	var crops_available: int = 0
+	var crop_candidates: Array[String] = ["wheat", "corn", "carrot", "tomato", "strawberry", "pumpkin", "soybean", "sugarcane", "apple", "mango", "sunflower", "rose", "lavender"]
+	for cr in crop_candidates:
+		crops_available += StorageManager.get_item_count(cr)
+		
+	var card2: PanelContainer = _create_feed_shop_card(
+		"🧸 Làm Quà Lưu Niệm Sở Thú",
+		"Đổi 2 Nông sản/Hoa bất kỳ nhận ngay +120 Xu Du Lịch & +50 XP (tính tiến độ nhiệm vụ).",
+		"Nông sản trong kho Silo: %d cái (Cần 2 cái)" % crops_available,
+		"🧸 Làm Quà (+120 Xu)",
+		func() -> void:
+			var collected: Array[String] = []
+			for item_id: String in crop_candidates:
+				var count: int = StorageManager.get_item_count(item_id)
+				while count > 0 and collected.size() < 2:
+					collected.append(item_id)
+					count -= 1
+				if collected.size() >= 2:
+					break
+			if collected.size() >= 2:
+				for item_id in collected:
+					StorageManager.remove_item(item_id, 1)
+				StorageManager.coins += 120
+				EventBus.coins_changed.emit(StorageManager.coins, 120)
+				StorageManager.add_xp(50)
+				EventBus.roadside_shop_item_sold.emit(0, "souvenir", 1, 120)
+				var farm_scene: Node = get_tree().current_scene
+				if farm_scene != null:
+					var qm: Node = farm_scene.find_child("QuestManager", true, false)
+					if qm != null and qm.has_method("notify_delivery_or_shop"):
+						qm.call("notify_delivery_or_shop")
+				AudioManager.play_sfx("sell")
+				show_floating_notice("🧸 Chế tác Quà Lưu Niệm thành công! +120 Xu Du Lịch & +50 XP!")
+			else:
+				AudioManager.play_sfx("error")
+				show_floating_notice("⚠️ Cần ít nhất 2 nông sản hoặc hoa trong kho Silo!")
+				return
+			_refresh_all_hud()
+			_render_feed_shop_options(container)
+	)
+	container.add_child(card2)
+	
+	# Card 3: Phát Vé Mời Du Khách (100 Vàng)
+	var card3: PanelContainer = _create_feed_shop_card(
+		"🎫 Phát Vé Mời Du Khách (100 Vàng)",
+		"Mời ngay 2 Du Khách mới đi qua cầu gỗ sang ngắm thú & chụp ảnh tại Sở Thú bờ Đông.",
+		"Vàng hiện có: %d Vàng (Chi phí: 100 Vàng)" % StorageManager.gold,
+		"🎫 Phát Vé (100 Vàng)",
+		func() -> void:
+			if StorageManager.has_gold(100):
+				StorageManager.spend_gold(100)
+				EventBus.gold_changed.emit(StorageManager.gold, -100)
+				var farm_node: Node = get_tree().current_scene
+				var vm: VisitorManager = farm_node.find_child("VisitorManager", true, false) as VisitorManager if farm_node != null else null
+				var count_spawned: int = 0
+				if vm != null:
+					count_spawned = vm.summon_zoo_visitors(2)
+				AudioManager.play_sfx("click")
+				show_floating_notice("🎫 Đã phát vé mời! 2 Du Khách mới đang qua cầu sang thăm Sở Thú!")
+			else:
+				AudioManager.play_sfx("error")
+				show_floating_notice("⚠️ Cần 100 Vàng để phát vé mời Du Khách!")
+				return
+			_refresh_all_hud()
+			_render_feed_shop_options(container)
+	)
+	container.add_child(card3)
+
+func _create_feed_shop_card(title: String, desc: String, status_text: String, btn_text: String, on_action: Callable) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	var csb: StyleBoxFlat = StyleBoxFlat.new()
+	csb.bg_color = Color(1.0, 0.98, 0.93, 0.95)
+	csb.border_color = Color(0.75, 0.55, 0.35, 0.8)
+	csb.set_border_width_all(2)
+	csb.set_corner_radius_all(10)
+	csb.content_margin_left = 12
+	csb.content_margin_right = 12
+	csb.content_margin_top = 8
+	csb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", csb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	card.add_child(hbox)
+	
+	var vbox_text: VBoxContainer = VBoxContainer.new()
+	vbox_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_text.add_theme_constant_override("separation", 3)
+	hbox.add_child(vbox_text)
+	
+	var lbl_t: Label = Label.new()
+	lbl_t.text = title
+	lbl_t.add_theme_font_size_override("font_size", 12)
+	lbl_t.add_theme_color_override("font_color", Color(0.35, 0.18, 0.08))
+	vbox_text.add_child(lbl_t)
+	
+	var lbl_d: Label = Label.new()
+	lbl_d.text = desc
+	lbl_d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_d.add_theme_font_size_override("font_size", 10)
+	lbl_d.add_theme_color_override("font_color", Color(0.48, 0.32, 0.18))
+	vbox_text.add_child(lbl_d)
+	
+	var lbl_s: Label = Label.new()
+	lbl_s.text = status_text
+	lbl_s.add_theme_font_size_override("font_size", 9)
+	lbl_s.add_theme_color_override("font_color", Color(0.2, 0.45, 0.15))
+	vbox_text.add_child(lbl_s)
+	
+	var btn_action: Button = Button.new()
+	btn_action.text = btn_text
+	btn_action.custom_minimum_size = Vector2(140, 36)
+	btn_action.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn_action.add_theme_font_size_override("font_size", 11)
+	btn_action.pressed.connect(on_action)
+	hbox.add_child(btn_action)
+	
+	return card

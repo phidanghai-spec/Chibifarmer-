@@ -6,6 +6,9 @@ const SAVE_VERSION: int = 10
 const MAX_OFFLINE_SECONDS: int = 28800 # 8 hours limit
 
 signal player_settings_changed()
+signal zoo_updated(animal_id: String)
+signal puzzle_pieces_changed(new_count: int)
+signal quest_updated(quest_id: String)
 
 var custom_decorations: Array = []
 var building_custom_names: Dictionary = {} # building_id -> String
@@ -14,6 +17,24 @@ var selected_character: String = "minh" # "minh" or "mai"
 var player_name: String = "Minh"
 var instant_interact: bool = false
 var player_position: Vector2 = Vector2(70.0, 640.0)
+
+# Zoo Sanctuary & Puzzle System
+var puzzle_pieces: int = 5
+var zoo_data: Dictionary = {
+	"zoo_capybara": { "unlocked": true, "fed_until": 0, "love_count": 0 },
+	"zoo_panda": { "unlocked": false, "fed_until": 0, "love_count": 0 },
+	"zoo_penguin": { "unlocked": false, "fed_until": 0, "love_count": 0 },
+	"zoo_giraffe": { "unlocked": false, "fed_until": 0, "love_count": 0 }
+}
+
+# Quest System
+var quests_data: Dictionary = {}
+var daily_quests_data: Dictionary = {}
+var daily_activity_points: int = 0
+var daily_chest_50_claimed: bool = false
+var daily_chest_100_claimed: bool = false
+var vip_requests: Array = []
+
 
 var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
@@ -180,6 +201,22 @@ func save_game() -> void:
 		"position_y": player_position.y
 	}
 	
+	# Save Zoo Sanctuary
+	save_data["zoo_sanctuary"] = {
+		"puzzle_pieces": puzzle_pieces,
+		"animals": zoo_data.duplicate(true)
+	}
+	
+	# Save Quests
+	save_data["quests"] = {
+		"story": quests_data.duplicate(true),
+		"daily": daily_quests_data.duplicate(true),
+		"activity_points": daily_activity_points,
+		"chest_50": daily_chest_50_claimed,
+		"chest_100": daily_chest_100_claimed,
+		"vip_requests": vip_requests.duplicate(true)
+	}
+	
 	var json_str: String = JSON.stringify(save_data, "\t")
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file != null:
@@ -227,19 +264,58 @@ func load_game() -> bool:
 		StorageManager.diamonds = int(econ.get("diamonds", StorageManager.diamonds))
 		StorageManager.xp = int(econ.get("xp", StorageManager.xp))
 		StorageManager.level = int(econ.get("level", StorageManager.level))
-		StorageManager.silo_capacity = maxi(300, int(econ.get("silo_capacity", 300)))
-		StorageManager.barn_capacity = maxi(300, int(econ.get("barn_capacity", 300)))
+		StorageManager.silo_capacity = maxi(600, int(econ.get("silo_capacity", 600)))
+		StorageManager.barn_capacity = maxi(600, int(econ.get("barn_capacity", 600)))
 		
 		var s_items: Dictionary = econ.get("silo_items", {}) as Dictionary
 		if not s_items.is_empty():
 			StorageManager.silo_items = s_items
-			if not StorageManager.silo_items.has("apple_seed"):
-				StorageManager.silo_items["apple_seed"] = 2
-			if not StorageManager.silo_items.has("mango_seed"):
-				StorageManager.silo_items["mango_seed"] = 2
+		
+		# Guarantee large stockpile of seeds, crops and flora
+		var guaranteed_silo: Dictionary = {
+			"wheat": 80,
+			"corn": 60,
+			"carrot": 50,
+			"tomato": 40,
+			"strawberry": 40,
+			"pumpkin": 35,
+			"soybean": 35,
+			"sugarcane": 35,
+			"apple": 25,
+			"mango": 25,
+			"sunflower": 20,
+			"rose": 20,
+			"lavender": 20,
+			"apple_seed": 15,
+			"mango_seed": 15
+		}
+		for k: String in guaranteed_silo:
+			if int(StorageManager.silo_items.get(k, 0)) < int(guaranteed_silo[k]):
+				StorageManager.silo_items[k] = int(guaranteed_silo[k])
+		
 		var b_items: Dictionary = econ.get("barn_items", {}) as Dictionary
 		if not b_items.is_empty():
 			StorageManager.barn_items = b_items
+		
+		# Guarantee large stockpile of animal feeds and artisanal foods
+		var guaranteed_barn: Dictionary = {
+			"egg": 40,
+			"milk": 40,
+			"bacon": 30,
+			"bread": 30,
+			"cookie": 25,
+			"butter": 20,
+			"cheese": 20,
+			"chicken_feed": 35,
+			"cow_feed": 35,
+			"pig_feed": 30,
+			"sanctuary_feed": 20,
+			"fish_carp": 20,
+			"fish_bass": 15
+		}
+		for k: String in guaranteed_barn:
+			if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
+				StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
 		EventBus.coins_changed.emit(StorageManager.coins, 0)
 		EventBus.gold_changed.emit(StorageManager.gold, 0)
@@ -280,6 +356,28 @@ func load_game() -> bool:
 		player_position = Vector2(px, py)
 		player_settings_changed.emit()
 	
+	# Restore Zoo Sanctuary
+	if data.has("zoo_sanctuary"):
+		var z_data: Dictionary = data["zoo_sanctuary"] as Dictionary
+		puzzle_pieces = int(z_data.get("puzzle_pieces", 5))
+		if z_data.has("animals"):
+			var anims: Dictionary = z_data["animals"] as Dictionary
+			for k: String in anims:
+				zoo_data[k] = (anims[k] as Dictionary).duplicate()
+	
+	# Restore Quests
+	if data.has("quests"):
+		var q_data: Dictionary = data["quests"] as Dictionary
+		if q_data.has("story"):
+			quests_data = (q_data["story"] as Dictionary).duplicate(true)
+		if q_data.has("daily"):
+			daily_quests_data = (q_data["daily"] as Dictionary).duplicate(true)
+		daily_activity_points = int(q_data.get("activity_points", 0))
+		daily_chest_50_claimed = bool(q_data.get("chest_50", false))
+		daily_chest_100_claimed = bool(q_data.get("chest_100", false))
+		if q_data.has("vip_requests"):
+			vip_requests = (q_data["vip_requests"] as Array).duplicate(true)
+	
 	return true
 
 func set_player_character(char_key: String) -> void:
@@ -303,4 +401,70 @@ func set_instant_interact(enabled: bool) -> void:
 
 func set_player_position(pos: Vector2) -> void:
 	player_position = pos
+
+# Zoo Sanctuary Helpers
+func add_puzzle_pieces(amount: int) -> void:
+	puzzle_pieces += amount
+	puzzle_pieces_changed.emit(puzzle_pieces)
+	save_game()
+
+func spend_puzzle_pieces(amount: int) -> bool:
+	if puzzle_pieces >= amount:
+		puzzle_pieces -= amount
+		puzzle_pieces_changed.emit(puzzle_pieces)
+		save_game()
+		return true
+	return false
+
+func is_animal_unlocked(animal_id: String) -> bool:
+	var entry: Dictionary = zoo_data.get(animal_id, {}) as Dictionary
+	return bool(entry.get("unlocked", false))
+
+func unlock_animal(animal_id: String) -> void:
+	if not zoo_data.has(animal_id):
+		zoo_data[animal_id] = { "unlocked": true, "fed_until": 0, "love_count": 0 }
+	else:
+		zoo_data[animal_id]["unlocked"] = true
+	zoo_updated.emit(animal_id)
+	EventBus.zoo_enclosure_unlocked.emit(animal_id)
+	save_game()
+
+func is_animal_fed(animal_id: String) -> bool:
+	var entry: Dictionary = zoo_data.get(animal_id, {}) as Dictionary
+	var fed_until: int = int(entry.get("fed_until", 0))
+	return TickManager.now() < fed_until
+
+func feed_animal(animal_id: String, duration_seconds: int = 180) -> void:
+	if not zoo_data.has(animal_id):
+		zoo_data[animal_id] = { "unlocked": true, "fed_until": 0, "love_count": 0 }
+	var cur_love: int = int(zoo_data[animal_id].get("love_count", 0))
+	zoo_data[animal_id]["fed_until"] = TickManager.now() + duration_seconds
+	zoo_data[animal_id]["love_count"] = cur_love + 1
+	zoo_updated.emit(animal_id)
+	save_game()
+
+func add_activity_points(amount: int) -> void:
+	daily_activity_points = mini(100, daily_activity_points + amount)
+	save_game()
+
+func claim_daily_chest(tier: int) -> bool:
+	if tier == 50:
+		if daily_activity_points >= 50 and not daily_chest_50_claimed:
+			daily_chest_50_claimed = true
+			add_puzzle_pieces(1)
+			StorageManager.add_gold(100)
+			StorageManager.add_item("sanctuary_feed", 1)
+			save_game()
+			return true
+	elif tier == 100:
+		if daily_activity_points >= 100 and not daily_chest_100_claimed:
+			daily_chest_100_claimed = true
+			add_puzzle_pieces(2)
+			StorageManager.diamonds += 3
+			EventBus.diamonds_changed.emit(StorageManager.diamonds, 3)
+			StorageManager.add_item("sanctuary_feed", 2)
+			save_game()
+			return true
+	return false
+
 

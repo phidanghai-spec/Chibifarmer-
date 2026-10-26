@@ -127,6 +127,27 @@ func spawn_random_visitor() -> VisitorNPC:
 	print("[VisitorManager] Spawned ", v_type, " heading toward ", target_pos, " (queue: ", dest_type, ")")
 	return available_npc
 
+func summon_zoo_visitors(count: int = 2) -> int:
+	var spawned: int = 0
+	var zoo_spots: Array[Vector2] = [
+		Vector2(1290.0, 195.0), # Capybara
+		Vector2(1450.0, 195.0), # Panda
+		Vector2(1290.0, 395.0), # Penguin
+		Vector2(1450.0, 395.0), # Giraffe
+		Vector2(1185.0, 440.0)  # Sanctuary Entrance
+	]
+	var start_pos: Vector2 = GridManager.grid_to_world(GridManager.ENTRANCE_CELL)
+	for npc: VisitorNPC in _pool:
+		if npc.state == VisitorNPC.VisitorState.INACTIVE:
+			var target_pos: Vector2 = zoo_spots.pick_random() + Vector2(randf_range(-14.0, 14.0), randf_range(-14.0, 14.0))
+			var v_type: String = VISITOR_TYPES.pick_random()
+			npc.activate(v_type, start_pos, target_pos, "zoo", -1)
+			spawned += 1
+			if spawned >= count:
+				break
+	print("[VisitorManager] Summoned %d visitors to Zoo Sanctuary!" % spawned)
+	return spawned
+
 func _get_sightseeing_position() -> Vector2:
 	var candidates: Array[Vector2] = [
 		Vector2(528, 560), # Chibi Scarecrow near the crop fields

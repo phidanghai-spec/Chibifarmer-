@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/core/walk_grid.gd" id="6_walk"]
 [ext_resource type="Script" path="res://scripts/entities/player_avatar.gd" id="7_avatar"]
 [ext_resource type="Script" path="res://scripts/core/player_input.gd" id="8_pinput"]
+[ext_resource type="Script" path="res://scripts/systems/zoo_manager.gd" id="9_zoo"]
+[ext_resource type="Script" path="res://scripts/systems/quest_manager.gd" id="10_quest"]
 
 [node name="MainFarm" type="Node2D"]
 y_sort_enabled = true
@@ -23,12 +25,14 @@ script = ExtResource("6_walk")
 [node name="PathLayer" type="Node2D" parent="."]
 
 [node name="PlotLayer" type="Node2D" parent="."]
+z_index = 1
 y_sort_enabled = true
 
 [node name="PropsLayer" type="Node2D" parent="."]
 y_sort_enabled = true
 
 [node name="PlotsContainer" type="Node2D" parent="."]
+z_index = 1
 y_sort_enabled = true
 
 [node name="BuildingsContainer" type="Node2D" parent="."]
@@ -38,10 +42,19 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="VisitorManager" type="Node2D" parent="."]
+z_index = 10
 y_sort_enabled = true
 script = ExtResource("4_vis")
 
+[node name="ZooManager" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("9_zoo")
+
+[node name="QuestManager" type="Node" parent="."]
+script = ExtResource("10_quest")
+
 [node name="PlayerAvatar" type="Node2D" parent="."]
+z_index = 10
 y_sort_enabled = true
 script = ExtResource("7_avatar")
 
@@ -60,3 +73,4 @@ script = ExtResource("2_cam")
 
 [node name="UIHud" parent="." node_paths=PackedStringArray("drag_action_manager") instance=ExtResource("5_hud")]
 drag_action_manager = NodePath("../DragActionManager")
+
