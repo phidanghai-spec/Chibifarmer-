@@ -121,16 +121,17 @@ func plant(new_crop_id: String) -> bool:
 	if state != PlotState.EMPTY:
 		return false
 	
-	if not StorageManager.has_item(new_crop_id, 1):
-		print("[FieldPlot] Thiếu hạt giống ", new_crop_id, " trong kho Silo!")
-		return false
-	
 	var crop_data: Dictionary = DataManager.get_crop(new_crop_id)
 	if crop_data.is_empty():
 		return false
 	
-	var success: bool = StorageManager.remove_item(new_crop_id, 1)
-	if not success:
+	if StorageManager.has_item(new_crop_id, 1):
+		StorageManager.remove_item(new_crop_id, 1)
+	elif new_crop_id in ["wheat", "corn"] or (StorageManager.get_item_count("wheat") == 0 and StorageManager.gold < 10):
+		# Anti-Softlock: basic crops can always be planted when empty to prevent player being stuck
+		print("[FieldPlot] Anti-Softlock: Cấp hạt giống khẩn cấp cho ", new_crop_id)
+	else:
+		print("[FieldPlot] Thiếu hạt giống ", new_crop_id, " trong kho Silo!")
 		return false
 	
 	crop_id = new_crop_id

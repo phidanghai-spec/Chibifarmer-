@@ -141,11 +141,13 @@ func add_xp(amount: int) -> void:
 	while xp >= needed:
 		xp -= needed
 		level += 1
-		var gold_reward: int = 8 if level >= 8 else 5
+		var gold_reward: int = 150 + level * 25
+		var dia_reward: int = 2
 		add_gold(gold_reward)
+		add_diamonds(dia_reward)
 		EventBus.leveled_up.emit(level)
 		needed = get_required_xp(level)
-		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng thưởng!)")
+		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng, +", dia_reward, " Kim Cương thưởng!)")
 	
 	EventBus.xp_changed.emit(xp, needed, level)
 

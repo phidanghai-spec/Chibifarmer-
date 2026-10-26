@@ -21,10 +21,54 @@
     "storage_type": "silo",
     "description": "Ngô ngọt thơm ngon, nguyên liệu chính của cám bò và bánh ngô."
   },
+  "tomato": {
+    "id": "tomato",
+    "name": "Cà Chua",
+    "growth_time_seconds": 25,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 9,
+    "unlock_level": 2,
+    "storage_type": "silo",
+    "description": "Cà chua chín đỏ mọng giàu vitamin."
+  },
+  "carrot": {
+    "id": "carrot",
+    "name": "Cà Rốt",
+    "growth_time_seconds": 30,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 8,
+    "unlock_level": 3,
+    "storage_type": "silo",
+    "description": "Cà rốt tươi giòn, thức ăn yêu thích của heo và du khách."
+  },
+  "strawberry": {
+    "id": "strawberry",
+    "name": "Dâu Tây",
+    "growth_time_seconds": 35,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 12,
+    "unlock_level": 3,
+    "storage_type": "silo",
+    "description": "Dâu tây đỏ mọng thơm ngọt, dùng làm bánh kem và mứt."
+  },
+  "pumpkin": {
+    "id": "pumpkin",
+    "name": "Bí Đỏ",
+    "growth_time_seconds": 40,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 15,
+    "unlock_level": 4,
+    "storage_type": "silo",
+    "description": "Quả bí đỏ vàng cam thơm bùi, dùng nấu súp và làm bánh bí ngô."
+  },
   "soybean": {
     "id": "soybean",
     "name": "Đậu Nành",
-    "growth_time_seconds": 1200,
+    "growth_time_seconds": 45,
     "harvest_yield": 2,
     "xp_reward": 3,
     "base_price": 10,
@@ -35,24 +79,13 @@
   "sugarcane": {
     "id": "sugarcane",
     "name": "Mía Đường",
-    "growth_time_seconds": 1800,
+    "growth_time_seconds": 50,
     "harvest_yield": 2,
     "xp_reward": 4,
     "base_price": 14,
     "unlock_level": 7,
     "storage_type": "silo",
-    "description": "Cây mía ngọt lịm, dùng ép đường và làm bánh ngọt cao cấp."
-  },
-  "carrot": {
-    "id": "carrot",
-    "name": "Cà Rốt",
-    "growth_time_seconds": 600,
-    "harvest_yield": 2,
-    "xp_reward": 3,
-    "base_price": 8,
-    "unlock_level": 9,
-    "storage_type": "silo",
-    "description": "Cà rốt tươi giòn, thức ăn yêu thích của heo và khách du lịch ăn chay."
+    "description": "Cây mía ngọt lịm, dùng ép nước mía và làm bánh ngọt cao cấp."
   },
   "apple": {
     "id": "apple",
@@ -60,7 +93,7 @@
     "growth_time_seconds": 25,
     "harvest_yield": 2,
     "xp_reward": 2,
-    "base_price": 12,
+    "base_price": 15,
     "unlock_level": 1,
     "storage_type": "silo",
     "description": "Táo đỏ tươi mọng nước, thu hoạch từ cây táo trong vườn."
@@ -71,7 +104,7 @@
     "growth_time_seconds": 30,
     "harvest_yield": 2,
     "xp_reward": 5,
-    "base_price": 18,
+    "base_price": 22,
     "unlock_level": 1,
     "storage_type": "silo",
     "description": "Xoài chín thơm ngọt, thu hoạch từ cây xoài trong vườn."
@@ -97,5 +130,246 @@
     "unlock_level": 1,
     "storage_type": "silo",
     "description": "Hạt giống cây xoài dùng để gieo trồng cây xoài mới."
+  },
+  "sunflower": {
+    "id": "sunflower",
+    "name": "Hoa Hướng Dương",
+    "growth_time_seconds": 25,
+    "harvest_yield": 2,
+    "xp_reward": 2,
+    "base_price": 12,
+    "unlock_level": 2,
+    "storage_type": "silo",
+    "description": "Hoa hướng dương vàng rực rỡ, thu hút du khách tham quan."
+  },
+  "rose": {
+    "id": "rose",
+    "name": "Hoa Hồng Đỏ",
+    "growth_time_seconds": 35,
+    "harvest_yield": 2,
+    "xp_reward": 3,
+    "base_price": 16,
+    "unlock_level": 3,
+    "storage_type": "silo",
+    "description": "Hoa hồng đỏ thắm kiêu sa ngát hương, làm đẹp cảnh quan trang trại."
+  },
+  "lavender": {
+    "id": "lavender",
+    "name": "Hoa Oải Hương",
+    "growth_time_seconds": 45,
+    "harvest_yield": 2,
+    "xp_reward": 4,
+    "base_price": 20,
+    "unlock_level": 4,
+    "storage_type": "silo",
+    "description": "Hoa oải hương tím ngát dịu dàng, dùng trang trí và pha chế tinh dầu."
+  },
+  "egg": {
+    "id": "egg",
+    "name": "Trứng Gà",
+    "base_price": 12,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Trứng gà tươi ngon giàu dinh dưỡng thu hoạch từ chuồng gà."
+  },
+  "milk": {
+    "id": "milk",
+    "name": "Sữa Bò Tươi",
+    "base_price": 28,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Sữa bò thanh trùng béo ngậy vừa vắt từ chuồng bò."
+  },
+  "bacon": {
+    "id": "bacon",
+    "name": "Thịt Xông Khói",
+    "base_price": 65,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Thịt xông khói thơm lừng từ chuồng heo mũm mĩm."
+  },
+  "wool": {
+    "id": "wool",
+    "name": "Lông Cừu",
+    "base_price": 90,
+    "unlock_level": 16,
+    "storage_type": "barn",
+    "description": "Lông cừu trắng muốt mềm mại dùng dệt len cao cấp."
+  },
+  "chicken_feed": {
+    "id": "chicken_feed",
+    "name": "Cám Gà",
+    "base_price": 7,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Cám nghiền mịn từ lúa mì và ngô dành cho bầy gà."
+  },
+  "cow_feed": {
+    "id": "cow_feed",
+    "name": "Cám Bò",
+    "base_price": 14,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Cám bổ dưỡng từ ngô và đậu nành giúp đàn bò cho nhiều sữa."
+  },
+  "pig_feed": {
+    "id": "pig_feed",
+    "name": "Cám Heo",
+    "base_price": 14,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Cám hỗn hợp cà rốt và đậu nành cho heo mau lớn."
+  },
+  "sheep_feed": {
+    "id": "sheep_feed",
+    "name": "Cám Cừu",
+    "base_price": 20,
+    "unlock_level": 16,
+    "storage_type": "barn",
+    "description": "Thức ăn chăn nuôi dành riêng cho cừu."
+  },
+  "bread": {
+    "id": "bread",
+    "name": "Bánh Mì Nóng",
+    "base_price": 21,
+    "unlock_level": 2,
+    "storage_type": "barn",
+    "description": "Ổ bánh mì vàng giòn rụm nướng từ lò bánh mì thủ công."
+  },
+  "butter": {
+    "id": "butter",
+    "name": "Bơ Sữa",
+    "base_price": 50,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Thỏi bơ vàng tươi sánh mịn chiết xuất từ sữa bò."
+  },
+  "cheese": {
+    "id": "cheese",
+    "name": "Phô Mai",
+    "base_price": 180,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Khối phô mai béo ngậy được ủ chuẩn nhiệt độ xưởng sữa."
+  },
+  "cream": {
+    "id": "cream",
+    "name": "Kem Tươi",
+    "base_price": 45,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Kem tươi mềm mịn đánh bông từ sữa nguyên chất."
+  },
+  "corn_bread": {
+    "id": "corn_bread",
+    "name": "Bánh Mì Ngô",
+    "base_price": 90,
+    "unlock_level": 7,
+    "storage_type": "barn",
+    "description": "Bánh ngô hòa quyện cùng trứng gà tươi bùi ngọt."
+  },
+  "cookie": {
+    "id": "cookie",
+    "name": "Bánh Quy Bơ",
+    "base_price": 150,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Bánh quy bơ giòn tan thơm lừng hấp dẫn du khách."
+  },
+  "butter_cookie": {
+    "id": "butter_cookie",
+    "name": "Bánh Quy Bơ",
+    "base_price": 150,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Bánh quy bơ nướng vàng rụm."
+  },
+  "cream_cake": {
+    "id": "cream_cake",
+    "name": "Bánh Kem Dâu",
+    "base_price": 260,
+    "unlock_level": 9,
+    "storage_type": "barn",
+    "description": "Bánh kem dâu tây béo ngậy phủ dâu tươi chín mọng."
+  },
+  "sugarcane_juice": {
+    "id": "sugarcane_juice",
+    "name": "Nước Mía Đá",
+    "base_price": 38,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Ly nước mía ép mát lạnh sảng khoái mùa hè."
+  },
+  "apple_juice": {
+    "id": "apple_juice",
+    "name": "Nước Ép Táo",
+    "base_price": 65,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Nước ép táo đỏ tươi ngọt thanh tự nhiên giàu vitamin."
+  },
+  "mango_smoothie": {
+    "id": "mango_smoothie",
+    "name": "Sinh Tố Xoài",
+    "base_price": 110,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Sinh tố xoài chín xay nhuyễn cùng sữa tươi béo thơm."
+  },
+  "fish_carp": {
+    "id": "fish_carp",
+    "name": "Cá Chép",
+    "base_price": 25,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Cá chép tươi ngon vừa câu dưới hồ."
+  },
+  "fish_bass": {
+    "id": "fish_bass",
+    "name": "Cá Vược",
+    "base_price": 35,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Cá vược thịt chắc ngọt câu tại đầm nước sâu."
+  },
+  "fish_golden_koi": {
+    "id": "fish_golden_koi",
+    "name": "Cá Koi Vàng",
+    "base_price": 150,
+    "unlock_level": 8,
+    "storage_type": "barn",
+    "description": "Cá koi hoàng kim quý hiếm mang lại may mắn và giá trị cao."
+  },
+  "fish": {
+    "id": "fish",
+    "name": "Cá Tươi",
+    "base_price": 25,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Cá tươi nước ngọt vừa câu từ hồ."
+  },
+  "bait_red": {
+    "id": "bait_red",
+    "name": "Mồi Câu Đỏ",
+    "base_price": 15,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Mồi câu cá tiêu chuẩn màu đỏ tươi."
+  },
+  "bait_blue": {
+    "id": "bait_blue",
+    "name": "Mồi Câu Xanh",
+    "base_price": 25,
+    "unlock_level": 5,
+    "storage_type": "barn",
+    "description": "Mồi câu chuyên săn cá nước sâu."
+  },
+  "bait_gold": {
+    "id": "bait_gold",
+    "name": "Mồi Câu Vàng Kim",
+    "base_price": 50,
+    "unlock_level": 7,
+    "storage_type": "barn",
+    "description": "Mồi câu mạ vàng chuyên săn cá Koi quý hiếm."
   }
 }

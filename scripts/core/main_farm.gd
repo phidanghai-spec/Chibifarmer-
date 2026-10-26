@@ -152,7 +152,7 @@ func _ready() -> void:
 	set_process(false)
 
 	# Check screenshot test mode
-	var args: PackedStringArray = OS.get_cmdline_args()
+	var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
 	for arg: String in args:
 		if arg == "--screenshot" or arg == "--run-tests":
 			_capture_screenshot_and_quit()

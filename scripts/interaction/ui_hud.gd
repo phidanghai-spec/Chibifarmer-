@@ -13,8 +13,10 @@ class_name UIHud
 @onready var progress_silo: ProgressBar = %ProgressSilo
 @onready var label_barn: Label = %LabelBarn
 @onready var progress_barn: ProgressBar = %ProgressBarn
+@onready var label_xp: Label = %LabelXP
 @onready var label_attraction: Label = %LabelAttraction
 @onready var btn_audio_toggle: Button = %BtnAudioToggle
+@onready var btn_settings: Button = %BtnSettings
 
 # --- Bottom Tools ---
 @onready var btn_view: Button = %BtnView
@@ -44,6 +46,9 @@ const StockAlertSystemClass = preload("res://scripts/systems/stock_alert_system.
 var label_coins: Label = null
 var stock_alert_system: Control = null
 var _rename_modal: PanelContainer = null
+var _settings_modal: PanelContainer = null
+var _level_up_modal: PanelContainer = null
+var _sell_picker_modal: PanelContainer = null
 
 var _tool_buttons: Dictionary = {}
 var _crop_buttons: Dictionary = {}
@@ -198,6 +203,9 @@ func _ready() -> void:
 				AudioManager.play_sfx("click")
 		)
 	
+	if btn_settings != null:
+		btn_settings.pressed.connect(open_settings_modal)
+	
 	if RoadsideShop != null:
 		RoadsideShop.shop_updated.connect(_refresh_shop_ui)
 	if TruckOrderSystem != null:
@@ -217,7 +225,7 @@ func _ready() -> void:
 	# Ensure crisp readability for HUD numbers: dark brown with white outline
 	var dark_brown: Color = Color(0.24, 0.15, 0.14) # #3E2723
 	var white_outline: Color = Color(1.0, 1.0, 1.0)
-	for lbl in [label_silo, label_barn, label_level, label_diamonds, label_gold]:
+	for lbl in [label_silo, label_barn, label_level, label_diamonds, label_gold, label_xp]:
 		if lbl != null:
 			lbl.add_theme_color_override("font_color", dark_brown)
 			lbl.add_theme_color_override("font_outline_color", white_outline)
@@ -549,11 +557,228 @@ func _on_xp_changed(current_xp: int, target_xp: int, current_level: int) -> void
 	if progress_xp != null:
 		progress_xp.max_value = target_xp
 		progress_xp.value = current_xp
+	if label_xp != null:
+		label_xp.text = "XP: %s / %s" % [_format_number(current_xp), _format_number(target_xp)]
 
 func _on_leveled_up(new_level: int) -> void:
 	print("[UIHud] CONGRATULATIONS! Level up to: ", new_level)
 	if label_level != null:
 		label_level.text = "%d" % new_level
+	_show_level_up_modal(new_level)
+
+func show_floating_notice(msg: String) -> void:
+	var notice_box: PanelContainer = PanelContainer.new()
+	notice_box.z_index = 120
+	notice_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.18, 0.12, 0.08, 0.92)
+	sb.border_color = Color(0.95, 0.78, 0.35, 1.0)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(10)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	notice_box.add_theme_stylebox_override("panel", sb)
+	
+	var lbl: Label = Label.new()
+	lbl.text = msg
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+	lbl.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.02))
+	lbl.add_theme_constant_override("outline_size", 2)
+	notice_box.add_child(lbl)
+	
+	add_child(notice_box)
+	
+	notice_box.anchors_preset = Control.PRESET_CENTER_TOP
+	notice_box.anchor_left = 0.5
+	notice_box.anchor_right = 0.5
+	notice_box.anchor_top = 0.0
+	notice_box.offset_left = -160.0
+	notice_box.offset_right = 160.0
+	notice_box.offset_top = 65.0
+	
+	var tw: Tween = create_tween()
+	tw.tween_property(notice_box, "offset_top", 75.0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(1.8)
+	tw.tween_property(notice_box, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(notice_box.queue_free)
+
+func _show_level_up_modal(new_level: int) -> void:
+	AudioManager.play_sfx("level_up")
+	if _level_up_modal != null and is_instance_valid(_level_up_modal):
+		_level_up_modal.queue_free()
+	
+	_level_up_modal = PanelContainer.new()
+	_level_up_modal.name = "LevelUpModal"
+	_level_up_modal.custom_minimum_size = Vector2(360, 220)
+	_level_up_modal.anchors_preset = Control.PRESET_CENTER
+	_level_up_modal.anchor_left = 0.5
+	_level_up_modal.anchor_top = 0.5
+	_level_up_modal.anchor_right = 0.5
+	_level_up_modal.anchor_bottom = 0.5
+	_level_up_modal.offset_left = -180.0
+	_level_up_modal.offset_top = -110.0
+	_level_up_modal.offset_right = 180.0
+	_level_up_modal.offset_bottom = 110.0
+	_level_up_modal.z_index = 150
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.99, 0.96, 0.90, 0.98)
+	sb.border_color = Color(0.85, 0.65, 0.18, 1.0)
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 20
+	sb.content_margin_right = 20
+	sb.content_margin_top = 16
+	sb.content_margin_bottom = 16
+	sb.shadow_color = Color(0.3, 0.2, 0.05, 0.3)
+	sb.shadow_size = 10
+	_level_up_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	_level_up_modal.add_child(vbox)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🎉 CHÚC MỪNG BẠN LÊN CẤP! 🎉"
+	lbl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_title.add_theme_font_size_override("font_size", 16)
+	lbl_title.add_theme_color_override("font_color", Color(0.85, 0.45, 0.05))
+	lbl_title.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	vbox.add_child(lbl_title)
+	
+	var lbl_level_badge: Label = Label.new()
+	lbl_level_badge.text = "⭐ CẤP ĐỘ %d ⭐" % new_level
+	lbl_level_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_level_badge.add_theme_font_size_override("font_size", 22)
+	lbl_level_badge.add_theme_color_override("font_color", Color(0.25, 0.15, 0.10))
+	vbox.add_child(lbl_level_badge)
+	
+	var gold_reward: int = 150 + new_level * 25
+	var dia_reward: int = 2
+	var lbl_rewards: Label = Label.new()
+	lbl_rewards.text = "🎁 Phần thưởng: +%d 👑 Vàng   +%d 💎 Kim Cương" % [gold_reward, dia_reward]
+	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_rewards.add_theme_font_size_override("font_size", 12)
+	lbl_rewards.add_theme_color_override("font_color", Color(0.18, 0.58, 0.22))
+	vbox.add_child(lbl_rewards)
+	
+	var btn_ok: Button = Button.new()
+	btn_ok.text = "🌟 Tuyệt Vời!"
+	btn_ok.custom_minimum_size = Vector2(130, 36)
+	btn_ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn_ok.pressed.connect(func() -> void:
+		_level_up_modal.queue_free()
+	)
+	vbox.add_child(btn_ok)
+	
+	add_child(_level_up_modal)
+
+func open_settings_modal() -> void:
+	AudioManager.play_sfx("click")
+	if _settings_modal != null and is_instance_valid(_settings_modal):
+		_settings_modal.queue_free()
+		return
+	
+	_settings_modal = PanelContainer.new()
+	_settings_modal.name = "SettingsModal"
+	_settings_modal.custom_minimum_size = Vector2(360, 260)
+	_settings_modal.anchors_preset = Control.PRESET_CENTER
+	_settings_modal.anchor_left = 0.5
+	_settings_modal.anchor_top = 0.5
+	_settings_modal.anchor_right = 0.5
+	_settings_modal.anchor_bottom = 0.5
+	_settings_modal.offset_left = -180.0
+	_settings_modal.offset_top = -130.0
+	_settings_modal.offset_right = 180.0
+	_settings_modal.offset_bottom = 130.0
+	_settings_modal.z_index = 100
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	_settings_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_settings_modal.add_child(vbox)
+	
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "⚙️ CÀI ĐẶT & QUẢN LÝ DỮ LIỆU"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "✕"
+	btn_close.custom_minimum_size = Vector2(28, 28)
+	btn_close.pressed.connect(func() -> void:
+		_settings_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	var lbl_sub: Label = Label.new()
+	lbl_sub.text = "Chọn chức năng lưu trữ hoặc chế độ chơi mong muốn:"
+	lbl_sub.add_theme_font_size_override("font_size", 11)
+	lbl_sub.add_theme_color_override("font_color", Color(0.45, 0.30, 0.20))
+	vbox.add_child(lbl_sub)
+	
+	var btn_save: Button = Button.new()
+	btn_save.text = "💾 Lưu Game Ngay"
+	btn_save.custom_minimum_size = Vector2(0, 34)
+	btn_save.pressed.connect(func() -> void:
+		SaveManager.save_game()
+		AudioManager.play_sfx("coin")
+		show_floating_notice("💾 Đã lưu tiến trình nông trại an toàn!")
+		_settings_modal.queue_free()
+	)
+	vbox.add_child(btn_save)
+	
+	var btn_reset_lvl1: Button = Button.new()
+	btn_reset_lvl1.text = "🌱 Chơi Mới Chuẩn (Level 1)"
+	btn_reset_lvl1.custom_minimum_size = Vector2(0, 34)
+	btn_reset_lvl1.pressed.connect(func() -> void:
+		SaveManager.reset_to_level_1()
+		_refresh_all_hud()
+		_refresh_shop_ui()
+		_refresh_truck_ui()
+		AudioManager.play_sfx("level_up")
+		show_floating_notice("🌱 Đã thiết lập lại nông trại Cấp 1! Chúc bạn cày cuốc vui vẻ!")
+		_settings_modal.queue_free()
+	)
+	vbox.add_child(btn_reset_lvl1)
+	
+	var btn_sandbox: Button = Button.new()
+	btn_sandbox.text = "🛠️ Chế Độ Thử Nghiệm (Sandbox Level 32)"
+	btn_sandbox.custom_minimum_size = Vector2(0, 34)
+	btn_sandbox.pressed.connect(func() -> void:
+		SaveManager.set_sandbox_level_32()
+		_refresh_all_hud()
+		_refresh_shop_ui()
+		_refresh_truck_ui()
+		AudioManager.play_sfx("coin")
+		show_floating_notice("🛠️ Đã kích hoạt Chế Độ Thử Nghiệm Cấp 32!")
+		_settings_modal.queue_free()
+	)
+	vbox.add_child(btn_sandbox)
+	
+	add_child(_settings_modal)
 
 func _on_storage_updated(storage_type: String, current_used: int, max_cap: int) -> void:
 	if storage_type == "silo":
@@ -635,7 +860,7 @@ func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer
 		
 		var btn_list: Button = Button.new()
 		btn_list.text = "+ Đăng Bán"
-		btn_list.pressed.connect(func() -> void: _quick_list_dialog(slot_index))
+		btn_list.pressed.connect(func() -> void: open_sell_item_picker(slot_index))
 		vbox.add_child(btn_list)
 	elif is_sold:
 		# Sold: Collect money!
@@ -674,19 +899,164 @@ func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer
 	
 	return card
 
-func _quick_list_dialog(slot_index: int) -> void:
-	# Find available items in Silo or Barn to sell
-	var candidates: Array[String] = ["wheat", "corn", "egg", "milk", "bread"]
-	for candidate: String in candidates:
-		if StorageManager.has_item(candidate, 5):
-			var price: int = RoadsideShop.get_suggested_price(candidate, 5)
-			RoadsideShop.list_item(slot_index, candidate, 5, price)
-			return
-		elif StorageManager.has_item(candidate, 2):
-			var price: int = RoadsideShop.get_suggested_price(candidate, 2)
-			RoadsideShop.list_item(slot_index, candidate, 2, price)
-			return
-	print("[UIHud] Không đủ vật phẩm trong kho để đăng bán!")
+func open_sell_item_picker(slot_index: int) -> void:
+	AudioManager.play_sfx("click")
+	if _sell_picker_modal != null and is_instance_valid(_sell_picker_modal):
+		_sell_picker_modal.queue_free()
+	
+	_sell_picker_modal = PanelContainer.new()
+	_sell_picker_modal.name = "SellPickerModal"
+	_sell_picker_modal.custom_minimum_size = Vector2(420, 340)
+	_sell_picker_modal.anchors_preset = Control.PRESET_CENTER
+	_sell_picker_modal.anchor_left = 0.5
+	_sell_picker_modal.anchor_top = 0.5
+	_sell_picker_modal.anchor_right = 0.5
+	_sell_picker_modal.anchor_bottom = 0.5
+	_sell_picker_modal.offset_left = -210.0
+	_sell_picker_modal.offset_top = -170.0
+	_sell_picker_modal.offset_right = 210.0
+	_sell_picker_modal.offset_bottom = 170.0
+	_sell_picker_modal.z_index = 95
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(12)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 12
+	sb.content_margin_bottom = 12
+	_sell_picker_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	_sell_picker_modal.add_child(vbox)
+	
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "📦 CHỌN HÀNG ĐĂNG BÁN (Ô #%d)" % (slot_index + 1)
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	btn_close.text = "✕"
+	btn_close.custom_minimum_size = Vector2(28, 28)
+	btn_close.pressed.connect(func() -> void:
+		_sell_picker_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(388, 260)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	
+	var vbox_list: VBoxContainer = VBoxContainer.new()
+	vbox_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_list.add_theme_constant_override("separation", 6)
+	scroll.add_child(vbox_list)
+	
+	var sellable_items: Array[Dictionary] = []
+	for item_id: Variant in StorageManager.silo_items:
+		var cnt: int = int(StorageManager.silo_items[item_id])
+		if cnt > 0:
+			sellable_items.append({"id": String(item_id), "count": cnt, "type": "silo"})
+	for item_id: Variant in StorageManager.barn_items:
+		var cnt: int = int(StorageManager.barn_items[item_id])
+		if cnt > 0:
+			sellable_items.append({"id": String(item_id), "count": cnt, "type": "barn"})
+			
+	if sellable_items.is_empty():
+		var lbl_empty: Label = Label.new()
+		lbl_empty.text = "Kho trống! Bạn chưa có nông sản hay thành phẩm nào."
+		lbl_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_empty.add_theme_font_size_override("font_size", 12)
+		lbl_empty.add_theme_color_override("font_color", Color(0.5, 0.35, 0.2))
+		vbox_list.add_child(lbl_empty)
+	else:
+		for s_data: Dictionary in sellable_items:
+			var i_id: String = String(s_data["id"])
+			var i_cnt: int = int(s_data["count"])
+			var i_name: String = DataManager.get_item_name(i_id)
+			var base_p: int = DataManager.get_item_base_price(i_id)
+			
+			var row_item: PanelContainer = PanelContainer.new()
+			var r_sb: StyleBoxFlat = StyleBoxFlat.new()
+			r_sb.bg_color = Color(1.0, 1.0, 1.0, 0.9)
+			r_sb.border_color = Color(0.85, 0.75, 0.60, 1.0)
+			r_sb.set_border_width_all(1)
+			r_sb.set_corner_radius_all(6)
+			r_sb.content_margin_left = 8
+			r_sb.content_margin_right = 8
+			r_sb.content_margin_top = 4
+			r_sb.content_margin_bottom = 4
+			row_item.add_theme_stylebox_override("panel", r_sb)
+			
+			var hbox_row: HBoxContainer = HBoxContainer.new()
+			hbox_row.add_theme_constant_override("separation", 8)
+			row_item.add_child(hbox_row)
+			
+			var icon_rect: TextureRect = TextureRect.new()
+			icon_rect.custom_minimum_size = Vector2(36, 36)
+			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			if SpriteAtlasManager.has_texture(i_id):
+				icon_rect.texture = SpriteAtlasManager.get_texture(i_id)
+			hbox_row.add_child(icon_rect)
+			
+			var vbox_info: VBoxContainer = VBoxContainer.new()
+			vbox_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			vbox_info.alignment = BoxContainer.ALIGNMENT_CENTER
+			hbox_row.add_child(vbox_info)
+			
+			var lbl_row_name: Label = Label.new()
+			lbl_row_name.text = "%s (Có: %d)" % [i_name, i_cnt]
+			lbl_row_name.add_theme_font_size_override("font_size", 11)
+			lbl_row_name.add_theme_color_override("font_color", Color(0.25, 0.15, 0.05))
+			vbox_info.add_child(lbl_row_name)
+			
+			var sell_qty: int = mini(i_cnt, 5) if i_cnt >= 5 else i_cnt
+			var norm_price: int = base_p * sell_qty
+			var max_price: int = RoadsideShop.get_suggested_price(i_id, sell_qty)
+			
+			var lbl_row_price: Label = Label.new()
+			lbl_row_price.text = "Bán %d: %d Vàng (Max: %d)" % [sell_qty, norm_price, max_price]
+			lbl_row_price.add_theme_font_size_override("font_size", 9)
+			lbl_row_price.add_theme_color_override("font_color", Color(0.65, 0.45, 0.10))
+			vbox_info.add_child(lbl_row_price)
+			
+			var btn_sell_norm: Button = Button.new()
+			btn_sell_norm.text = "%d Vàng" % norm_price
+			btn_sell_norm.tooltip_text = "Đăng bán giá chuẩn"
+			btn_sell_norm.pressed.connect(func() -> void:
+				if RoadsideShop.list_item(slot_index, i_id, sell_qty, norm_price):
+					AudioManager.play_sfx("coin")
+					show_floating_notice("💰 Đã đăng bán %dx %s (%d Vàng)!" % [sell_qty, i_name, norm_price])
+					_sell_picker_modal.queue_free()
+					_refresh_shop_ui()
+			)
+			hbox_row.add_child(btn_sell_norm)
+			
+			var btn_sell_max: Button = Button.new()
+			btn_sell_max.text = "⭐ %d" % max_price
+			btn_sell_max.tooltip_text = "Đăng bán giá tối đa"
+			btn_sell_max.pressed.connect(func() -> void:
+				if RoadsideShop.list_item(slot_index, i_id, sell_qty, max_price):
+					AudioManager.play_sfx("coin")
+					show_floating_notice("⭐ Đã đăng bán %dx %s giá tối đa (%d Vàng)!" % [sell_qty, i_name, max_price])
+					_sell_picker_modal.queue_free()
+					_refresh_shop_ui()
+			)
+			hbox_row.add_child(btn_sell_max)
+			
+			vbox_list.add_child(row_item)
+	
+	add_child(_sell_picker_modal)
 
 # --- Truck Orders Modal ---
 
@@ -731,6 +1101,18 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
 	card.add_child(vbox)
+	
+	if bool(order.get("is_refreshing", false)):
+		var cd: int = int(order.get("refresh_time_left", 15))
+		var lbl_cd: Label = Label.new()
+		lbl_cd.text = "⏳ Đang đổi đơn mới...\nCòn lại: %d giây" % cd
+		lbl_cd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_cd.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_cd.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		lbl_cd.add_theme_font_size_override("font_size", 13)
+		lbl_cd.add_theme_color_override("font_color", Color(0.5, 0.35, 0.2))
+		vbox.add_child(lbl_cd)
+		return card
 	
 	# Header: Order ID & Reward Badges
 	var hbox_header: HBoxContainer = HBoxContainer.new()
@@ -809,7 +1191,7 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	hbox_btns.add_child(btn_send)
 	
 	var btn_trash: Button = Button.new()
-	btn_trash.text = "🔄 Đổi Đơn"
+	btn_trash.text = "🗑️ Đổi Đơn"
 	btn_trash.custom_minimum_size = Vector2(80, 30)
 	btn_trash.pressed.connect(func() -> void:
 		TruckOrderSystem.trash_order(order_index)
@@ -1583,6 +1965,21 @@ func open_production_recipe_modal(machine: ProductionMachine) -> void:
 	lbl_status.add_theme_color_override("font_color", Color(0.4, 0.25, 0.12))
 	vbox.add_child(lbl_status)
 	
+	if not machine.queue.is_empty():
+		var btn_speedup: Button = Button.new()
+		btn_speedup.text = "⚡ Hoàn Thành Ngay (1 💎)"
+		btn_speedup.custom_minimum_size = Vector2(0, 30)
+		btn_speedup.pressed.connect(func() -> void:
+			if StorageManager.diamonds < 1:
+				show_floating_notice("⚠️ Bạn không đủ Kim Cương (cần 1 💎)!")
+				return
+			if is_instance_valid(machine):
+				if machine.speed_up_current_job():
+					show_floating_notice("⚡ Đã hoàn thành ngay bằng 1 💎!")
+					open_production_recipe_modal(machine)
+		)
+		vbox.add_child(btn_speedup)
+	
 	# Recipes Scroll
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(408, 220)
@@ -1669,8 +2066,11 @@ func _create_recipe_row(machine: ProductionMachine, rec: Dictionary) -> PanelCon
 	btn_craft.custom_minimum_size = Vector2(90, 32)
 	var rec_id: String = String(rec.get("id", ""))
 	if not has_all_ings:
-		btn_craft.text = "Thiếu Đồ"
-		btn_craft.disabled = true
+		btn_craft.text = "⚠️ Thiếu Đồ"
+		btn_craft.pressed.connect(func() -> void:
+			show_floating_notice("⚠️ Không đủ nguyên liệu để sản xuất %s!" % String(rec.get("name", prod_item)))
+			AudioManager.play_sfx("click")
+		)
 	else:
 		btn_craft.text = "🍳 Sản Xuất"
 		btn_craft.disabled = false

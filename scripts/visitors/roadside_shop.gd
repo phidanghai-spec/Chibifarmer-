@@ -7,8 +7,20 @@ const TOTAL_SLOTS: int = 6
 # Array of slot Dictionaries
 var slots: Array[Dictionary] = []
 
+var _buyer_timer: Timer
+
 func _ready() -> void:
 	_init_slots()
+	_buyer_timer = Timer.new()
+	_buyer_timer.name = "AutoBuyerTimer"
+	_buyer_timer.wait_time = randf_range(15.0, 25.0)
+	_buyer_timer.autostart = true
+	_buyer_timer.timeout.connect(_on_buyer_timer_timeout)
+	add_child(_buyer_timer)
+
+func _on_buyer_timer_timeout() -> void:
+	_buyer_timer.wait_time = randf_range(15.0, 25.0)
+	buy_random_available_slot()
 
 func _init_slots() -> void:
 	slots.clear()

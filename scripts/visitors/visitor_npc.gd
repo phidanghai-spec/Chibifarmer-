@@ -179,20 +179,27 @@ func handle_visitor_click() -> bool:
 		_show_emote()
 		return true
 	
+	var attraction: int = GridManager.total_attraction_score
+	var attraction_mult: float = 1.0 + float(attraction) * 0.008
+	var final_gold: int = int(float(reward_gold) * attraction_mult)
+	var tip_coins: int = maxi(2, int(float(attraction) * 0.15))
+	
 	# Check if player has the requested item in Silo or Barn
 	if StorageManager.has_item(requested_item, 1):
 		StorageManager.remove_item(requested_item, 1)
-		StorageManager.add_gold(reward_gold)
+		StorageManager.add_gold(final_gold)
+		StorageManager.add_coins(tip_coins)
 		StorageManager.add_xp(reward_xp)
 		GridManager.add_attraction_score(5)
 		
-		EventBus.loot_collected.emit("gold", reward_gold, global_position)
+		EventBus.loot_collected.emit("gold", final_gold, global_position)
+		EventBus.loot_collected.emit("coins", tip_coins, global_position)
 		EventBus.loot_collected.emit("xp", reward_xp, global_position)
 		
 		_is_demand_satisfied = true
 		_demand_timer = 20.0
 		
-		_label_demand.text = "😍 Cảm ơn! +5✨"
+		_label_demand.text = "😍 +%dV +%dXu! ✨" % [final_gold, tip_coins]
 		_label_demand.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 		_show_emote()
 		AudioManager.play_sfx("coin")
@@ -203,12 +210,15 @@ func handle_visitor_click() -> bool:
 		_body_sprite.scale = _base_sprite_scale
 		return true
 	else:
-		# Player doesn't have requested item yet -> Friendly tip +10 gold for visiting
-		StorageManager.add_gold(10)
+		# Player doesn't have requested item yet -> Friendly tip scaled by attraction
+		var visit_gold: int = 10 + int(float(attraction) * 0.1)
+		var visit_coins: int = maxi(1, int(float(attraction) * 0.05))
+		StorageManager.add_gold(visit_gold)
+		StorageManager.add_coins(visit_coins)
 		AudioManager.play_sfx("coin")
-		EventBus.loot_collected.emit("gold", 10, global_position)
+		EventBus.loot_collected.emit("gold", visit_gold, global_position)
 		
-		_label_demand.text = "Chưa có %s! Tặng 10 Vàng" % requested_name
+		_label_demand.text = "Ghé thăm: +%dV +%dXu! ✨" % [visit_gold, visit_coins]
 		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4))
 		
 		var tw: Tween = create_tween()
