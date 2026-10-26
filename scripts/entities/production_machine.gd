@@ -129,40 +129,11 @@ func handle_machine_click() -> bool:
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 
 	if not completed_items.is_empty():
-		var _ret: bool = collect_all()
-	elif queue.is_empty():
-		# 1-Click Harvest & Start next batch
-		var def_item: String = ""
-		if machine_id == "bakery":
-			def_item = "bread"
-		elif machine_id == "feed_mill":
-			def_item = "cow_feed"
-		elif machine_id == "dairy":
-			def_item = "butter"
-		elif machine_id == "cake_oven":
-			def_item = "cream_cake"
-		elif machine_id == "juice_stand":
-			def_item = "sugarcane_juice"
-		
-		if def_item != "" and StorageManager.can_store_item(def_item, 1):
-			StorageManager.add_item(def_item, 1)
-			StorageManager.add_xp(3)
-			AudioManager.play_sfx("harvest")
-			EventBus.loot_collected.emit(def_item, 1, global_position)
-			_spawn_local_harvest_fx(def_item)
-		
-		var rec_id: String = def_item
-		if rec_id != "":
-			var rec: Dictionary = DataManager.get_recipe(rec_id)
-			var ings: Dictionary = rec.get("ingredients", {}) as Dictionary
-			for ing: Variant in ings:
-				if not StorageManager.has_item(String(ing), int(ings[ing])):
-					StorageManager.add_item(String(ing), int(ings[ing]))
-			start_recipe(rec_id)
-	else:
-		var hint_text: String = "Đang nướng bánh..." if machine_id == "bakery" else "Đang sản xuất..."
-		_show_floating_hint(hint_text)
-		AudioManager.play_sfx("error")
+		collect_all()
+		_show_floating_hint("✨ Đã thu hoạch vào Kho Barn!")
+	elif not queue.is_empty():
+		var remaining: int = TickManager.get_time_remaining(int(queue[0].get("finish_timestamp", 0)))
+		_show_floating_hint("⏳ Đang chế biến (%s)..." % TickManager.format_duration(remaining))
 
 	if hud != null:
 		hud.open_production_recipe_modal(self)
@@ -170,6 +141,29 @@ func handle_machine_click() -> bool:
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "scale", Vector2(1.08, 0.92), 0.08)
 	tw.tween_property(self, "scale", Vector2.ONE, 0.1)
+	return true
+
+func speed_up_current_job() -> bool:
+	if queue.is_empty():
+		return false
+	if not StorageManager.spend_diamonds(1):
+		AudioManager.play_sfx("error")
+		return false
+	
+	var cur_job: Dictionary = queue[0]
+	var prod_item: String = String(cur_job.get("produce_item_id", ""))
+	completed_items.append(prod_item)
+	EventBus.production_finished.emit(instance_id, String(cur_job.get("recipe_id", "")))
+	queue.remove_at(0)
+	
+	if not queue.is_empty():
+		var next_job: Dictionary = queue[0]
+		var rec: Dictionary = DataManager.get_recipe(String(next_job["recipe_id"]))
+		var craft_time: int = mini(int(rec.get("craft_time_seconds", 30)), 60)
+		next_job["finish_timestamp"] = TickManager.calculate_finish_timestamp(craft_time)
+	
+	AudioManager.play_sfx("coin")
+	_show_floating_hint("⚡ Xong ngay! (-1 💎)")
 	return true
 
 func _show_floating_hint(hint_text: String) -> void:

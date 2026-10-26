@@ -21,16 +21,32 @@ func _create_random_order() -> Dictionary:
 	var order_id: String = "TRUCK_%03d" % _order_counter
 	_order_counter += 1
 	
-	# Possible items to order from Silo and Barn
-	var possible_crops: Array[String] = ["wheat", "corn", "carrot", "apple"]
-	var possible_goods: Array[String] = ["egg", "milk", "bread", "cow_feed"]
+	var cur_lvl: int = StorageManager.level
+	var possible_crops: Array[String] = []
+	var possible_goods: Array[String] = []
+	
+	for item_id: Variant in DataManager.items:
+		var s_id: String = String(item_id)
+		var item_dict: Dictionary = DataManager.items[item_id] as Dictionary
+		var u_lvl: int = int(item_dict.get("unlock_level", 1))
+		if u_lvl <= cur_lvl:
+			var s_type: String = String(item_dict.get("storage_type", "silo"))
+			if s_type == "silo":
+				possible_crops.append(s_id)
+			else:
+				possible_goods.append(s_id)
+	
+	if possible_crops.is_empty():
+		possible_crops = ["wheat", "corn"]
+	if possible_goods.is_empty():
+		possible_goods = ["chicken_feed", "bread"]
 	
 	var requirements: Dictionary = {}
 	var total_base_val: int = 0
 	
 	# 1st item (crop)
 	var crop: String = possible_crops.pick_random()
-	var crop_qty: int = randi_range(2, 6)
+	var crop_qty: int = randi_range(2, 5)
 	requirements[crop] = crop_qty
 	total_base_val += DataManager.get_item_base_price(crop) * crop_qty
 	
@@ -42,7 +58,7 @@ func _create_random_order() -> Dictionary:
 	
 	# Calculate balanced rewards: 130% coins + 1-2 gold + XP
 	var reward_coins: int = int(total_base_val * 1.3)
-	var reward_gold: int = randi_range(1, 2)
+	var reward_gold: int = randi_range(2, 4)
 	var reward_xp: int = int(total_base_val * 0.5) + 15
 	
 	return {
@@ -50,7 +66,9 @@ func _create_random_order() -> Dictionary:
 		"requirements": requirements,
 		"reward_coins": reward_coins,
 		"reward_gold": reward_gold,
-		"reward_xp": reward_xp
+		"reward_xp": reward_xp,
+		"is_refreshing": false,
+		"refresh_seconds": 0
 	}
 
 func get_orders() -> Array[Dictionary]:
@@ -100,6 +118,15 @@ func fulfill_order(order_index: int) -> bool:
 
 func trash_order(order_index: int) -> void:
 	if order_index >= 0 and order_index < active_orders.size():
-		active_orders[order_index] = _create_random_order()
+		var ord: Dictionary = active_orders[order_index]
+		ord["is_refreshing"] = true
+		ord["refresh_seconds"] = 15
 		orders_updated.emit()
-		print("[TruckOrderSystem] Discarded order and generated new one.")
+		print("[TruckOrderSystem] Discarded order, finding new order in 15s...")
+		
+		var timer: SceneTreeTimer = get_tree().create_timer(15.0)
+		timer.timeout.connect(func() -> void:
+			if order_index >= 0 and order_index < active_orders.size():
+				active_orders[order_index] = _create_random_order()
+				orders_updated.emit()
+		)

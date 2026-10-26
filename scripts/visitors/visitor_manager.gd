@@ -71,12 +71,20 @@ func release_farmhouse_slot(idx: int) -> void:
 func _process(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = randf_range(8.0, 14.0)
+		var attraction: int = GridManager.total_attraction_score
+		var min_wait: float = maxf(3.5, 8.0 - float(attraction) * 0.05)
+		var max_wait: float = maxf(6.0, 14.0 - float(attraction) * 0.08)
+		_spawn_timer = randf_range(min_wait, max_wait)
 		spawn_random_visitor()
 
 func spawn_random_visitor() -> VisitorNPC:
-	# Limit maximum simultaneous active visitors on roads to 3 for clear aesthetics
-	if get_active_visitors().size() >= 3:
+	var attraction: int = GridManager.total_attraction_score
+	var max_active: int = 3
+	if attraction >= 80:
+		max_active = 5
+	elif attraction >= 40:
+		max_active = 4
+	if get_active_visitors().size() >= max_active:
 		return null
 
 	var available_npc: VisitorNPC = null

@@ -36,16 +36,102 @@ func _notification(what: int) -> void:
 		save_game()
 
 func reset_save() -> void:
+	reset_to_level_1()
+
+func reset_to_level_1() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		var global_p: String = ProjectSettings.globalize_path(SAVE_PATH)
 		DirAccess.remove_absolute(global_p)
-		print("[SaveManager] Reset and removed legacy save file: ", SAVE_PATH)
+		print("[SaveManager] Reset and removed save file for Level 1 fresh start: ", SAVE_PATH)
 	custom_decorations.clear()
 	building_custom_names.clear()
-	StorageManager.silo_capacity = 300
-	StorageManager.barn_capacity = 300
-	StorageManager._init_starter_inventory()
+	
+	StorageManager.level = 1
+	StorageManager.xp = 0
+	StorageManager.gold = 500
+	StorageManager.coins = 100
+	StorageManager.diamonds = 15
+	StorageManager.silo_capacity = 100
+	StorageManager.barn_capacity = 100
+	
+	StorageManager.silo_items.clear()
+	StorageManager.silo_items["wheat"] = 5
+	StorageManager.silo_items["corn"] = 5
+	
+	StorageManager.barn_items.clear()
+	StorageManager.barn_items["chicken_feed"] = 3
+	StorageManager.barn_items["cow_feed"] = 2
+	
+	EventBus.coins_changed.emit(StorageManager.coins, 0)
+	EventBus.gold_changed.emit(StorageManager.gold, 0)
+	EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
+	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
+	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
+	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	save_game()
+	print("[SaveManager] Successfully reset account to Fresh Level 1!")
+
+func set_sandbox_level_32() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		var global_p: String = ProjectSettings.globalize_path(SAVE_PATH)
+		DirAccess.remove_absolute(global_p)
+	
+	StorageManager.level = 32
+	StorageManager.xp = 1240
+	StorageManager.gold = 99999
+	StorageManager.coins = 25000
+	StorageManager.diamonds = 150
+	StorageManager.silo_capacity = 500
+	StorageManager.barn_capacity = 500
+	
+	StorageManager.silo_items.clear()
+	StorageManager.silo_items["wheat"] = 60
+	StorageManager.silo_items["corn"] = 45
+	StorageManager.silo_items["tomato"] = 25
+	StorageManager.silo_items["carrot"] = 25
+	StorageManager.silo_items["strawberry"] = 20
+	StorageManager.silo_items["pumpkin"] = 20
+	StorageManager.silo_items["soybean"] = 20
+	StorageManager.silo_items["sugarcane"] = 20
+	StorageManager.silo_items["apple"] = 15
+	StorageManager.silo_items["mango"] = 15
+	StorageManager.silo_items["sunflower"] = 15
+	StorageManager.silo_items["rose"] = 15
+	StorageManager.silo_items["lavender"] = 15
+	StorageManager.silo_items["apple_seed"] = 10
+	StorageManager.silo_items["mango_seed"] = 10
+	
+	StorageManager.barn_items.clear()
+	StorageManager.barn_items["egg"] = 40
+	StorageManager.barn_items["milk"] = 35
+	StorageManager.barn_items["bacon"] = 25
+	StorageManager.barn_items["wool"] = 15
+	StorageManager.barn_items["chicken_feed"] = 30
+	StorageManager.barn_items["cow_feed"] = 30
+	StorageManager.barn_items["pig_feed"] = 20
+	StorageManager.barn_items["bread"] = 25
+	StorageManager.barn_items["butter"] = 15
+	StorageManager.barn_items["cheese"] = 15
+	StorageManager.barn_items["cream"] = 15
+	StorageManager.barn_items["cookie"] = 15
+	StorageManager.barn_items["cream_cake"] = 10
+	StorageManager.barn_items["sugarcane_juice"] = 15
+	StorageManager.barn_items["apple_juice"] = 15
+	StorageManager.barn_items["mango_smoothie"] = 15
+	StorageManager.barn_items["fish_carp"] = 15
+	StorageManager.barn_items["fish_bass"] = 10
+	StorageManager.barn_items["fish_golden_koi"] = 5
+	StorageManager.barn_items["bait_red"] = 10
+	StorageManager.barn_items["bait_gold"] = 5
+	
+	EventBus.coins_changed.emit(StorageManager.coins, 0)
+	EventBus.gold_changed.emit(StorageManager.gold, 0)
+	EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
+	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
+	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
+	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
+	save_game()
+	print("[SaveManager] Successfully activated Sandbox Mode Level 32!")
 
 func save_game() -> void:
 	var save_data: Dictionary = {

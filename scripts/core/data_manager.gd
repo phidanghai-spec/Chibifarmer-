@@ -1,12 +1,14 @@
 extends Node
 
 var crops: Dictionary = {}
+var items: Dictionary = {}
 var animals: Dictionary = {}
 var buildings: Dictionary = {}
 var recipes: Dictionary = {}
 var fishes: Dictionary = {}
 var visitors: Dictionary = {}
 
+const ITEMS_PATH: String = "res://data/items.json"
 const CROPS_PATH: String = "res://data/crops.json"
 const ANIMALS_PATH: String = "res://data/animals.json"
 const BUILDINGS_PATH: String = "res://data/buildings.json"
@@ -18,6 +20,7 @@ func _ready() -> void:
 	load_all_data()
 
 func load_all_data() -> void:
+	items = _load_json(ITEMS_PATH)
 	crops = _load_json(CROPS_PATH)
 	animals = _load_json(ANIMALS_PATH)
 	buildings = _load_json(BUILDINGS_PATH)
@@ -86,6 +89,8 @@ func get_recipes_for_building(building_id: String) -> Array[Dictionary]:
 	return result
 
 func get_item_storage_type(item_id: String) -> String:
+	if items.has(item_id):
+		return String((items[item_id] as Dictionary).get("storage_type", "barn"))
 	if crops.has(item_id):
 		return String((crops[item_id] as Dictionary).get("storage_type", "silo"))
 	if animals.has(item_id):
@@ -99,6 +104,8 @@ func get_item_storage_type(item_id: String) -> String:
 	return "barn"
 
 func get_item_name(item_id: String) -> String:
+	if items.has(item_id):
+		return String((items[item_id] as Dictionary).get("name", item_id))
 	match item_id.to_lower():
 		"bacon", "pork":
 			return "Thịt Xông Khói"
@@ -166,6 +173,8 @@ func get_item_name(item_id: String) -> String:
 	return item_id.capitalize()
 
 func get_item_base_price(item_id: String) -> int:
+	if items.has(item_id):
+		return int((items[item_id] as Dictionary).get("base_price", 5))
 	if crops.has(item_id):
 		return int((crops[item_id] as Dictionary).get("base_price", 1))
 	for rec_key: Variant in recipes:
