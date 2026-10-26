@@ -1,14 +1,14 @@
 extends Camera2D
 class_name CameraController
 
-@export var zoom_min: float = 0.5
-@export var zoom_max: float = 2.0
+@export var zoom_min: float = 0.85
+@export var zoom_max: float = 1.6
 @export var zoom_step: float = 0.1
 @export var zoom_speed: float = 12.0
 @export var pan_speed_keyboard: float = 480.0
 
 var is_pan_locked: bool = false
-var target_zoom: Vector2 = Vector2(1.35, 1.35)
+var target_zoom: Vector2 = Vector2(1.2, 1.2)
 
 var _is_panning: bool = false
 var _pan_start_mouse_pos: Vector2 = Vector2.ZERO
@@ -20,8 +20,8 @@ const MAP_MIN: Vector2 = Vector2(0.0, 0.0)
 const MAP_MAX: Vector2 = Vector2(2048.0, 2048.0)
 
 func _ready() -> void:
-	zoom = Vector2(1.35, 1.35)
-	target_zoom = Vector2(1.35, 1.35)
+	zoom = Vector2(1.2, 1.2)
+	target_zoom = Vector2(1.2, 1.2)
 	
 	# Clamp limits to map dimensions
 	limit_left = 0

@@ -795,13 +795,14 @@ func _draw() -> void:
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.42, 0.30, 0.21), false, 1.8)
 
 func _capture_screenshot_and_quit() -> void:
-	# 1. Capture East Bank Zoo Sanctuary
+	SaveManager.set_sandbox_level_33()
+	# 1. Capture East Bank Zoo Sanctuary with Hot Air Balloon and Horizontal Top Bar
 	if camera_2d != null:
-		camera_2d.position = Vector2(1320.0, 360.0)
-		camera_2d.zoom = Vector2(0.85, 0.85)
-		camera_2d.target_zoom = Vector2(0.85, 0.85)
+		camera_2d.position = Vector2(1230.0, 310.0)
+		camera_2d.zoom = Vector2(0.95, 0.95)
+		camera_2d.target_zoom = Vector2(0.95, 0.95)
 	
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(3.0).timeout
 	await RenderingServer.frame_post_draw
 	var vp: Viewport = get_viewport()
 	var img: Image = vp.get_texture().get_image()
@@ -823,9 +824,9 @@ func _capture_screenshot_and_quit() -> void:
 			img_plot.save_png(ProjectSettings.globalize_path("res://debug_avatar_plot.png"))
 			print("[MainFarm] Captured avatar on plot to res://debug_avatar_plot.png")
 	
-	# 3. Capture Zoo Feed Shop Modal (3 options)
-	if ui_hud != null:
-		ui_hud.open_zoo_feed_shop_modal()
+	# 3. Capture Zoo Feed Shop Modal (if available)
+	if ui_hud != null and ui_hud.has_method("open_zoo_feed_shop_modal"):
+		ui_hud.call("open_zoo_feed_shop_modal")
 		await get_tree().create_timer(0.6).timeout
 		await RenderingServer.frame_post_draw
 		var img_shop: Image = vp.get_texture().get_image()

@@ -183,6 +183,7 @@ func handle_visitor_click() -> bool:
 	if _is_demand_satisfied:
 		# Already thanked player, give friendly greeting
 		_show_emote()
+		_show_chat_dialogue("Cảm ơn bạn nhé! Nông trại đẹp lắm! ✨")
 		return true
 	
 	var attraction: int = GridManager.total_attraction_score
@@ -191,7 +192,7 @@ func handle_visitor_click() -> bool:
 	var tip_coins: int = maxi(2, int(float(attraction) * 0.15))
 	
 	# Check if player has the requested item in Silo or Barn
-	if StorageManager.has_item(requested_item, 1):
+	if requested_item != "" and StorageManager.has_item(requested_item, 1):
 		StorageManager.remove_item(requested_item, 1)
 		StorageManager.add_gold(final_gold)
 		StorageManager.add_coins(tip_coins)
@@ -203,41 +204,54 @@ func handle_visitor_click() -> bool:
 		EventBus.loot_collected.emit("xp", reward_xp, global_position)
 		
 		_is_demand_satisfied = true
-		_demand_timer = 20.0
+		_demand_timer = 30.0
 		
 		_label_demand.text = "😍 +%dV +%dXu! ✨" % [final_gold, tip_coins]
 		_label_demand.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 		_show_emote()
-		AudioManager.play_sfx("coin")
+		_show_chat_dialogue("Đã nhận %s! Cảm ơn bạn rất nhiều! ❤️" % requested_name)
+		AudioManager.play_sfx("sell")
 		
 		var tw: Tween = create_tween()
-		self.scale = Vector2(1.08, 0.92)
-		tw.tween_property(self, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		self.scale = Vector2(1.15, 0.90)
+		tw.tween_property(self, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_body_sprite.scale = _base_sprite_scale
+		
+		# Direct visitor happily toward Zoo or sightseeing
+		_wait_timer = 2.0
+		queue_destination = "zoo"
+		return true
+	elif requested_item != "":
+		# Player doesn't have requested item -> Clear immediate feedback notice
+		var farm: Node = get_tree().current_scene
+		var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+		if hud != null:
+			hud.show_floating_notice("⚠️ Thiếu %s trong kho để bán cho khách!" % requested_name)
+		AudioManager.play_sfx("error")
+		
+		# Visual shake on demand label
+		if _label_demand != null:
+			var tw_err: Tween = create_tween()
+			tw_err.tween_property(_label_demand, "position:x", -75.0 + 4.0, 0.05)
+			tw_err.tween_property(_label_demand, "position:x", -75.0 - 4.0, 0.05)
+			tw_err.tween_property(_label_demand, "position:x", -75.0, 0.05)
 		return true
 	else:
-		# Player doesn't have requested item yet -> Friendly tip scaled by attraction
-		var visit_gold: int = 10 + int(float(attraction) * 0.1)
-		var visit_coins: int = maxi(1, int(float(attraction) * 0.05))
+		# Pure tourist visiting farm -> Drop generous tip
+		var visit_gold: int = 15 + int(float(attraction) * 0.1)
+		var visit_coins: int = maxi(2, int(float(attraction) * 0.08))
 		StorageManager.add_gold(visit_gold)
 		StorageManager.add_coins(visit_coins)
+		StorageManager.add_xp(5)
 		AudioManager.play_sfx("coin")
 		EventBus.loot_collected.emit("gold", visit_gold, global_position)
+		EventBus.loot_collected.emit("coins", visit_coins, global_position)
 		
-		_label_demand.text = "Ghé thăm: +%dV +%dXu! ✨" % [visit_gold, visit_coins]
+		_show_emote()
+		_show_chat_dialogue("Thăm quan vui quá! Gửi bạn ít tiền tip nhé! ✨")
+		_label_demand.text = "+%dV +%dXu! ✨" % [visit_gold, visit_coins]
 		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4))
-		
-		var tw: Tween = create_tween()
-		tw.tween_interval(2.5)
-		tw.tween_callback(func() -> void:
-			if not _is_demand_satisfied and is_instance_valid(_label_demand):
-				if npc_type == "visitor_tourist":
-					_label_demand.visible = false
-				else:
-					_label_demand.text = "🛒 Cần: 1 %s (+%d Xu)" % [requested_name, reward_gold]
-					_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-					_label_demand.visible = true
-		)
+		_label_demand.visible = true
 		return true
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -247,7 +261,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
 			var mpos: Vector2 = get_global_mouse_position()
-			if mpos.distance_to(global_position) <= 55.0:
+			var local_pos: Vector2 = mpos - global_position
+			# Wide 72x88px bounding box covering character and overhead bubble
+			if Rect2(-36.0, -60.0, 72.0, 88.0).has_point(local_pos):
 				if handle_visitor_click():
 					get_viewport().set_input_as_handled()
 

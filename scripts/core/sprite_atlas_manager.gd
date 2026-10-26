@@ -358,9 +358,11 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("wooden_bench", "res://assets/sprites/wooden_bench.png")
 	_load_standalone_texture("tool_demolish", "res://assets/sprites/tool_demolish.png")
 
-	# Player Characters (Minh & Mai)
+	# Player Characters & Portraits (Minh & Mai)
 	_load_standalone_texture("player_minh", "res://assets/sprites/player_minh.png")
 	_load_standalone_texture("player_mai", "res://assets/sprites/player_mai.png")
+	_load_standalone_texture("portrait_minh", "res://assets/sprites/portrait_minh.png")
+	_load_standalone_texture("portrait_mai", "res://assets/sprites/portrait_mai.png")
 
 	# Zoo Sanctuary & Animals
 	_load_standalone_texture("zoo_entrance", "res://assets/sprites/zoo_entrance.png")
@@ -379,6 +381,11 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("zoo_ticket", "res://assets/sprites/zoo_ticket.png")
 
 	_load_standalone_texture("zoo_capybara_test", "res://assets/sprites/zoo_capybara_test.png")
+	_load_standalone_texture("hot_air_balloon", "res://assets/sprites/hot_air_balloon.png")
+	_load_standalone_texture("decor_hay_bale", "res://assets/sprites/decor_hay_bale.png")
+	_load_standalone_texture("decor_wooden_bench", "res://assets/sprites/decor_wooden_bench.png")
+	_load_standalone_texture("portrait_minh", "res://assets/sprites/portrait_minh.png")
+	_load_standalone_texture("portrait_mai", "res://assets/sprites/portrait_mai.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)

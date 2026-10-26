@@ -43,10 +43,13 @@ class_name UIHud
 @onready var panel_truck: Control = %PanelTruck
 @onready var shop_slots_container: GridContainer = %ShopSlotsContainer
 @onready var truck_orders_container: Control = %TruckOrdersContainer
-@onready var pill_silo: PanelContainer = $TopLeftHUD/PillSilo
-@onready var pill_barn: PanelContainer = $TopLeftHUD/PillBarn
+@onready var pill_silo: PanelContainer = find_child("PillSilo", true, false) as PanelContainer
+@onready var pill_barn: PanelContainer = find_child("PillBarn", true, false) as PanelContainer
+@onready var avatar_portrait: TextureRect = %AvatarPortrait
+@onready var btn_quick_storage: Button = %BtnQuickStorage
 
 const StockAlertSystemClass = preload("res://scripts/systems/stock_alert_system.gd")
+const LevelProgressionManagerClass = preload("res://scripts/core/level_progression_manager.gd")
 
 var label_coins: Label = null
 var stock_alert_system: Control = null
@@ -235,6 +238,14 @@ func _ready() -> void:
 	if drag_action_manager != null:
 		drag_action_manager.tool_changed.connect(_on_drag_tool_changed)
 	
+	# Top-Left Horizontal HUD: Avatar Portrait & Quick Storage
+	_update_avatar_portrait()
+	SaveManager.player_settings_changed.connect(func() -> void: _update_avatar_portrait())
+	if btn_quick_storage != null:
+		btn_quick_storage.pressed.connect(func() -> void:
+			open_storage_popup("silo")
+		)
+	
 	panel_shop.visible = false
 	panel_truck.visible = false
 	if panel_seeds_menu != null:
@@ -364,15 +375,35 @@ func cancel_all_active_tools() -> void:
 	_highlight_active_button(DragActionManager.ToolType.NONE)
 
 func _refresh_all_hud() -> void:
-	_on_coins_changed(StorageManager.coins, 0)
-	_on_gold_changed(StorageManager.gold, 0)
-	_on_diamonds_changed(StorageManager.diamonds, 0)
-	var needed_xp: int = StorageManager.get_required_xp(StorageManager.level)
-	_on_xp_changed(StorageManager.xp, needed_xp, StorageManager.level)
-	_on_storage_updated("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-	_on_storage_updated("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
-	_on_attraction_score_changed(GridManager.total_attraction_score)
+	if label_gold != null and StorageManager != null:
+		label_gold.text = "%s" % _format_number(StorageManager.gold)
+	if label_diamonds != null and StorageManager != null:
+		label_diamonds.text = "%d" % StorageManager.diamonds
+	if label_coins != null and StorageManager != null:
+		label_coins.text = "%s Xu" % _format_number(StorageManager.coins)
+	if label_level != null and StorageManager != null:
+		label_level.text = "Lv.%d" % StorageManager.level
+	if label_xp != null and StorageManager != null:
+		var needed_xp: int = StorageManager.get_required_xp(StorageManager.level)
+		label_xp.text = "XP: %s / %s" % [_format_number(StorageManager.xp), _format_number(needed_xp)]
+	if progress_xp != null and StorageManager != null:
+		var needed_xp: int = StorageManager.get_required_xp(StorageManager.level)
+		progress_xp.max_value = float(needed_xp)
+		progress_xp.value = float(StorageManager.xp)
+	if label_silo != null and StorageManager != null:
+		label_silo.text = "%d/%d" % [StorageManager.get_silo_used(), StorageManager.silo_capacity]
+	if progress_silo != null and StorageManager != null:
+		progress_silo.max_value = float(StorageManager.silo_capacity)
+		progress_silo.value = float(StorageManager.get_silo_used())
+	if label_barn != null and StorageManager != null:
+		label_barn.text = "%d/%d" % [StorageManager.get_barn_used(), StorageManager.barn_capacity]
+	if progress_barn != null and StorageManager != null:
+		progress_barn.max_value = float(StorageManager.barn_capacity)
+		progress_barn.value = float(StorageManager.get_barn_used())
+	if label_attraction != null and GridManager != null:
+		label_attraction.text = "%d" % GridManager.total_attraction_score
 	_refresh_seed_counts()
+	_update_avatar_portrait()
 
 func _setup_extra_seed_buttons() -> void:
 	var vbox_seeds: VBoxContainer = %VBoxSeeds as VBoxContainer
@@ -513,58 +544,26 @@ func _refresh_seed_counts() -> void:
 			btn_seeds.text = "🌱 Hạt Giống"
 
 func _setup_coins_hud() -> void:
-	var top_hud: VBoxContainer = find_child("TopLeftHUD", true, false) as VBoxContainer
-	if top_hud != null and label_coins == null:
-		var row_coins: HBoxContainer = HBoxContainer.new()
-		row_coins.name = "RowCoins"
-		row_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		
-		var pill_coins: PanelContainer = PanelContainer.new()
-		pill_coins.name = "PillCoins"
-		pill_coins.custom_minimum_size = Vector2(170, 36)
-		pill_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		
-		var sb: StyleBoxFlat = StyleBoxFlat.new()
-		sb.bg_color = Color(1.0, 0.99, 0.96, 0.96)
-		sb.border_color = Color(0.42, 0.30, 0.21, 1.0)
-		sb.set_border_width_all(2)
-		sb.set_corner_radius_all(16)
-		sb.shadow_color = Color(0.42, 0.30, 0.21, 0.18)
-		sb.shadow_size = 4
-		sb.content_margin_left = 8
-		sb.content_margin_right = 8
-		pill_coins.add_theme_stylebox_override("panel", sb)
-		
-		var hbox: HBoxContainer = HBoxContainer.new()
-		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hbox.add_theme_constant_override("separation", 6)
-		pill_coins.add_child(hbox)
-		
-		var icon_coin_rect: TextureRect = TextureRect.new()
-		icon_coin_rect.name = "IconCoin"
-		icon_coin_rect.custom_minimum_size = Vector2(22, 22)
-		icon_coin_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_coin_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon_coin_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		if SpriteAtlasManager.has_texture("icon_coin"):
-			icon_coin_rect.texture = SpriteAtlasManager.get_texture("icon_coin")
-		hbox.add_child(icon_coin_rect)
-		
-		label_coins = Label.new()
-		label_coins.name = "LabelCoins"
-		label_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label_coins.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label_coins.add_theme_color_override("font_color", Color(0.24, 0.15, 0.14))
-		label_coins.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
-		label_coins.add_theme_constant_override("outline_size", 2)
-		label_coins.add_theme_font_size_override("font_size", 16)
+	if label_coins == null:
+		if has_node("%LabelCoins"):
+			label_coins = %LabelCoins
+		else:
+			label_coins = find_child("LabelCoins", true, false) as Label
+	if label_coins != null:
 		label_coins.text = "%s Xu" % _format_number(StorageManager.coins)
-		hbox.add_child(label_coins)
-		
-		row_coins.add_child(pill_coins)
-		top_hud.add_child(row_coins)
-		top_hud.move_child(row_coins, 0)
+
+func _update_avatar_portrait() -> void:
+	if avatar_portrait == null:
+		if has_node("%AvatarPortrait"):
+			avatar_portrait = %AvatarPortrait
+		else:
+			avatar_portrait = find_child("AvatarPortrait", true, false) as TextureRect
+	if avatar_portrait != null:
+		var char_id: String = SaveManager.selected_character.to_lower()
+		var tex_key: String = "portrait_mai" if char_id == "mai" else "portrait_minh"
+		if SpriteAtlasManager.has_texture(tex_key):
+			avatar_portrait.texture = SpriteAtlasManager.get_texture(tex_key)
+
 
 func _on_coins_changed(new_coins: int, _delta: int) -> void:
 	if label_coins != null:
@@ -572,7 +571,7 @@ func _on_coins_changed(new_coins: int, _delta: int) -> void:
 
 func _on_gold_changed(new_gold: int, _delta: int) -> void:
 	if label_gold != null:
-		label_gold.text = "👑 %s Vàng" % _format_number(new_gold)
+		label_gold.text = "%s" % _format_number(new_gold)
 
 func _on_diamonds_changed(new_diamonds: int, _delta: int) -> void:
 	if label_diamonds != null:
@@ -639,35 +638,44 @@ func _show_level_up_modal(new_level: int) -> void:
 	if _level_up_modal != null and is_instance_valid(_level_up_modal):
 		_level_up_modal.queue_free()
 	
+	var u_info: Dictionary = LevelProgressionManagerClass.get_unlock_info(new_level)
+	var title_str: String = String(u_info.get("title", "Tiến Trình Mới"))
+	var desc_str: String = String(u_info.get("desc", ""))
+	var crops: Array = u_info.get("crops", [])
+	var buildings: Array = u_info.get("buildings", [])
+	var gold_reward: int = int(u_info.get("gold_reward", 150 + new_level * 25))
+	var dia_reward: int = int(u_info.get("diamonds_reward", 2))
+	var coins_reward: int = int(u_info.get("coins_reward", 50))
+	
 	_level_up_modal = PanelContainer.new()
 	_level_up_modal.name = "LevelUpModal"
-	_level_up_modal.custom_minimum_size = Vector2(360, 220)
+	_level_up_modal.custom_minimum_size = Vector2(400, 260)
 	_level_up_modal.anchors_preset = Control.PRESET_CENTER
 	_level_up_modal.anchor_left = 0.5
 	_level_up_modal.anchor_top = 0.5
 	_level_up_modal.anchor_right = 0.5
 	_level_up_modal.anchor_bottom = 0.5
-	_level_up_modal.offset_left = -180.0
-	_level_up_modal.offset_top = -110.0
-	_level_up_modal.offset_right = 180.0
-	_level_up_modal.offset_bottom = 110.0
+	_level_up_modal.offset_left = -200.0
+	_level_up_modal.offset_top = -130.0
+	_level_up_modal.offset_right = 200.0
+	_level_up_modal.offset_bottom = 130.0
 	_level_up_modal.z_index = 150
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = Color(0.99, 0.96, 0.90, 0.98)
 	sb.border_color = Color(0.85, 0.65, 0.18, 1.0)
 	sb.set_border_width_all(4)
-	sb.set_corner_radius_all(14)
-	sb.content_margin_left = 20
-	sb.content_margin_right = 20
+	sb.set_corner_radius_all(16)
+	sb.content_margin_left = 22
+	sb.content_margin_right = 22
 	sb.content_margin_top = 16
 	sb.content_margin_bottom = 16
-	sb.shadow_color = Color(0.3, 0.2, 0.05, 0.3)
-	sb.shadow_size = 10
+	sb.shadow_color = Color(0.3, 0.2, 0.05, 0.35)
+	sb.shadow_size = 12
 	_level_up_modal.add_theme_stylebox_override("panel", sb)
 	
 	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	_level_up_modal.add_child(vbox)
 	
@@ -681,24 +689,46 @@ func _show_level_up_modal(new_level: int) -> void:
 	vbox.add_child(lbl_title)
 	
 	var lbl_level_badge: Label = Label.new()
-	lbl_level_badge.text = "⭐ CẤP ĐỘ %d ⭐" % new_level
+	lbl_level_badge.text = "⭐ CẤP ĐỘ %d: %s ⭐" % [new_level, title_str]
 	lbl_level_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_level_badge.add_theme_font_size_override("font_size", 22)
+	lbl_level_badge.add_theme_font_size_override("font_size", 18)
 	lbl_level_badge.add_theme_color_override("font_color", Color(0.25, 0.15, 0.10))
 	vbox.add_child(lbl_level_badge)
 	
-	var gold_reward: int = 150 + new_level * 25
-	var dia_reward: int = 2
+	if desc_str != "":
+		var lbl_desc: Label = Label.new()
+		lbl_desc.text = desc_str
+		lbl_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_desc.add_theme_font_size_override("font_size", 11)
+		lbl_desc.add_theme_color_override("font_color", Color(0.42, 0.32, 0.22))
+		vbox.add_child(lbl_desc)
+		
+	var unlocks: Array[String] = []
+	for c in crops:
+		unlocks.append("🌱 " + String(c))
+	for b in buildings:
+		unlocks.append("🏗️ " + String(b))
+		
+	if not unlocks.is_empty():
+		var lbl_unlock: Label = Label.new()
+		lbl_unlock.text = "🔓 Mở Khóa Mới: " + ", ".join(unlocks)
+		lbl_unlock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_unlock.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_unlock.add_theme_font_size_override("font_size", 12)
+		lbl_unlock.add_theme_color_override("font_color", Color(0.15, 0.48, 0.2))
+		vbox.add_child(lbl_unlock)
+	
 	var lbl_rewards: Label = Label.new()
-	lbl_rewards.text = "🎁 Phần thưởng: +%d 👑 Vàng   +%d 💎 Kim Cương" % [gold_reward, dia_reward]
+	lbl_rewards.text = "🎁 Phần thưởng: +%d 🪙 Vàng  +%d 💎 Kim Cương  +%d ✨ Xu" % [gold_reward, dia_reward, coins_reward]
 	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_rewards.add_theme_font_size_override("font_size", 12)
-	lbl_rewards.add_theme_color_override("font_color", Color(0.18, 0.58, 0.22))
+	lbl_rewards.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
 	vbox.add_child(lbl_rewards)
 	
 	var btn_ok: Button = Button.new()
 	btn_ok.text = "🌟 Tuyệt Vời!"
-	btn_ok.custom_minimum_size = Vector2(130, 36)
+	btn_ok.custom_minimum_size = Vector2(140, 36)
 	btn_ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_ok.pressed.connect(func() -> void:
 		_level_up_modal.queue_free()
@@ -715,16 +745,16 @@ func open_settings_modal() -> void:
 	
 	_settings_modal = PanelContainer.new()
 	_settings_modal.name = "SettingsModal"
-	_settings_modal.custom_minimum_size = Vector2(380, 420)
+	_settings_modal.custom_minimum_size = Vector2(400, 460)
 	_settings_modal.anchors_preset = Control.PRESET_CENTER
 	_settings_modal.anchor_left = 0.5
 	_settings_modal.anchor_top = 0.5
 	_settings_modal.anchor_right = 0.5
 	_settings_modal.anchor_bottom = 0.5
-	_settings_modal.offset_left = -190.0
-	_settings_modal.offset_top = -210.0
-	_settings_modal.offset_right = 190.0
-	_settings_modal.offset_bottom = 210.0
+	_settings_modal.offset_left = -200.0
+	_settings_modal.offset_top = -230.0
+	_settings_modal.offset_right = 200.0
+	_settings_modal.offset_bottom = 230.0
 	_settings_modal.z_index = 100
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
@@ -747,7 +777,7 @@ func open_settings_modal() -> void:
 	vbox.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "⚙️ CÀI ĐẶT & NHÂN VẬT"
+	lbl_title.text = "⚙️ CÀI ĐẶT & CHẾ ĐỘ CHƠI"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_title.add_theme_font_size_override("font_size", 14)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
@@ -797,12 +827,14 @@ func open_settings_modal() -> void:
 	btn_char_minh.pressed.connect(func() -> void:
 		SaveManager.set_player_character("minh")
 		update_char_buttons.call()
+		_update_avatar_portrait()
 		AudioManager.play_sfx("click")
 		show_floating_notice("🧑 Đã chọn nhân vật: Minh!")
 	)
 	btn_char_mai.pressed.connect(func() -> void:
 		SaveManager.set_player_character("mai")
 		update_char_buttons.call()
+		_update_avatar_portrait()
 		AudioManager.play_sfx("click")
 		show_floating_notice("👧 Đã chọn nhân vật: Mai!")
 	)
@@ -813,7 +845,7 @@ func open_settings_modal() -> void:
 	vbox.add_child(hbox_name)
 	
 	var lbl_name_prompt: Label = Label.new()
-	lbl_name_prompt.text = "Tên nhân vật:"
+	lbl_name_prompt.text = "Tên nông trại:"
 	lbl_name_prompt.add_theme_font_size_override("font_size", 11)
 	lbl_name_prompt.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_name.add_child(lbl_name_prompt)
@@ -821,7 +853,7 @@ func open_settings_modal() -> void:
 	var edit_player_name: LineEdit = LineEdit.new()
 	edit_player_name.text = SaveManager.player_name
 	edit_player_name.max_length = 16
-	edit_player_name.placeholder_text = "Nhập tên nhân vật..."
+	edit_player_name.placeholder_text = "Nhập tên..."
 	edit_player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit_player_name.text_changed.connect(func(new_text: String) -> void:
 		SaveManager.set_player_name(new_text)
@@ -836,14 +868,14 @@ func open_settings_modal() -> void:
 	vbox.add_child(lbl_interact_sec)
 	
 	var btn_toggle_interact: Button = Button.new()
-	btn_toggle_interact.custom_minimum_size = Vector2(0, 36)
+	btn_toggle_interact.custom_minimum_size = Vector2(0, 34)
 	
 	var update_interact_btn: Callable = func() -> void:
 		if SaveManager.instant_interact:
-			btn_toggle_interact.text = "⚡ Tương tác tức thì: [BẬT] (Bấm trực tiếp)"
+			btn_toggle_interact.text = "⚡ Tương tác tức thì 1 Chạm: [BẬT]"
 			btn_toggle_interact.modulate = Color(1.2, 1.25, 0.8)
 		else:
-			btn_toggle_interact.text = "🚶 Tương tác tức thì: [TẮT] (Nhân vật đi bộ tới cạnh)"
+			btn_toggle_interact.text = "🚶 Tương tác tức thì: [TẮT] (Đi bộ tới nơi)"
 			btn_toggle_interact.modulate = Color(0.9, 1.15, 1.2)
 			
 	update_interact_btn.call()
@@ -853,64 +885,59 @@ func open_settings_modal() -> void:
 		update_interact_btn.call()
 		AudioManager.play_sfx("click")
 		if SaveManager.instant_interact:
-			show_floating_notice("⚡ Đã bật Tương tác tức thì!")
+			show_floating_notice("⚡ Đã bật Tương tác 1 Chạm!")
 		else:
-			show_floating_notice("🚶 Đã bật chế độ Nhân vật đi bộ tới đối tượng!")
+			show_floating_notice("🚶 Đã bật chế độ Đi bộ tới đối tượng!")
 	)
 	vbox.add_child(btn_toggle_interact)
 	
-	# --- 3. Save / Reset Actions ---
-	var lbl_data_sec: Label = Label.new()
-	lbl_data_sec.text = "💾 QUẢN LÝ DỮ LIỆU GAME"
-	lbl_data_sec.add_theme_font_size_override("font_size", 11)
-	lbl_data_sec.add_theme_color_override("font_color", Color(0.40, 0.25, 0.12))
-	vbox.add_child(lbl_data_sec)
-	
-	var hbox_saves: HBoxContainer = HBoxContainer.new()
-	hbox_saves.add_theme_constant_override("separation", 8)
-	vbox.add_child(hbox_saves)
-	
-	var btn_save: Button = Button.new()
-	btn_save.text = "💾 Lưu Game"
-	btn_save.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_save.custom_minimum_size = Vector2(0, 32)
-	btn_save.pressed.connect(func() -> void:
-		SaveManager.save_game()
-		AudioManager.play_sfx("coin")
-		show_floating_notice("💾 Đã lưu tiến trình nông trại an toàn!")
-		_settings_modal.queue_free()
-	)
-	hbox_saves.add_child(btn_save)
+	# --- 3. Web Testing Game Modes: Level 1 Story vs Level 33 Sandbox ---
+	var lbl_mode_sec: Label = Label.new()
+	lbl_mode_sec.text = "🚀 CHUYỂN NHANH CHẾ ĐỘ CHƠI (WEB TEST)"
+	lbl_mode_sec.add_theme_font_size_override("font_size", 11)
+	lbl_mode_sec.add_theme_color_override("font_color", Color(0.40, 0.25, 0.12))
+	vbox.add_child(lbl_mode_sec)
 	
 	var btn_reset_lvl1: Button = Button.new()
-	btn_reset_lvl1.text = "🌱 Chơi Mới"
-	btn_reset_lvl1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_reset_lvl1.custom_minimum_size = Vector2(0, 32)
+	btn_reset_lvl1.text = "🌱 Chơi Từ Cấp 1 (Cốt Truyện Lv.1 -> Lv.33)"
+	btn_reset_lvl1.custom_minimum_size = Vector2(0, 36)
 	btn_reset_lvl1.pressed.connect(func() -> void:
 		SaveManager.reset_to_level_1()
 		_refresh_all_hud()
 		_refresh_shop_ui()
 		_refresh_truck_ui()
+		_update_avatar_portrait()
 		AudioManager.play_sfx("level_up")
-		show_floating_notice("🌱 Đã thiết lập lại nông trại Cấp 1!")
+		show_floating_notice("🌱 Đã thiết lập lại nông trại Cấp 1 Chuẩn Cốt Truyện!")
 		_settings_modal.queue_free()
 	)
-	hbox_saves.add_child(btn_reset_lvl1)
+	vbox.add_child(btn_reset_lvl1)
 	
 	var btn_sandbox: Button = Button.new()
-	btn_sandbox.text = "🛠️ Sandbox Lv32"
-	btn_sandbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_sandbox.custom_minimum_size = Vector2(0, 32)
+	btn_sandbox.text = "👑 Chế Độ Sandbox Cấp 33 (Full Mở Khóa & Tài Nguyên)"
+	btn_sandbox.custom_minimum_size = Vector2(0, 36)
 	btn_sandbox.pressed.connect(func() -> void:
-		SaveManager.set_sandbox_level_32()
+		SaveManager.set_sandbox_level_33()
 		_refresh_all_hud()
 		_refresh_shop_ui()
 		_refresh_truck_ui()
+		_update_avatar_portrait()
 		AudioManager.play_sfx("coin")
-		show_floating_notice("🛠️ Đã kích hoạt Chế Độ Sandbox Cấp 32!")
+		show_floating_notice("👑 Đã kích hoạt Chế Độ Sandbox Cấp 33 (190,556 Vàng, Full Thú)!")
 		_settings_modal.queue_free()
 	)
-	hbox_saves.add_child(btn_sandbox)
+	vbox.add_child(btn_sandbox)
+	
+	var btn_save: Button = Button.new()
+	btn_save.text = "💾 Lưu Tiến Trình"
+	btn_save.custom_minimum_size = Vector2(0, 32)
+	btn_save.pressed.connect(func() -> void:
+		SaveManager.save_game()
+		AudioManager.play_sfx("coin")
+		show_floating_notice("💾 Đã lưu tiến trình nông trại!")
+		_settings_modal.queue_free()
+	)
+	vbox.add_child(btn_save)
 	
 	add_child(_settings_modal)
 

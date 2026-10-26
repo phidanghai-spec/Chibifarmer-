@@ -15,7 +15,7 @@ var building_custom_names: Dictionary = {} # building_id -> String
 
 var selected_character: String = "minh" # "minh" or "mai"
 var player_name: String = "Minh"
-var instant_interact: bool = false
+var instant_interact: bool = true
 var player_position: Vector2 = Vector2(70.0, 640.0)
 
 # Zoo Sanctuary & Puzzle System
@@ -98,64 +98,72 @@ func reset_to_level_1() -> void:
 	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	selected_character = "minh"
 	player_name = "Minh"
-	instant_interact = false
+	instant_interact = true
 	player_position = Vector2(70.0, 640.0)
 	player_settings_changed.emit()
 	save_game()
 	print("[SaveManager] Successfully reset account to Fresh Level 1!")
 
-func set_sandbox_level_32() -> void:
+func set_sandbox_level_33() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		var global_p: String = ProjectSettings.globalize_path(SAVE_PATH)
 		DirAccess.remove_absolute(global_p)
 	
-	StorageManager.level = 32
-	StorageManager.xp = 1240
-	StorageManager.gold = 99999
-	StorageManager.coins = 25000
-	StorageManager.diamonds = 150
-	StorageManager.silo_capacity = 500
-	StorageManager.barn_capacity = 500
+	StorageManager.level = 33
+	StorageManager.xp = 0
+	StorageManager.gold = 190556
+	StorageManager.coins = 50000
+	StorageManager.diamonds = 250
+	StorageManager.silo_capacity = 600
+	StorageManager.barn_capacity = 600
+	puzzle_pieces = 25
+	
+	# Unlock all sanctuary animals
+	unlock_animal("zoo_capybara")
+	unlock_animal("zoo_panda")
+	unlock_animal("zoo_penguin")
+	unlock_animal("zoo_giraffe")
 	
 	StorageManager.silo_items.clear()
-	StorageManager.silo_items["wheat"] = 60
-	StorageManager.silo_items["corn"] = 45
-	StorageManager.silo_items["tomato"] = 25
-	StorageManager.silo_items["carrot"] = 25
-	StorageManager.silo_items["strawberry"] = 20
-	StorageManager.silo_items["pumpkin"] = 20
-	StorageManager.silo_items["soybean"] = 20
-	StorageManager.silo_items["sugarcane"] = 20
-	StorageManager.silo_items["apple"] = 15
-	StorageManager.silo_items["mango"] = 15
-	StorageManager.silo_items["sunflower"] = 15
-	StorageManager.silo_items["rose"] = 15
-	StorageManager.silo_items["lavender"] = 15
-	StorageManager.silo_items["apple_seed"] = 10
-	StorageManager.silo_items["mango_seed"] = 10
+	StorageManager.silo_items["wheat"] = 80
+	StorageManager.silo_items["corn"] = 60
+	StorageManager.silo_items["tomato"] = 35
+	StorageManager.silo_items["carrot"] = 35
+	StorageManager.silo_items["strawberry"] = 30
+	StorageManager.silo_items["pumpkin"] = 30
+	StorageManager.silo_items["soybean"] = 30
+	StorageManager.silo_items["sugarcane"] = 30
+	StorageManager.silo_items["apple"] = 25
+	StorageManager.silo_items["mango"] = 25
+	StorageManager.silo_items["sunflower"] = 20
+	StorageManager.silo_items["rose"] = 20
+	StorageManager.silo_items["lavender"] = 20
+	StorageManager.silo_items["apple_seed"] = 15
+	StorageManager.silo_items["mango_seed"] = 15
 	
 	StorageManager.barn_items.clear()
-	StorageManager.barn_items["egg"] = 40
-	StorageManager.barn_items["milk"] = 35
-	StorageManager.barn_items["bacon"] = 25
-	StorageManager.barn_items["wool"] = 15
-	StorageManager.barn_items["chicken_feed"] = 30
-	StorageManager.barn_items["cow_feed"] = 30
-	StorageManager.barn_items["pig_feed"] = 20
-	StorageManager.barn_items["bread"] = 25
-	StorageManager.barn_items["butter"] = 15
-	StorageManager.barn_items["cheese"] = 15
-	StorageManager.barn_items["cream"] = 15
-	StorageManager.barn_items["cookie"] = 15
-	StorageManager.barn_items["cream_cake"] = 10
-	StorageManager.barn_items["sugarcane_juice"] = 15
-	StorageManager.barn_items["apple_juice"] = 15
-	StorageManager.barn_items["mango_smoothie"] = 15
-	StorageManager.barn_items["fish_carp"] = 15
-	StorageManager.barn_items["fish_bass"] = 10
-	StorageManager.barn_items["fish_golden_koi"] = 5
-	StorageManager.barn_items["bait_red"] = 10
-	StorageManager.barn_items["bait_gold"] = 5
+	StorageManager.barn_items["egg"] = 50
+	StorageManager.barn_items["milk"] = 45
+	StorageManager.barn_items["bacon"] = 35
+	StorageManager.barn_items["wool"] = 25
+	StorageManager.barn_items["chicken_feed"] = 40
+	StorageManager.barn_items["cow_feed"] = 40
+	StorageManager.barn_items["pig_feed"] = 30
+	StorageManager.barn_items["bread"] = 30
+	StorageManager.barn_items["butter"] = 20
+	StorageManager.barn_items["cheese"] = 20
+	StorageManager.barn_items["cream"] = 20
+	StorageManager.barn_items["cookie"] = 20
+	StorageManager.barn_items["cream_cake"] = 15
+	StorageManager.barn_items["sugarcane_juice"] = 20
+	StorageManager.barn_items["apple_juice"] = 20
+	StorageManager.barn_items["mango_smoothie"] = 20
+	StorageManager.barn_items["fish_carp"] = 20
+	StorageManager.barn_items["fish_bass"] = 15
+	StorageManager.barn_items["fish_golden_koi"] = 8
+	StorageManager.barn_items["bait_red"] = 15
+	StorageManager.barn_items["bait_gold"] = 10
+	StorageManager.barn_items["sanctuary_feed"] = 30
 	
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
 	EventBus.gold_changed.emit(StorageManager.gold, 0)
@@ -163,8 +171,13 @@ func set_sandbox_level_32() -> void:
 	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
 	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
 	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
+	zoo_updated.emit("")
+	puzzle_pieces_changed.emit(puzzle_pieces)
 	save_game()
-	print("[SaveManager] Successfully activated Sandbox Mode Level 32!")
+	print("[SaveManager] Successfully activated Sandbox Mode Level 33!")
+
+func set_sandbox_level_32() -> void:
+	set_sandbox_level_33()
 
 func save_game() -> void:
 	var save_data: Dictionary = {
@@ -350,7 +363,7 @@ func load_game() -> bool:
 		var p_data: Dictionary = data["player"] as Dictionary
 		selected_character = String(p_data.get("selected_character", "minh"))
 		player_name = String(p_data.get("player_name", "Minh"))
-		instant_interact = bool(p_data.get("instant_interact", false))
+		instant_interact = bool(p_data.get("instant_interact", true))
 		var px: float = float(p_data.get("position_x", 70.0))
 		var py: float = float(p_data.get("position_y", 640.0))
 		player_position = Vector2(px, py)

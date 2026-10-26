@@ -225,8 +225,11 @@ func _build_garden_and_riverside_details(container: Node2D, list: Array[Node2D])
 
 		# Lối đi & đầu cầu gỗ (Visual leading lines)
 		{"id": "chibi_floral_6", "pos": Vector2(120.0, 615.0), "size": Vector2(32.0, 26.0), "shadow": Vector2(13.0, 6.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(160.0, 615.0), "size": Vector2(38.0, 36.0), "shadow": Vector2(16.0, 8.0)},
 		{"id": "chibi_floral_1", "pos": Vector2(280.0, 615.0), "size": Vector2(32.0, 26.0), "shadow": Vector2(13.0, 6.0)},
-		{"id": "chibi_floral_2", "pos": Vector2(575.0, 615.0), "size": Vector2(32.0, 26.0), "shadow": Vector2(13.0, 6.0)},
+		{"id": "decor_hay_bale", "pos": Vector2(335.0, 610.0), "size": Vector2(36.0, 34.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(575.0, 615.0), "size": Vector2(38.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "decor_hay_bale", "pos": Vector2(625.0, 610.0), "size": Vector2(36.0, 34.0), "shadow": Vector2(15.0, 8.0)},
 		{"id": "chibi_bush_green", "pos": Vector2(745.0, 605.0), "size": Vector2(34.0, 28.0), "shadow": Vector2(14.0, 7.0)},
 		{"id": "chibi_bush_green", "pos": Vector2(1020.0, 605.0), "size": Vector2(34.0, 28.0), "shadow": Vector2(14.0, 7.0)}
 	]

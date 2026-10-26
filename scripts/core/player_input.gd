@@ -24,12 +24,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.is_pressed():
 		return
 		
-	# Ignore clicks if a tool is currently selected or placing a building
-	if main_farm != null:
-		if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
-			return
-		if main_farm._pending_build_id != "":
-			return
+	if main_farm != null and main_farm._pending_build_id != "":
+		return
 
 	if player_avatar == null or walk_grid == null:
 		return
@@ -41,7 +37,50 @@ func _unhandled_input(event: InputEvent) -> void:
 		var vp: Viewport = get_viewport()
 		if vp != null:
 			mpos = vp.get_camera_2d().get_global_mouse_position() if vp.get_camera_2d() != null else Vector2.ZERO
-			
+
+	# 1. PRIORITY 1: Check VisitorNPCs with generous 72x88px bounding box
+	var vm: VisitorManager = main_farm.find_child("VisitorManager", true, false) as VisitorManager if main_farm != null else null
+	if vm != null:
+		for npc: VisitorNPC in vm.get_active_visitors():
+			if is_instance_valid(npc) and npc.state != VisitorNPC.VisitorState.INACTIVE:
+				var local_pos: Vector2 = mpos - npc.global_position
+				if Rect2(-36.0, -60.0, 72.0, 88.0).has_point(local_pos):
+					if main_farm != null and main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+						main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+					npc.handle_visitor_click()
+					get_viewport().set_input_as_handled()
+					return
+
+	# 2. PRIORITY 2: Check Animal Pens (1-Click Feed / Harvest)
+	if main_farm != null:
+		for pen: AnimalPen in main_farm._animal_pens:
+			if is_instance_valid(pen) and mpos.distance_to(pen.global_position) <= 95.0:
+				if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+					main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+				pen.handle_pen_click()
+				interact_with(pen)
+				get_viewport().set_input_as_handled()
+				return
+
+	# 3. PRIORITY 3: Check Zoo Enclosures (1-Click Feed / Unlock)
+	if main_farm != null:
+		var zm: ZooManager = main_farm.find_child("ZooManager", true, false) as ZooManager
+		if zm != null:
+			for enc_id: String in zm.enclosures:
+				var enc: ZooEnclosure = zm.enclosures[enc_id] as ZooEnclosure
+				if is_instance_valid(enc) and mpos.distance_to(enc.global_position) <= 100.0:
+					if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+						main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+					enc.on_player_interact(player_avatar)
+					interact_with(enc)
+					get_viewport().set_input_as_handled()
+					return
+
+	# Ignore clicks if a tool is currently selected (e.g. planting seeds or harvesting crops)
+	if main_farm != null:
+		if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+			return
+
 	var target_interactable: Node = find_interactable_at(mpos)
 	
 	if target_interactable != null:
