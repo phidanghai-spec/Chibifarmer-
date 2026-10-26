@@ -24,6 +24,7 @@ var _crop_sprite: Sprite2D
 
 func _ready() -> void:
 	y_sort_enabled = true
+	add_to_group("interactable")
 	
 	# 0. Soil Background Sprite (scaled 1.45x to seamlessly tile rich soil patches)
 	_soil_sprite = Sprite2D.new()
@@ -82,7 +83,16 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 				dam.apply_tool_to_plot(self)
 				return
 			
+			if not SaveManager.instant_interact:
+				var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+				if p_input != null and p_input.has_method("interact_with"):
+					p_input.call("interact_with", self)
+					return
+			
 			handle_direct_click()
+
+func on_player_interact(_avatar: Node2D) -> void:
+	handle_direct_click()
 
 func handle_direct_click() -> void:
 	if state == PlotState.READY:

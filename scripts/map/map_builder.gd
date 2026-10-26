@@ -38,7 +38,7 @@ static func _init_blocked_and_occupied() -> void:
 		if y_idx == 20: # Row 20 là cầu gỗ chính bắc qua sông
 			continue
 		var world_y: float = float(y_idx * TILE_SIZE) + float(TILE_SIZE) * 0.5
-		var cx: float = FishingSpot.get_river_center_x(world_y)
+		var cx: float = GridManager.get_river_center_x(world_y)
 		var sand_half: float = 108.0
 		var col_start: int = int(floor((cx - sand_half) / float(TILE_SIZE)))
 		var col_end: int = int(ceil((cx + sand_half) / float(TILE_SIZE)))

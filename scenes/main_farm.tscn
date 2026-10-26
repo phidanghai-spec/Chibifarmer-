@@ -5,10 +5,16 @@
 [ext_resource type="Script" path="res://scripts/interaction/drag_action_manager.gd" id="3_drag"]
 [ext_resource type="Script" path="res://scripts/visitors/visitor_manager.gd" id="4_vis"]
 [ext_resource type="PackedScene" path="res://scenes/ui_hud.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/core/walk_grid.gd" id="6_walk"]
+[ext_resource type="Script" path="res://scripts/entities/player_avatar.gd" id="7_avatar"]
+[ext_resource type="Script" path="res://scripts/core/player_input.gd" id="8_pinput"]
 
 [node name="MainFarm" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_main")
+
+[node name="WalkGrid" type="Node2D" parent="."]
+script = ExtResource("6_walk")
 
 [node name="GroundLayer" type="Node2D" parent="."]
 
@@ -34,6 +40,16 @@ y_sort_enabled = true
 [node name="VisitorManager" type="Node2D" parent="."]
 y_sort_enabled = true
 script = ExtResource("4_vis")
+
+[node name="PlayerAvatar" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("7_avatar")
+
+[node name="PlayerInput" type="Node" parent="." node_paths=PackedStringArray("main_farm", "player_avatar", "walk_grid")]
+script = ExtResource("8_pinput")
+main_farm = NodePath("..")
+player_avatar = NodePath("../PlayerAvatar")
+walk_grid = NodePath("../WalkGrid")
 
 [node name="DragActionManager" type="Node2D" parent="." node_paths=PackedStringArray("camera_controller")]
 script = ExtResource("3_drag")

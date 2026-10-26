@@ -44,6 +44,7 @@ func setup(p_id: String, p_pos: Vector2, p_size: Vector2, p_shadow: bool = true,
 	is_swaying = p_sway
 	main_farm = p_main_farm
 	y_sort_enabled = true
+	add_to_group("interactable")
 	
 	if "tree" in decor_id:
 		z_index = 1
@@ -404,6 +405,13 @@ func try_harvest() -> bool:
 		bounce.tween_property(self, "scale", Vector2.ONE, 0.1)
 	
 	return true
+
+func on_player_interact(_avatar: Node2D) -> void:
+	if is_fruit_tree:
+		if growth_stage == TreeGrowthStage.STAGE_WITHERED:
+			try_interact_withered()
+		elif is_ripe:
+			try_harvest()
 
 func try_interact_withered() -> bool:
 	if not is_fruit_tree or growth_stage != TreeGrowthStage.STAGE_WITHERED:

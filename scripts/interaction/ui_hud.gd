@@ -688,16 +688,16 @@ func open_settings_modal() -> void:
 	
 	_settings_modal = PanelContainer.new()
 	_settings_modal.name = "SettingsModal"
-	_settings_modal.custom_minimum_size = Vector2(360, 260)
+	_settings_modal.custom_minimum_size = Vector2(380, 420)
 	_settings_modal.anchors_preset = Control.PRESET_CENTER
 	_settings_modal.anchor_left = 0.5
 	_settings_modal.anchor_top = 0.5
 	_settings_modal.anchor_right = 0.5
 	_settings_modal.anchor_bottom = 0.5
-	_settings_modal.offset_left = -180.0
-	_settings_modal.offset_top = -130.0
-	_settings_modal.offset_right = 180.0
-	_settings_modal.offset_bottom = 130.0
+	_settings_modal.offset_left = -190.0
+	_settings_modal.offset_top = -210.0
+	_settings_modal.offset_right = 190.0
+	_settings_modal.offset_bottom = 210.0
 	_settings_modal.z_index = 100
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
@@ -715,13 +715,14 @@ func open_settings_modal() -> void:
 	vbox.add_theme_constant_override("separation", 10)
 	_settings_modal.add_child(vbox)
 	
+	# Header
 	var hbox_head: HBoxContainer = HBoxContainer.new()
 	vbox.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "⚙️ CÀI ĐẶT & QUẢN LÝ DỮ LIỆU"
+	lbl_title.text = "⚙️ CÀI ĐẶT & NHÂN VẬT"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_font_size_override("font_size", 14)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_head.add_child(lbl_title)
 	
@@ -733,50 +734,156 @@ func open_settings_modal() -> void:
 	)
 	hbox_head.add_child(btn_close)
 	
-	var lbl_sub: Label = Label.new()
-	lbl_sub.text = "Chọn chức năng lưu trữ hoặc chế độ chơi mong muốn:"
-	lbl_sub.add_theme_font_size_override("font_size", 11)
-	lbl_sub.add_theme_color_override("font_color", Color(0.45, 0.30, 0.20))
-	vbox.add_child(lbl_sub)
+	# --- 1. Character Selection (Minh / Mai) ---
+	var lbl_char_sec: Label = Label.new()
+	lbl_char_sec.text = "👤 LỰA CHỌN NHÂN VẬT"
+	lbl_char_sec.add_theme_font_size_override("font_size", 11)
+	lbl_char_sec.add_theme_color_override("font_color", Color(0.40, 0.25, 0.12))
+	vbox.add_child(lbl_char_sec)
+	
+	var hbox_chars: HBoxContainer = HBoxContainer.new()
+	hbox_chars.add_theme_constant_override("separation", 10)
+	vbox.add_child(hbox_chars)
+	
+	var btn_char_minh: Button = Button.new()
+	btn_char_minh.text = "🧑 Minh (Nam)"
+	btn_char_minh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_char_minh.custom_minimum_size = Vector2(0, 34)
+	hbox_chars.add_child(btn_char_minh)
+	
+	var btn_char_mai: Button = Button.new()
+	btn_char_mai.text = "👧 Mai (Nữ)"
+	btn_char_mai.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_char_mai.custom_minimum_size = Vector2(0, 34)
+	hbox_chars.add_child(btn_char_mai)
+	
+	var update_char_buttons: Callable = func() -> void:
+		if SaveManager.selected_character == "minh":
+			btn_char_minh.modulate = Color(1.2, 1.3, 0.8)
+			btn_char_mai.modulate = Color(0.9, 0.9, 0.9)
+		else:
+			btn_char_minh.modulate = Color(0.9, 0.9, 0.9)
+			btn_char_mai.modulate = Color(1.3, 1.1, 1.2)
+	
+	update_char_buttons.call()
+	
+	btn_char_minh.pressed.connect(func() -> void:
+		SaveManager.set_player_character("minh")
+		update_char_buttons.call()
+		AudioManager.play_sfx("click")
+		show_floating_notice("🧑 Đã chọn nhân vật: Minh!")
+	)
+	btn_char_mai.pressed.connect(func() -> void:
+		SaveManager.set_player_character("mai")
+		update_char_buttons.call()
+		AudioManager.play_sfx("click")
+		show_floating_notice("👧 Đã chọn nhân vật: Mai!")
+	)
+	
+	# Character Name Input
+	var hbox_name: HBoxContainer = HBoxContainer.new()
+	hbox_name.add_theme_constant_override("separation", 8)
+	vbox.add_child(hbox_name)
+	
+	var lbl_name_prompt: Label = Label.new()
+	lbl_name_prompt.text = "Tên nhân vật:"
+	lbl_name_prompt.add_theme_font_size_override("font_size", 11)
+	lbl_name_prompt.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	hbox_name.add_child(lbl_name_prompt)
+	
+	var edit_player_name: LineEdit = LineEdit.new()
+	edit_player_name.text = SaveManager.player_name
+	edit_player_name.max_length = 16
+	edit_player_name.placeholder_text = "Nhập tên nhân vật..."
+	edit_player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit_player_name.text_changed.connect(func(new_text: String) -> void:
+		SaveManager.set_player_name(new_text)
+	)
+	hbox_name.add_child(edit_player_name)
+	
+	# --- 2. Instant Interact vs Walk-to-Interact Toggle ---
+	var lbl_interact_sec: Label = Label.new()
+	lbl_interact_sec.text = "🎮 PHƯƠNG THỨC ĐIỀU KHIỂN & TƯƠNG TÁC"
+	lbl_interact_sec.add_theme_font_size_override("font_size", 11)
+	lbl_interact_sec.add_theme_color_override("font_color", Color(0.40, 0.25, 0.12))
+	vbox.add_child(lbl_interact_sec)
+	
+	var btn_toggle_interact: Button = Button.new()
+	btn_toggle_interact.custom_minimum_size = Vector2(0, 36)
+	
+	var update_interact_btn: Callable = func() -> void:
+		if SaveManager.instant_interact:
+			btn_toggle_interact.text = "⚡ Tương tác tức thì: [BẬT] (Bấm trực tiếp)"
+			btn_toggle_interact.modulate = Color(1.2, 1.25, 0.8)
+		else:
+			btn_toggle_interact.text = "🚶 Tương tác tức thì: [TẮT] (Nhân vật đi bộ tới cạnh)"
+			btn_toggle_interact.modulate = Color(0.9, 1.15, 1.2)
+			
+	update_interact_btn.call()
+	
+	btn_toggle_interact.pressed.connect(func() -> void:
+		SaveManager.set_instant_interact(not SaveManager.instant_interact)
+		update_interact_btn.call()
+		AudioManager.play_sfx("click")
+		if SaveManager.instant_interact:
+			show_floating_notice("⚡ Đã bật Tương tác tức thì!")
+		else:
+			show_floating_notice("🚶 Đã bật chế độ Nhân vật đi bộ tới đối tượng!")
+	)
+	vbox.add_child(btn_toggle_interact)
+	
+	# --- 3. Save / Reset Actions ---
+	var lbl_data_sec: Label = Label.new()
+	lbl_data_sec.text = "💾 QUẢN LÝ DỮ LIỆU GAME"
+	lbl_data_sec.add_theme_font_size_override("font_size", 11)
+	lbl_data_sec.add_theme_color_override("font_color", Color(0.40, 0.25, 0.12))
+	vbox.add_child(lbl_data_sec)
+	
+	var hbox_saves: HBoxContainer = HBoxContainer.new()
+	hbox_saves.add_theme_constant_override("separation", 8)
+	vbox.add_child(hbox_saves)
 	
 	var btn_save: Button = Button.new()
-	btn_save.text = "💾 Lưu Game Ngay"
-	btn_save.custom_minimum_size = Vector2(0, 34)
+	btn_save.text = "💾 Lưu Game"
+	btn_save.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_save.custom_minimum_size = Vector2(0, 32)
 	btn_save.pressed.connect(func() -> void:
 		SaveManager.save_game()
 		AudioManager.play_sfx("coin")
 		show_floating_notice("💾 Đã lưu tiến trình nông trại an toàn!")
 		_settings_modal.queue_free()
 	)
-	vbox.add_child(btn_save)
+	hbox_saves.add_child(btn_save)
 	
 	var btn_reset_lvl1: Button = Button.new()
-	btn_reset_lvl1.text = "🌱 Chơi Mới Chuẩn (Level 1)"
-	btn_reset_lvl1.custom_minimum_size = Vector2(0, 34)
+	btn_reset_lvl1.text = "🌱 Chơi Mới"
+	btn_reset_lvl1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_reset_lvl1.custom_minimum_size = Vector2(0, 32)
 	btn_reset_lvl1.pressed.connect(func() -> void:
 		SaveManager.reset_to_level_1()
 		_refresh_all_hud()
 		_refresh_shop_ui()
 		_refresh_truck_ui()
 		AudioManager.play_sfx("level_up")
-		show_floating_notice("🌱 Đã thiết lập lại nông trại Cấp 1! Chúc bạn cày cuốc vui vẻ!")
+		show_floating_notice("🌱 Đã thiết lập lại nông trại Cấp 1!")
 		_settings_modal.queue_free()
 	)
-	vbox.add_child(btn_reset_lvl1)
+	hbox_saves.add_child(btn_reset_lvl1)
 	
 	var btn_sandbox: Button = Button.new()
-	btn_sandbox.text = "🛠️ Chế Độ Thử Nghiệm (Sandbox Level 32)"
-	btn_sandbox.custom_minimum_size = Vector2(0, 34)
+	btn_sandbox.text = "🛠️ Sandbox Lv32"
+	btn_sandbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_sandbox.custom_minimum_size = Vector2(0, 32)
 	btn_sandbox.pressed.connect(func() -> void:
 		SaveManager.set_sandbox_level_32()
 		_refresh_all_hud()
 		_refresh_shop_ui()
 		_refresh_truck_ui()
 		AudioManager.play_sfx("coin")
-		show_floating_notice("🛠️ Đã kích hoạt Chế Độ Thử Nghiệm Cấp 32!")
+		show_floating_notice("🛠️ Đã kích hoạt Chế Độ Sandbox Cấp 32!")
 		_settings_modal.queue_free()
 	)
-	vbox.add_child(btn_sandbox)
+	hbox_saves.add_child(btn_sandbox)
 	
 	add_child(_settings_modal)
 

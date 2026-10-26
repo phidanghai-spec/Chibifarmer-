@@ -9,6 +9,9 @@ class_name MainFarm
 @onready var visitor_manager: VisitorManager = $VisitorManager
 @onready var drag_action_manager: DragActionManager = $DragActionManager
 @onready var ui_hud: CanvasLayer = $UIHud
+@onready var walk_grid: Node2D = $WalkGrid
+@onready var player_avatar: Node2D = $PlayerAvatar
+@onready var player_input: Node = $PlayerInput
 
 @onready var ground_layer: Node2D = get_node_or_null("GroundLayer") as Node2D
 @onready var props_layer: Node2D = get_node_or_null("PropsLayer") as Node2D
@@ -31,9 +34,13 @@ var _production_machines: Array[ProductionMachine] = []
 var _truck_prop: Node2D = null
 var _barn_prop: Node2D = null
 var _silo_prop: Node2D = null
+var _roadside_shop_prop: Node2D = null
 
 const SpecializedNPCClass = preload("res://scripts/entities/specialized_npc.gd")
 const ChibiSceneryBuilderClass = preload("res://scripts/map/chibi_scenery_builder.gd")
+const WalkGridClass = preload("res://scripts/core/walk_grid.gd")
+const PlayerAvatarClass = preload("res://scripts/entities/player_avatar.gd")
+const PlayerInputClass = preload("res://scripts/core/player_input.gd")
 
 var _ghost_preview_node: Node2D = null
 var _ghost_box: Polygon2D = null
@@ -148,13 +155,23 @@ func _ready() -> void:
 	# Spawn Specialized NPCs at functional buildings
 	_spawn_specialized_npcs()
 
-	# Tắt _process hoàn toàn để chống giật lag
-	set_process(false)
+	# Position Player Avatar at saved position or default farm gate
+	if player_avatar != null:
+		if SaveManager.player_position != Vector2.ZERO:
+			player_avatar.position = SaveManager.player_position
+		else:
+			player_avatar.position = Vector2(70.0, 640.0)
 
 	# Check screenshot test mode
 	var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
 	for arg: String in args:
 		if arg == "--screenshot" or arg == "--run-tests":
+			var plot: FieldPlot = get_field_plot_at(Vector2i(12, 17))
+			if plot != null and player_avatar != null and walk_grid != null:
+				var path: Array[Vector2] = walk_grid.find_path(player_avatar.position, plot.global_position + Vector2(-32.0, 0.0))
+				player_avatar.go_to(path, plot)
+				camera_2d.position = plot.global_position + Vector2(-16.0, 0.0)
+				camera_2d.zoom = Vector2(1.5, 1.5)
 			_capture_screenshot_and_quit()
 			break
 
@@ -263,7 +280,7 @@ func _is_in_lake_zone(world_pos: Vector2) -> bool:
 	return _is_in_water_pond(world_pos)
 
 func _is_in_water_pond(pos: Vector2) -> bool:
-	return FishingSpot.is_in_water_or_sand(pos)
+	return GridManager.is_in_water_or_sand(pos)
 
 const MapBuilderClass = preload("res://scripts/map/map_builder.gd")
 
@@ -516,8 +533,12 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		_truck_prop = node_wrapper
 		_truck_prop.position = Vector2(435.0, 660.0)
 		_truck_prop.z_index = 2
+		_truck_prop.add_to_group("interactable")
+		_truck_prop.set_meta("interact_type", "truck")
 	elif sprite_id == "barn" or sprite_id == "building_barn":
 		_barn_prop = node_wrapper
+		_barn_prop.add_to_group("interactable")
+		_barn_prop.set_meta("interact_type", "barn")
 		var lbl_barn: Label = Label.new()
 		lbl_barn.text = SaveManager.get_building_name("building_barn", "📦 NHÀ KHO")
 		lbl_barn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -532,6 +553,8 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		node_wrapper.add_child(lbl_barn)
 	elif sprite_id == "silo":
 		_silo_prop = node_wrapper
+		_silo_prop.add_to_group("interactable")
+		_silo_prop.set_meta("interact_type", "silo")
 		var lbl_silo: Label = Label.new()
 		lbl_silo.text = SaveManager.get_building_name("building_silo", "🌾 KHO SILO")
 		lbl_silo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -584,6 +607,10 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 			var tw_d: Tween = node_wrapper.create_tween().set_loops()
 			tw_d.tween_property(donkey_sp, "scale:y", donkey_sp.scale.y * 1.06, 1.0).set_trans(Tween.TRANS_SINE)
 			tw_d.tween_property(donkey_sp, "scale:y", donkey_sp.scale.y, 1.0).set_trans(Tween.TRANS_SINE)
+	elif sprite_id == "roadside_shop":
+		_roadside_shop_prop = node_wrapper
+		_roadside_shop_prop.add_to_group("interactable")
+		_roadside_shop_prop.set_meta("interact_type", "roadside_shop")
 	return sp
 
 func _spawn_production_machine(m_id: String, cell: Vector2i) -> ProductionMachine:
@@ -755,7 +782,7 @@ func _draw() -> void:
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.42, 0.30, 0.21), false, 1.8)
 
 func _capture_screenshot_and_quit() -> void:
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(3.2).timeout
 	await RenderingServer.frame_post_draw
 	var vp: Viewport = get_viewport()
 	var tex: ViewportTexture = vp.get_texture()
@@ -877,8 +904,26 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 			if ui_hud != null:
 				ui_hud.toggle_truck_popup()
 				return true
+	if _roadside_shop_prop != null and is_instance_valid(_roadside_shop_prop):
+		if world_pos.distance_to(_roadside_shop_prop.global_position) <= 65.0:
+			if ui_hud != null:
+				ui_hud.open_roadside_shop_modal()
+				return true
 	
 	return false
+
+func interact_with_prop(prop_node: Node2D) -> void:
+	if not is_instance_valid(prop_node):
+		return
+	var itype: String = String(prop_node.get_meta("interact_type", ""))
+	if itype == "barn":
+		if ui_hud != null: ui_hud.open_storage_popup("barn")
+	elif itype == "silo":
+		if ui_hud != null: ui_hud.open_storage_popup("silo")
+	elif itype == "truck":
+		if ui_hud != null: ui_hud.toggle_truck_popup()
+	elif itype == "roadside_shop":
+		if ui_hud != null: ui_hud.open_roadside_shop_modal()
 
 func cancel_pending_build() -> void:
 	_pending_build_id = ""

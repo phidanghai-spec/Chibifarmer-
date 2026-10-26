@@ -357,6 +357,11 @@ func load_all_atlases() -> void:
 
 	_load_standalone_texture("wooden_bench", "res://assets/sprites/wooden_bench.png")
 	_load_standalone_texture("tool_demolish", "res://assets/sprites/tool_demolish.png")
+
+	# Player Characters (Minh & Mai)
+	_load_standalone_texture("player_minh", "res://assets/sprites/player_minh.png")
+	_load_standalone_texture("player_mai", "res://assets/sprites/player_mai.png")
+
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)
