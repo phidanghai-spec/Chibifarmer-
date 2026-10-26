@@ -29,20 +29,14 @@ var _water_quads: Array[PackedVector2Array] = []
 var _deep_water_quads: Array[PackedVector2Array] = []
 
 static func get_river_center_x(y: float) -> float:
-	var base_x: float = 920.0
-	var wave1: float = sin((y + 120.0) * 0.0030) * 60.0
-	var wave2: float = cos((y + 120.0) * 0.0065) * 22.0
-	return base_x + wave1 - wave2
+	return GridManager.get_river_center_x(y)
 
 static func is_in_water_or_sand(pos: Vector2) -> bool:
-	# Wooden river bridge spans across at y = 636..684, x = 820..1080
-	if pos.y >= 636.0 and pos.y <= 684.0 and pos.x >= 820.0 and pos.x <= 1080.0:
-		return false
-	var rx: float = get_river_center_x(pos.y)
-	return absf(pos.x - rx) <= 108.0 and pos.y >= -100.0 and pos.y <= 1400.0
+	return GridManager.is_in_water_or_sand(pos)
 
 func _ready() -> void:
 	y_sort_enabled = true
+	add_to_group("interactable")
 	set_process(false) # Tắt hoàn toàn _process để triệt tiêu redraw liên tục, chống giật lag
 	_generate_river_geometry()
 
@@ -175,12 +169,21 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_label_status.text = "⏳ HỒI: 00:%02d" % maxi(0, remaining)
 			_label_status.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 
+func on_player_interact(_avatar: Node2D) -> void:
+	handle_fishing_click()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
 			var mpos: Vector2 = get_global_mouse_position()
 			if fishing_rect.has_point(mpos):
+				if not SaveManager.instant_interact:
+					var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+					if p_input != null:
+						p_input.call("interact_with", self)
+						get_viewport().set_input_as_handled()
+						return
 				if handle_fishing_click():
 					get_viewport().set_input_as_handled()
 
@@ -188,6 +191,11 @@ func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
+			if not SaveManager.instant_interact:
+				var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+				if p_input != null:
+					p_input.call("interact_with", self)
+					return
 			handle_fishing_click()
 
 func handle_fishing_click() -> bool:

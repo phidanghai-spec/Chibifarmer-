@@ -20,7 +20,7 @@ static func is_position_safe_for_scenery(pos: Vector2) -> bool:
 		return false
 
 	# 2. Vùng Lòng sông & Bờ cát (cách tâm sông tối thiểu 115px)
-	var river_cx: float = FishingSpot.get_river_center_x(pos.y)
+	var river_cx: float = GridManager.get_river_center_x(pos.y)
 	if absf(pos.x - river_cx) < 115.0:
 		return false
 

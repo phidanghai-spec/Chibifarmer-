@@ -5,8 +5,15 @@ const SAVE_PATH: String = "user://hayday_save.json"
 const SAVE_VERSION: int = 10
 const MAX_OFFLINE_SECONDS: int = 28800 # 8 hours limit
 
+signal player_settings_changed()
+
 var custom_decorations: Array = []
 var building_custom_names: Dictionary = {} # building_id -> String
+
+var selected_character: String = "minh" # "minh" or "mai"
+var player_name: String = "Minh"
+var instant_interact: bool = false
+var player_position: Vector2 = Vector2(70.0, 640.0)
 
 var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
@@ -68,6 +75,11 @@ func reset_to_level_1() -> void:
 	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
 	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
 	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
+	selected_character = "minh"
+	player_name = "Minh"
+	instant_interact = false
+	player_position = Vector2(70.0, 640.0)
+	player_settings_changed.emit()
 	save_game()
 	print("[SaveManager] Successfully reset account to Fresh Level 1!")
 
@@ -159,6 +171,15 @@ func save_game() -> void:
 	# Save Custom Decorations layout
 	save_data["custom_decorations"] = custom_decorations.duplicate(true)
 	
+	# Save Player Avatar
+	save_data["player"] = {
+		"selected_character": selected_character,
+		"player_name": player_name,
+		"instant_interact": instant_interact,
+		"position_x": player_position.x,
+		"position_y": player_position.y
+	}
+	
 	var json_str: String = JSON.stringify(save_data, "\t")
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file != null:
@@ -248,4 +269,38 @@ func load_game() -> bool:
 				RoadsideShop.slots.append(slot_val as Dictionary)
 			RoadsideShop.shop_updated.emit()
 	
+	# Restore Player Avatar
+	if data.has("player"):
+		var p_data: Dictionary = data["player"] as Dictionary
+		selected_character = String(p_data.get("selected_character", "minh"))
+		player_name = String(p_data.get("player_name", "Minh"))
+		instant_interact = bool(p_data.get("instant_interact", false))
+		var px: float = float(p_data.get("position_x", 70.0))
+		var py: float = float(p_data.get("position_y", 640.0))
+		player_position = Vector2(px, py)
+		player_settings_changed.emit()
+	
 	return true
+
+func set_player_character(char_key: String) -> void:
+	if selected_character != char_key:
+		selected_character = char_key
+		player_settings_changed.emit()
+		save_game()
+
+func set_player_name(new_name: String) -> void:
+	var trimmed: String = new_name.strip_edges()
+	if trimmed != "":
+		player_name = trimmed.substr(0, 16)
+		player_settings_changed.emit()
+		save_game()
+
+func set_instant_interact(enabled: bool) -> void:
+	if instant_interact != enabled:
+		instant_interact = enabled
+		player_settings_changed.emit()
+		save_game()
+
+func set_player_position(pos: Vector2) -> void:
+	player_position = pos
+

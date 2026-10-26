@@ -36,6 +36,7 @@ var _eggs_sprite: Sprite2D
 
 func _ready() -> void:
 	y_sort_enabled = true
+	add_to_group("interactable")
 
 	# 1. Pen Barn / Coop Structure in top-left
 	if animal_id == "chicken" and SpriteAtlasManager.has_texture("chicken_coop"):
@@ -253,6 +254,12 @@ func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
+			if not SaveManager.instant_interact:
+				var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+				if p_input != null:
+					p_input.call("interact_with", self)
+					get_viewport().set_input_as_handled()
+					return
 			if state == PenState.HUNGRY:
 				feed()
 				get_viewport().set_input_as_handled()
@@ -282,12 +289,21 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_timer_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.1))
 			_timer_label.add_theme_constant_override("outline_size", 3)
 
+func on_player_interact(_avatar: Node2D) -> void:
+	handle_pen_click()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
 			var mpos: Vector2 = get_global_mouse_position()
 			if mpos.distance_to(global_position) <= 95.0:
+				if not SaveManager.instant_interact:
+					var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+					if p_input != null:
+						p_input.call("interact_with", self)
+						get_viewport().set_input_as_handled()
+						return
 				if handle_pen_click():
 					get_viewport().set_input_as_handled()
 

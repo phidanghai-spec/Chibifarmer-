@@ -17,6 +17,7 @@ var _label_title: Label
 var _btn_rename: Button
 
 func _ready() -> void:
+	add_to_group("interactable")
 	# 1. Machine Sprite
 	_sprite = Sprite2D.new()
 	if SpriteAtlasManager.has_texture(machine_id):
@@ -202,12 +203,21 @@ func _spawn_local_harvest_fx(item_id: String) -> void:
 	tw.parallel().tween_property(fx, "modulate:a", 0.0, 0.6).set_delay(0.2)
 	tw.tween_callback(fx.queue_free)
 
+func on_player_interact(_avatar: Node2D) -> void:
+	handle_machine_click()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
 			var mpos: Vector2 = get_global_mouse_position()
 			if mpos.distance_to(global_position) <= 75.0:
+				if not SaveManager.instant_interact:
+					var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+					if p_input != null and p_input.has_method("interact_with"):
+						p_input.call("interact_with", self)
+						get_viewport().set_input_as_handled()
+						return
 				if handle_machine_click():
 					get_viewport().set_input_as_handled()
 

@@ -28,6 +28,18 @@ func add_attraction_score(amount: int) -> void:
 	total_attraction_score += amount
 	EventBus.attraction_score_changed.emit(total_attraction_score)
 
+static func get_river_center_x(y: float) -> float:
+	var base_x: float = 920.0
+	var wave1: float = sin((y + 120.0) * 0.0030) * 60.0
+	var wave2: float = cos((y + 120.0) * 0.0065) * 22.0
+	return base_x + wave1 - wave2
+
+static func is_in_water_or_sand(pos: Vector2) -> bool:
+	if pos.y >= 636.0 and pos.y <= 684.0 and pos.x >= 820.0 and pos.x <= 1080.0:
+		return false
+	var rx: float = get_river_center_x(pos.y)
+	return absf(pos.x - rx) <= 108.0 and pos.y >= -100.0 and pos.y <= 1400.0
+
 func _ready() -> void:
 	_init_astar()
 	_init_default_layout()
@@ -129,7 +141,7 @@ func can_place_building(building_id: String, grid_pos: Vector2i) -> bool:
 			if occupied_cells.has(check_cell):
 				return false
 			var w_pos: Vector2 = grid_to_world(check_cell)
-			if FishingSpot.is_in_water_or_sand(w_pos):
+			if is_in_water_or_sand(w_pos):
 				return false
 	
 	return true
@@ -177,7 +189,7 @@ func place_path(grid_pos: Vector2i) -> bool:
 	if occupied_cells.has(grid_pos):
 		return false
 	var w_pos: Vector2 = grid_to_world(grid_pos)
-	if FishingSpot.is_in_water_or_sand(w_pos):
+	if is_in_water_or_sand(w_pos):
 		return false
 	if path_cells.get(grid_pos, false):
 		return true
