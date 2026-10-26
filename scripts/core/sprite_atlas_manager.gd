@@ -362,6 +362,23 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("player_minh", "res://assets/sprites/player_minh.png")
 	_load_standalone_texture("player_mai", "res://assets/sprites/player_mai.png")
 
+	# Zoo Sanctuary & Animals
+	_load_standalone_texture("zoo_entrance", "res://assets/sprites/zoo_entrance.png")
+	_load_standalone_texture("zoo_feed_shop", "res://assets/sprites/zoo_feed_shop.png")
+	_load_standalone_texture("zoo_enclosure_capybara", "res://assets/sprites/zoo_enclosure_capybara.png")
+	_load_standalone_texture("zoo_enclosure_panda", "res://assets/sprites/zoo_enclosure_panda.png")
+	_load_standalone_texture("zoo_enclosure_penguin", "res://assets/sprites/zoo_enclosure_penguin.png")
+	_load_standalone_texture("zoo_enclosure_giraffe", "res://assets/sprites/zoo_enclosure_giraffe.png")
+	_load_standalone_texture("zoo_capybara", "res://assets/sprites/zoo_capybara.png")
+	_load_standalone_texture("zoo_panda", "res://assets/sprites/zoo_panda.png")
+	_load_standalone_texture("zoo_penguin", "res://assets/sprites/zoo_penguin.png")
+	_load_standalone_texture("zoo_giraffe", "res://assets/sprites/zoo_giraffe.png")
+	_load_standalone_texture("sanctuary_feed", "res://assets/sprites/sanctuary_feed.png")
+	_load_standalone_texture("item_sanctuary_feed", "res://assets/sprites/sanctuary_feed.png")
+	_load_standalone_texture("puzzle_piece", "res://assets/sprites/puzzle_piece.png")
+	_load_standalone_texture("zoo_ticket", "res://assets/sprites/zoo_ticket.png")
+
+	_load_standalone_texture("zoo_capybara_test", "res://assets/sprites/zoo_capybara_test.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)

@@ -58,6 +58,13 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0, 0, 0, 0.2)
 shadow_size = 2
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.92, 0.22, 0.22, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_silo"]
 bg_color = Color(1, 0.992, 0.961, 0.96)
 border_width_left = 2
@@ -350,10 +357,10 @@ mouse_filter = 2
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
-offset_top = 16.0
-offset_right = -18.0
-offset_bottom = 54.0
+offset_left = -410.0
+offset_top = 14.0
+offset_right = -16.0
+offset_bottom = 52.0
 grow_horizontal = 0
 theme_override_constants/separation = 6
 alignment = 2
@@ -363,8 +370,60 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.7, 0.9, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
 text = "✨ 10"
+
+[node name="BtnZoo" type="Button" parent="TopRightHUD"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 34)
+layout_mode = 2
+text = "🦁"
+tooltip_text = "Sổ Tay Bảo Tồn Sở Thú"
+
+[node name="BadgeZoo" type="Label" parent="TopRightHUD/BtnZoo"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 13.0
+grow_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnQuests" type="Button" parent="TopRightHUD"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 34)
+layout_mode = 2
+text = "📜"
+tooltip_text = "Bảng Nhiệm Vụ Nông Trại & Sở Thú"
+
+[node name="BadgeQuests" type="Label" parent="TopRightHUD/BtnQuests"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 13.0
+grow_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BtnAudioToggle" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true

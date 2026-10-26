@@ -49,3 +49,8 @@ signal loot_collected(item_id: String, amount: int, world_pos: Vector2)
 # --- Commercial & Orders ---
 signal truck_order_completed(order_id: String, reward_gold: int, reward_xp: int)
 signal roadside_shop_item_sold(slot_index: int, item_id: String, count: int, price: int)
+
+# --- Zoo & Quests ---
+signal zoo_animal_fed(animal_id: String)
+signal zoo_enclosure_unlocked(animal_id: String)
+signal quest_completed(quest_id: String)

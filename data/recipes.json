@@ -241,5 +241,24 @@
     "unlock_level": 7,
     "storage_type": "barn",
     "description": "Mồi câu mạ vàng lấp lánh chuyên săn cá quý hiếm."
+  },
+  "sanctuary_feed": {
+    "id": "sanctuary_feed",
+    "name": "Bó Cỏ Dinh Dưỡng",
+    "building_id": "feed_mill",
+    "ingredients": {
+      "wheat": 3,
+      "corn": 2,
+      "carrot": 1
+    },
+    "produce_item_id": "sanctuary_feed",
+    "produce_count": 2,
+    "craft_time_seconds": 12,
+    "xp_reward": 5,
+    "base_price": 35,
+    "unlock_level": 3,
+    "storage_type": "barn",
+    "description": "Bó cỏ tổng hợp bổ dưỡng từ lúa mì, ngô và cà rốt dành riêng cho thú Sở Thú."
   }
 }
+

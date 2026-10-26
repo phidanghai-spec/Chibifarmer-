@@ -20,6 +20,7 @@ var _anim_frame_idx: int = 0
 const ANIM_FRAME_TIME: float = 0.14
 
 func _ready() -> void:
+	z_index = 10
 	z_as_relative = true
 	_setup_nodes()
 	_update_appearance()

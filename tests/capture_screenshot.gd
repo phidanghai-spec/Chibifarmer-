@@ -5,14 +5,13 @@ func _ready() -> void:
 	var farm: Node = farm_scene.instantiate()
 	add_child(farm)
 	
-	# Frame camera to show the winding river, wooden bridge, fishing pier, and farm center
+	# 1. Capture East Bank Zoo Sanctuary (Entrance, Feed Shop with house sprite, 4 spaced enclosures)
 	var cam: Camera2D = farm.get_node_or_null("Camera2D") as Camera2D
 	if cam != null:
-		cam.position = Vector2(700.0, 520.0)
-		cam.zoom = Vector2(0.78, 0.78)
-		cam.set("target_zoom", Vector2(0.78, 0.78))
+		cam.position = Vector2(1300.0, 360.0)
+		cam.zoom = Vector2(0.85, 0.85)
+		cam.set("target_zoom", Vector2(0.85, 0.85))
 	
-	# Wait for rendering pipeline
 	for i: int in range(25):
 		await get_tree().process_frame
 	
@@ -21,77 +20,33 @@ func _ready() -> void:
 		img.save_png("res://debug_preview.png")
 		print("[SCREENSHOT] Saved screenshot to res://debug_preview.png (Size: ", img.get_size(), ")")
 	
-	# Also capture wide panoramic view of northern horizon
-	if cam != null:
-		cam.position = Vector2(600.0, 320.0)
-		cam.zoom = Vector2(0.55, 0.55)
-		cam.set("target_zoom", Vector2(0.55, 0.55))
-	for i: int in range(15):
-		await get_tree().process_frame
-	var img_wide: Image = get_viewport().get_texture().get_image()
-	if img_wide != null and not img_wide.is_empty():
-		img_wide.save_png("res://debug_panorama.png")
-		print("[SCREENSHOT] Saved panorama screenshot to res://debug_panorama.png")
+	# 2. Capture Avatar on Field Plot to verify avatar is drawn on top of plot soil
+	var p_avatar: Node2D = farm.get_node_or_null("PlayerAvatar") as Node2D
+	if p_avatar != null and cam != null:
+		p_avatar.position = Vector2(430.0, 560.0)
+		cam.position = Vector2(440.0, 560.0)
+		cam.zoom = Vector2(1.6, 1.6)
+		cam.set("target_zoom", Vector2(1.6, 1.6))
+		for i: int in range(15):
+			await get_tree().process_frame
+		var img_plot: Image = get_viewport().get_texture().get_image()
+		if img_plot != null and not img_plot.is_empty():
+			img_plot.save_png("res://debug_avatar_plot.png")
+			print("[SCREENSHOT] Saved avatar plot screenshot to res://debug_avatar_plot.png")
 	
-	# Open recipe modal on Bakery and capture
-	var main_farm: MainFarm = farm as MainFarm
-	if main_farm != null and not main_farm._production_machines.is_empty():
-		for m: ProductionMachine in main_farm._production_machines:
-			if m.machine_id == "bakery":
-				m.handle_machine_click()
-				break
-	for i: int in range(12):
-		await get_tree().process_frame
-	var img_recipe: Image = get_viewport().get_texture().get_image()
-	if img_recipe != null and not img_recipe.is_empty():
-		img_recipe.save_png("res://debug_recipe_modal.png")
-		print("[SCREENSHOT] Saved recipe modal screenshot to res://debug_recipe_modal.png")
-	
-	# Open Barn Storage Modal and capture
-	var hud: CanvasLayer = farm.get_node_or_null("UIHud") as CanvasLayer
+	# 3. Capture Zoo Feed Shop Modal (3 options)
+	var hud: UIHud = farm.get_node_or_null("UIHud") as UIHud
 	if hud != null:
-		# Hide recipe modal first
-		if hud.get("_recipe_modal") != null:
-			(hud.get("_recipe_modal") as CanvasItem).visible = false
-		
-		# Open Build Modal
-		hud.call("open_build_modal")
-		for i: int in range(12):
+		hud.open_zoo_feed_shop_modal()
+		for i: int in range(15):
 			await get_tree().process_frame
-		var img_build: Image = get_viewport().get_texture().get_image()
-		if img_build != null and not img_build.is_empty():
-			img_build.save_png("res://debug_build_modal.png")
-			print("[SCREENSHOT] Saved build modal screenshot to res://debug_build_modal.png")
-		
-		if hud.get("_build_modal") != null:
-			(hud.get("_build_modal") as CanvasItem).visible = false
-		
-		hud.call("open_storage_popup", "barn")
-		for i: int in range(12):
-			await get_tree().process_frame
-		var img_barn: Image = get_viewport().get_texture().get_image()
-		if img_barn != null and not img_barn.is_empty():
-			img_barn.save_png("res://debug_barn_storage.png")
-			print("[SCREENSHOT] Saved barn storage screenshot to res://debug_barn_storage.png")
-		
-		# Open Silo Storage Modal and capture
-		hud.call("open_storage_popup", "silo")
-		for i: int in range(12):
-			await get_tree().process_frame
-		var img_silo: Image = get_viewport().get_texture().get_image()
-		if img_silo != null and not img_silo.is_empty():
-			img_silo.save_png("res://debug_silo_storage.png")
-			print("[SCREENSHOT] Saved silo storage screenshot to res://debug_silo_storage.png")
-		
-		# Close storage and toggle seeds menu
-		if hud.get("_storage_modal") != null:
-			(hud.get("_storage_modal") as CanvasItem).visible = false
-		hud.call("toggle_seeds_menu")
-		for i: int in range(12):
-			await get_tree().process_frame
-		var img_seeds: Image = get_viewport().get_texture().get_image()
-		if img_seeds != null and not img_seeds.is_empty():
-			img_seeds.save_png("res://debug_seeds_menu.png")
-			print("[SCREENSHOT] Saved seeds menu screenshot to res://debug_seeds_menu.png")
+		var img_shop: Image = get_viewport().get_texture().get_image()
+		if img_shop != null and not img_shop.is_empty():
+			img_shop.save_png("res://debug_feed_shop.png")
+			print("[SCREENSHOT] Saved Zoo Feed Shop modal to res://debug_feed_shop.png")
+		var s_modal: PanelContainer = hud.get("_zoo_feed_shop_modal") as PanelContainer
+		if s_modal != null:
+			s_modal.queue_free()
 	
+	print("[SCREENSHOT] All preview screenshots successfully captured!")
 	get_tree().quit()

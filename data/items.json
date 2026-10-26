@@ -371,5 +371,21 @@
     "unlock_level": 7,
     "storage_type": "barn",
     "description": "Mồi câu mạ vàng chuyên săn cá Koi quý hiếm."
+  },
+  "sanctuary_feed": {
+    "id": "sanctuary_feed",
+    "name": "Bó Cỏ Dinh Dưỡng",
+    "base_price": 35,
+    "unlock_level": 3,
+    "storage_type": "barn",
+    "description": "Bó cỏ dinh dưỡng hảo hạng từ lúa mì, ngô và cà rốt dành cho thú Sở Thú."
+  },
+  "puzzle_piece": {
+    "id": "puzzle_piece",
+    "name": "Mảnh Ghép Sở Thú",
+    "base_price": 100,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Mảnh ghép kỳ diệu dùng để mở khóa các loài thú quý hiếm trong Khu Bảo Tồn."
   }
 }

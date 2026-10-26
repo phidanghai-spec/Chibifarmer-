@@ -56,6 +56,10 @@ static func is_position_safe_for_scenery(pos: Vector2) -> bool:
 				if pos.distance_to(cell_center) < 48.0:
 					return false
 
+	# 9. Vùng Quy hoạch Khu Bảo Tồn Sở Thú Bờ Đông (Tránh đè lên Cổng và 4 Chuồng Thú)
+	if pos.x >= 780.0 and pos.x <= 1580.0 and pos.y >= 120.0 and pos.y <= 660.0:
+		return false
+
 	return true
 
 ## Tạo bóng đổ elip mềm mại màu xanh đen bán trong suốt

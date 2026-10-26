@@ -121,6 +121,8 @@ func get_item_name(item_id: String) -> String:
 			return "Cám Bò"
 		"pig_feed":
 			return "Cám Heo"
+		"sanctuary_feed":
+			return "Bó Cỏ Dinh Dưỡng"
 		"butter":
 			return "Bơ Sữa"
 		"cheese":
