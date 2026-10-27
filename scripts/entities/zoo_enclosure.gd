@@ -26,6 +26,8 @@ class AnimalInstance:
 	var phase_offset: float = 0.0
 	var speed: float = 24.0
 	var wait_timer: float = 0.0
+	var home_pos: Vector2 = Vector2.ZERO
+	var wander_radius: float = 22.0
 
 var _animals: Array[AnimalInstance] = []
 var _bubble_node: Node2D = null
@@ -44,55 +46,7 @@ func _ready() -> void:
 	SaveManager.puzzle_pieces_changed.connect(_on_puzzle_pieces_changed)
 
 func _draw() -> void:
-	# 1. Paddock Ground (Lush Ecological Base)
-	var bg_color: Color = Color(0.48, 0.72, 0.32, 0.95) # Lush green default
-	if animal_id == "zoo_giraffe":
-		bg_color = Color(0.78, 0.75, 0.45, 0.95) # Warm savannah
-	elif animal_id == "zoo_penguin":
-		bg_color = Color(0.55, 0.75, 0.65, 0.95) # Cool coastal grass
-	
-	# Paddock turf
-	draw_rect(PADDOCK_RECT, bg_color, true)
-	
-	# 2. Ecological Decor inside Enclosure
-	if animal_id == "zoo_capybara":
-		# Capybara Onsen / Water Pond
-		var pond_rect: Rect2 = Rect2(-90.0, -25.0, 80.0, 50.0)
-		draw_rect(pond_rect, Color(0.24, 0.62, 0.85, 0.85), true)
-		# Pond edge
-		draw_rect(pond_rect, Color(0.75, 0.68, 0.48, 0.9), false, 2.5)
-		# Oranges floating in bath
-		draw_circle(Vector2(-70.0, -10.0), 4.5, Color(1.0, 0.60, 0.1))
-		draw_circle(Vector2(-50.0, 5.0), 4.0, Color(1.0, 0.60, 0.1))
-		draw_circle(Vector2(-35.0, -12.0), 3.5, Color(1.0, 0.60, 0.1))
-	elif animal_id == "zoo_panda":
-		# Bamboo mini grove
-		for bx in [-85.0, -65.0, -45.0, 65.0, 85.0]:
-			draw_line(Vector2(bx, -45.0), Vector2(bx, -10.0), Color(0.25, 0.58, 0.22), 5.0)
-			draw_circle(Vector2(bx - 3.0, -42.0), 5.0, Color(0.35, 0.72, 0.28))
-			draw_circle(Vector2(bx + 4.0, -25.0), 4.0, Color(0.35, 0.72, 0.28))
-	elif animal_id == "zoo_penguin":
-		# Blue icy swimming pool
-		var pool_rect: Rect2 = Rect2(-90.0, -35.0, 95.0, 60.0)
-		draw_rect(pool_rect, Color(0.20, 0.68, 0.92, 0.90), true)
-		draw_rect(pool_rect, Color(0.85, 0.92, 0.98, 0.95), false, 3.0)
-		# Ice float
-		draw_rect(Rect2(-70.0, -20.0, 35.0, 20.0), Color(0.92, 0.98, 1.0, 0.88), true)
-	elif animal_id == "zoo_giraffe":
-		# Tall acacia shade foliage
-		draw_circle(Vector2(-60.0, -35.0), 22.0, Color(0.32, 0.56, 0.20, 0.9))
-		draw_circle(Vector2(-45.0, -40.0), 18.0, Color(0.38, 0.64, 0.25, 0.9))
-		draw_line(Vector2(-55.0, -15.0), Vector2(-55.0, 5.0), Color(0.48, 0.32, 0.18), 4.5)
-	
-	# Wooden Food Trough inside paddock
-	var trough_rect: Rect2 = Rect2(50.0, -45.0, 42.0, 22.0)
-	draw_rect(trough_rect, Color(0.55, 0.38, 0.22), true)
-	draw_rect(trough_rect, Color(0.35, 0.22, 0.12), false, 2.0)
-	# Food fill in trough
-	var f_color: Color = Color(0.95, 0.82, 0.3) if animal_id != "zoo_capybara" else Color(1.0, 0.55, 0.15)
-	draw_rect(Rect2(53.0, -42.0, 36.0, 16.0), f_color, true)
-
-	# 3. Wooden Post & Rail Fence along 4 edges with viewing gate
+	# 1. Wooden Post & Rail Fence along 4 edges with viewing gate
 	var fence_wood: Color = Color(0.48, 0.32, 0.18)
 	var fence_light: Color = Color(0.72, 0.52, 0.32)
 	
@@ -121,13 +75,24 @@ func _draw() -> void:
 		draw_rect(Rect2(p.x - 2.5, p.y - 6.0, 5.0, 4.0), fence_light, true)
 
 func _setup_visuals() -> void:
-	# 1. Setup 2 to 3 Animals wandering inside
+	# 0. Authentic Chibi Habitat Diorama (Zen Koi pond, Bamboo pavilion, Goat/Penguin rocky cliff, Savannah shelter)
+	var hab_key: String = "zoo_enclosure_" + animal_id.replace("zoo_", "")
+	if SpriteAtlasManager != null and SpriteAtlasManager.has_texture(hab_key):
+		var hab_sprite: Sprite2D = Sprite2D.new()
+		hab_sprite.name = "HabitatDiorama"
+		hab_sprite.texture = SpriteAtlasManager.get_texture(hab_key)
+		SpriteAtlasManager.set_sprite_pixel_size(hab_sprite, Vector2(115.0, 115.0))
+		hab_sprite.position = Vector2(-42.0, -2.0)
+		hab_sprite.z_index = 0
+		add_child(hab_sprite)
+
+	# 1. Setup 2 to 3 Animals wandering inside with generous separation (> 50px)
 	var animal_count: int = 3 if (animal_id == "zoo_capybara" or animal_id == "zoo_penguin") else 2
 	var spawn_points: Array[Vector2] = []
 	if animal_count == 3:
-		spawn_points = [Vector2(-45.0, 15.0), Vector2(10.0, -5.0), Vector2(55.0, 25.0)]
+		spawn_points = [Vector2(26.0, -36.0), Vector2(72.0, 4.0), Vector2(28.0, 42.0)]
 	else:
-		spawn_points = [Vector2(-35.0, 15.0), Vector2(35.0, 5.0)]
+		spawn_points = [Vector2(32.0, -32.0), Vector2(68.0, 32.0)]
 		
 	var tex: Texture2D = null
 	if SpriteAtlasManager.has_texture(animal_id):
@@ -139,6 +104,7 @@ func _setup_visuals() -> void:
 		inst.root.y_sort_enabled = true
 		inst.phase_offset = float(i) * 1.8
 		inst.current_pos = spawn_points[i]
+		inst.home_pos = spawn_points[i]
 		inst.target_pos = inst.current_pos
 		inst.root.position = inst.current_pos
 		
@@ -253,11 +219,12 @@ func _process(delta: float) -> void:
 			var breath: float = sin(phase) * 0.05
 			inst.sprite.scale = inst.base_scale * Vector2(1.0, 1.0 + breath)
 			
-			# Wandering within paddock bounds
+			# Wandering within its designated home sector to avoid overlapping
 			inst.wait_timer -= delta
 			if inst.wait_timer <= 0.0:
-				inst.wait_timer = randf_range(3.0, 6.5)
-				inst.target_pos = Vector2(randf_range(-75.0, 75.0), randf_range(-40.0, 45.0))
+				inst.wait_timer = randf_range(3.5, 7.0)
+				var wander_offset: Vector2 = Vector2(randf_range(-inst.wander_radius, inst.wander_radius), randf_range(-inst.wander_radius * 0.75, inst.wander_radius * 0.75))
+				inst.target_pos = (inst.home_pos + wander_offset).clamp(Vector2(-15.0, -52.0), Vector2(85.0, 52.0))
 			
 			if inst.current_pos.distance_to(inst.target_pos) > 2.0:
 				var move_step: Vector2 = (inst.target_pos - inst.current_pos).normalized() * inst.speed * delta

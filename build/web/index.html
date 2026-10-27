@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>🌾 Hay Day Offline & Farm Tourism - Chibi Cozy Farm</title>
+	<link rel="icon" type="image/png" href="../../assets/sprites/portrait_minh.png">
+	<style>
+		:root {
+			--wood-dark: #3E2723;
+			--wood-mid: #8D5B28;
+			--wood-warm: #D9822B;
+			--wood-light: #F5B041;
+			--cream-bg: #FFF8E7;
+			--cream-card: #FFFDF9;
+			--grass-green: #2ECC71;
+			--grass-dark: #27AE60;
+			--sky-blue: #AED6F1;
+			--shadow-soft: 0 8px 24px rgba(62, 39, 35, 0.22);
+			--border-radius: 18px;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+			user-select: none;
+			-webkit-user-select: none;
+		}
+
+		body {
+			background: linear-gradient(180deg, #A9DFBF 0%, #D4EFDF 40%, #EDBB99 100%);
+			font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+			color: var(--wood-dark);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-start;
+			overflow-x: hidden;
+		}
+
+		/* Decorative Floating Clouds */
+		.cloud {
+			position: fixed;
+			background: rgba(255, 255, 255, 0.75);
+			border-radius: 50px;
+			filter: blur(1px);
+			pointer-events: none;
+			z-index: 0;
+			animation: floatCloud linear infinite;
+		}
+		.cloud::before, .cloud::after {
+			content: '';
+			position: absolute;
+			background: inherit;
+			border-radius: 50%;
+		}
+		.cloud-1 {
+			width: 140px; height: 42px; top: 35px; left: -160px;
+			animation-duration: 38s;
+		}
+		.cloud-1::before { width: 55px; height: 55px; top: -25px; left: 25px; }
+		.cloud-1::after { width: 45px; height: 45px; top: -18px; right: 28px; }
+
+		.cloud-2 {
+			width: 180px; height: 50px; top: 120px; left: -200px;
+			animation-duration: 52s;
+			animation-delay: 14s;
+		}
+		.cloud-2::before { width: 70px; height: 70px; top: -32px; left: 35px; }
+		.cloud-2::after { width: 55px; height: 55px; top: -22px; right: 35px; }
+
+		@keyframes floatCloud {
+			from { transform: translateX(0); }
+			to { transform: translateX(calc(100vw + 350px)); }
+		}
+
+		/* Top Navigation Header */
+		header {
+			position: relative;
+			z-index: 10;
+			width: 100%;
+			max-width: 1280px;
+			padding: 12px 20px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+
+		.brand-badge {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			background: var(--cream-bg);
+			border: 3px solid var(--wood-warm);
+			border-radius: var(--border-radius);
+			padding: 6px 16px 6px 8px;
+			box-shadow: var(--shadow-soft);
+		}
+
+		.avatar-frame {
+			width: 48px;
+			height: 48px;
+			border-radius: 12px;
+			border: 3px solid var(--wood-light);
+			background: #FFEAA7;
+			overflow: hidden;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+		}
+		.avatar-frame img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.brand-title {
+			font-size: 1.15rem;
+			font-weight: 800;
+			color: var(--wood-dark);
+			letter-spacing: 0.5px;
+			text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+		}
+		.brand-subtitle {
+			font-size: 0.78rem;
+			font-weight: 600;
+			color: var(--wood-mid);
+		}
+
+		/* Controls Right Group */
+		.header-controls {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.btn-tactile {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			background: linear-gradient(180deg, #FAD7A0 0%, #F5B041 100%);
+			border: 2px solid var(--wood-mid);
+			border-radius: 12px;
+			color: var(--wood-dark);
+			font-size: 0.88rem;
+			font-weight: 700;
+			padding: 8px 16px;
+			cursor: pointer;
+			box-shadow: 0 4px 0 var(--wood-mid), 0 6px 12px rgba(62, 39, 35, 0.2);
+			transition: all 0.1s ease;
+			outline: none;
+		}
+		.btn-tactile:hover {
+			background: linear-gradient(180deg, #FDEBD0 0%, #F8C471 100%);
+			transform: translateY(-1px);
+		}
+		.btn-tactile:active {
+			transform: translateY(3px);
+			box-shadow: 0 1px 0 var(--wood-mid), 0 2px 6px rgba(62, 39, 35, 0.2);
+		}
+
+		.btn-special {
+			background: linear-gradient(180deg, #58D68D 0%, #2ECC71 100%);
+			border-color: #196F3D;
+			color: #FFFFFF;
+			box-shadow: 0 4px 0 #196F3D, 0 6px 12px rgba(25, 111, 61, 0.3);
+			text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+		}
+		.btn-special:hover {
+			background: linear-gradient(180deg, #82E0AA 0%, #58D68D 100%);
+		}
+		.btn-special:active {
+			box-shadow: 0 1px 0 #196F3D, 0 2px 6px rgba(25, 111, 61, 0.3);
+		}
+
+		/* Main Frame Container */
+		main {
+			position: relative;
+			z-index: 5;
+			width: 100%;
+			max-width: 1280px;
+			padding: 0 16px 20px 16px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.canvas-wrapper {
+			position: relative;
+			width: 100%;
+			aspect-ratio: 16 / 9;
+			max-height: 720px;
+			background: #3E2723;
+			border: 8px solid var(--cream-bg);
+			outline: 4px solid var(--wood-warm);
+			border-radius: 20px;
+			box-shadow: 0 16px 40px rgba(62, 39, 35, 0.35);
+			overflow: hidden;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#canvas {
+			width: 100%;
+			height: 100%;
+			display: block;
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+		}
+
+		/* Loading Overlay Screen */
+		#loading-screen {
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(circle at center, #FFFDF9 0%, #FCEFD5 80%, #F5CBA7 100%);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 24px;
+			z-index: 50;
+			transition: opacity 0.5s ease;
+		}
+
+		.loading-logo {
+			width: 120px;
+			height: 120px;
+			border-radius: 28px;
+			border: 5px solid var(--wood-warm);
+			background: #FFFFFF;
+			box-shadow: 0 10px 24px rgba(62, 39, 35, 0.2);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-bottom: 20px;
+			animation: pulseLogo 2s infinite ease-in-out;
+		}
+		.loading-logo img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		@keyframes pulseLogo {
+			0%, 100% { transform: scale(1); }
+			50% { transform: scale(1.05); }
+		}
+
+		.loading-title {
+			font-size: 1.6rem;
+			font-weight: 800;
+			color: var(--wood-dark);
+			margin-bottom: 6px;
+			text-align: center;
+		}
+		.loading-desc {
+			font-size: 0.95rem;
+			color: var(--wood-mid);
+			margin-bottom: 24px;
+			text-align: center;
+			font-weight: 600;
+		}
+
+		.progress-capsule {
+			width: 320px;
+			max-width: 90%;
+			height: 22px;
+			background: var(--wood-dark);
+			border: 3px solid var(--wood-light);
+			border-radius: 14px;
+			padding: 2px;
+			box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+			position: relative;
+			overflow: hidden;
+		}
+		.progress-bar-fill {
+			height: 100%;
+			width: 0%;
+			background: linear-gradient(90deg, #2ECC71 0%, #F1C40F 100%);
+			border-radius: 10px;
+			transition: width 0.3s ease;
+		}
+
+		.loading-tip {
+			margin-top: 18px;
+			font-size: 0.85rem;
+			color: var(--wood-dark);
+			background: rgba(255, 255, 255, 0.7);
+			padding: 8px 18px;
+			border-radius: 20px;
+			border: 1px dashed var(--wood-mid);
+			font-weight: 500;
+		}
+
+		/* Bottom Features Bar */
+		.footer-features {
+			margin-top: 14px;
+			display: flex;
+			gap: 16px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.feature-pill {
+			background: var(--cream-bg);
+			border: 2px solid var(--wood-warm);
+			border-radius: 16px;
+			padding: 6px 14px;
+			font-size: 0.84rem;
+			font-weight: 600;
+			color: var(--wood-dark);
+			box-shadow: 0 4px 10px rgba(62, 39, 35, 0.1);
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		/* Fullscreen Mode Styling */
+		:fullscreen .canvas-wrapper {
+			width: 100vw !important;
+			height: 100vh !important;
+			max-height: none !important;
+			border: none !important;
+			outline: none !important;
+			border-radius: 0 !important;
+		}
+	</style>
+</head>
+<body>
+
+	<!-- Floating Ambient Clouds -->
+	<div class="cloud cloud-1"></div>
+	<div class="cloud cloud-2"></div>
+
+	<!-- Top Navigation -->
+	<header>
+		<div class="brand-badge">
+			<div class="avatar-frame">
+				<img id="header-avatar" src="../../assets/sprites/portrait_minh.png" alt="Avatar">
+			</div>
+			<div>
+				<div class="brand-title">🌾 Hay Day Offline & Farm Tourism</div>
+				<div class="brand-subtitle">Phiên Bản Web Chibi Cozy 2.5D Storybook</div>
+			</div>
+		</div>
+
+		<div class="header-controls">
+			<button class="btn-tactile" id="btn-audio" title="Bật/Tắt Âm Thanh">
+				🔊 Âm Thanh
+			</button>
+			<button class="btn-tactile btn-special" id="btn-fullscreen" title="Toàn Màn Hình">
+				⛶ Toàn Màn Hình
+			</button>
+		</div>
+	</header>
+
+	<!-- Main Play Area -->
+	<main>
+		<div class="canvas-wrapper" id="canvas-container">
+			<canvas id="canvas"></canvas>
+
+			<!-- Cozy Storybook Loading Screen -->
+			<div id="loading-screen">
+				<div class="loading-logo">
+					<img src="../../assets/sprites/portrait_minh.png" alt="Chibi Farmer">
+				</div>
+				<h1 class="loading-title">Đang Khởi Tạo Nông Trại Chibi...</h1>
+				<p class="loading-desc">Khu Bảo Tồn Sở Thú Bờ Đông & Nông Trại Trù Phú Bờ Tây</p>
+
+				<div class="progress-capsule">
+					<div class="progress-bar-fill" id="progress-fill"></div>
+				</div>
+
+				<div class="loading-tip" id="loading-tip-text">
+					💡 Mẹo: Nhấp vào ô ruộng để gieo trồng lúa mì và thu hoạch khi chín vàng!
+				</div>
+			</div>
+		</div>
+
+		<!-- Footer Feature Badges -->
+		<div class="footer-features">
+			<div class="feature-pill">🚜 Trồng trọt & Thu hoạch 1 chạm</div>
+			<div class="feature-pill">🦁 Khu Bảo Tồn Sở Thú 4 Loài Thú Quý</div>
+			<div class="feature-pill">🎈 Khinh Khí Cầu Du Khách Bờ Đông</div>
+			<div class="feature-pill">🏪 Sạp Hàng Ven Đường & Xe Tải Vàng</div>
+			<div class="feature-pill">💾 Tự Động Lưu Trữ Offline 100%</div>
+		</div>
+	</main>
+
+	<!-- Game Launch & Control Script -->
+	<script>
+		// Dynamic Tip Rotation
+		const TIPS = [
+			"💡 Mẹo: Nhấp vào ô ruộng để gieo hạt giống (Lúa mì, Ngô, Cà rốt) và gặt hái bội thu!",
+			"💡 Mẹo: Băng qua cây cầu gỗ sang Bờ Đông để thăm Capybara, Gấu trúc, Chim cánh cụt và Hươu cao cổ!",
+			"💡 Mẹo: Chế biến Sanctuary Feed ở cối xay thức ăn để cho các bạn thú ăn nhận XP và Xu Du Lịch!",
+			"💡 Mẹo: Bán nông sản qua Sạp Hàng ven đường hoặc hoàn thành đơn hàng Xe Tải đỏ!",
+			"💡 Mẹo: Quả Khinh Khí Cầu ngắm cảnh giữa sở thú mang lại lượng lớn điểm Hấp Dẫn du khách!"
+		];
+
+		let tipIndex = 0;
+		const tipElem = document.getElementById('loading-tip-text');
+		setInterval(() => {
+			tipIndex = (tipIndex + 1) % TIPS.length;
+			if (tipElem) tipElem.textContent = TIPS[tipIndex];
+		}, 3500);
+
+		// Simulated/Godot Engine Loading Integration
+		let progress = 0;
+		const fillElem = document.getElementById('progress-fill');
+		const loadingScreen = document.getElementById('loading-screen');
+
+		const progressInterval = setInterval(() => {
+			progress += Math.floor(Math.random() * 18) + 12;
+			if (progress >= 100) {
+				progress = 100;
+				clearInterval(progressInterval);
+				setTimeout(() => {
+					loadingScreen.style.opacity = '0';
+					setTimeout(() => {
+						loadingScreen.style.display = 'none';
+					}, 500);
+				}, 400);
+			}
+			if (fillElem) fillElem.style.width = progress + '%';
+		}, 180);
+
+		// Fullscreen Controller
+		const btnFullscreen = document.getElementById('btn-fullscreen');
+		const container = document.getElementById('canvas-container');
+
+		btnFullscreen.addEventListener('click', () => {
+			if (!document.fullscreenElement) {
+				container.requestFullscreen().catch(err => {
+					console.warn('Fullscreen error:', err);
+				});
+				btnFullscreen.textContent = '⛶ Thu Nhỏ';
+			} else {
+				document.exitFullscreen();
+				btnFullscreen.textContent = '⛶ Toàn Màn Hình';
+			}
+		});
+
+		document.addEventListener('fullscreenchange', () => {
+			if (!document.fullscreenElement) {
+				btnFullscreen.textContent = '⛶ Toàn Màn Hình';
+			}
+		});
+
+		// Audio Button Toggle
+		let isMuted = false;
+		const btnAudio = document.getElementById('btn-audio');
+		btnAudio.addEventListener('click', () => {
+			isMuted = !isMuted;
+			btnAudio.textContent = isMuted ? '🔇 Tắt Tiếng' : '🔊 Âm Thanh';
+		});
+	</script>
+</body>
+</html>

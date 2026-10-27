@@ -385,7 +385,9 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("decor_hay_bale", "res://assets/sprites/decor_hay_bale.png")
 	_load_standalone_texture("decor_wooden_bench", "res://assets/sprites/decor_wooden_bench.png")
 	_load_standalone_texture("portrait_minh", "res://assets/sprites/portrait_minh.png")
-	_load_standalone_texture("portrait_mai", "res://assets/sprites/portrait_mai.png")
+	_load_standalone_texture("pet_poodle", "res://assets/sprites/pet_poodle.png")
+	_load_standalone_texture("pet_house_poodle", "res://assets/sprites/pet_house_poodle.png")
+	_load_standalone_texture("mailbox_newspaper", "res://assets/sprites/mailbox_newspaper.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)

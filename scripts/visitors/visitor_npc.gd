@@ -168,13 +168,9 @@ func _assign_new_demand() -> void:
 	reward_xp = int(choice["xp"])
 	
 	if _label_demand != null:
-		if npc_type == "visitor_tourist":
-			# Tourists sightseeing without buy request clutter
-			_label_demand.visible = false
-		else:
-			_label_demand.text = "🛒 Cần: 1 %s (+%d Xu)" % [requested_name, reward_gold]
-			_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-			_label_demand.visible = true
+		_label_demand.visible = false
+		_label_demand.text = "🛒 Cần: 1 %s (+%d Xu)" % [requested_name, reward_gold]
+		_label_demand.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
 
 func handle_visitor_click() -> bool:
 	if state == VisitorState.INACTIVE:
@@ -380,6 +376,11 @@ func _on_reached_destination() -> void:
 			state = VisitorState.BROWSING_SHOP
 			_wait_timer = randf_range(3.0, 5.0)
 			_show_emote()
+			if _label_demand != null and not _is_demand_satisfied and npc_type != "visitor_tourist":
+				_label_demand.visible = true
+				var tw_d: Tween = create_tween()
+				tw_d.tween_interval(2.5)
+				tw_d.tween_property(_label_demand, "visible", false, 0.2)
 			if RoadsideShop != null:
 				RoadsideShop.buy_random_available_slot()
 		elif queue_destination == "zoo":
@@ -413,6 +414,10 @@ func _drop_zoo_tip() -> void:
 		if SaveManager.is_animal_fed(a_id):
 			base_coins *= 2
 			base_gold *= 2
+	
+	# Hot Air Balloon tip multiplier (+10% per level)
+	var balloon_mult: float = 1.0 + float(SaveManager.balloon_level) * 0.10
+	base_coins = int(float(base_coins) * balloon_mult)
 	
 	StorageManager.coins += base_coins
 	StorageManager.add_gold(base_gold)
@@ -487,6 +492,8 @@ func _show_chat_dialogue(text: String) -> void:
 	)
 
 func _start_walking_to_exit() -> void:
+	if _label_demand != null:
+		_label_demand.visible = false
 	if manager != null and queue_slot_index >= 0:
 		if queue_destination == "shop":
 			manager.release_shop_slot(queue_slot_index)

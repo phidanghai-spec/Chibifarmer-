@@ -14,6 +14,7 @@ var _feed_shop_sprite: Sprite2D = null
 var _balloon_sprite: Sprite2D = null
 var _balloon_shadow: Polygon2D = null
 var _timer: float = 0.0
+var _is_flying_tour: bool = false
 
 func _ready() -> void:
 	y_sort_enabled = true
@@ -24,26 +25,32 @@ func _draw() -> void:
 	var sand_color: Color = Color(0.88, 0.78, 0.58, 0.95) # Warm sand path
 	var sand_border: Color = Color(0.74, 0.62, 0.42, 0.95)
 	
-	# Central East-West Avenue from bridge (x: 940) to east edge (x: 1560)
-	var h_path: Rect2 = Rect2(940.0, 245.0, 620.0, 50.0)
+	# Central East-West Avenue from East bank promenade edge (x: 1136) to east edge (x: 1730)
+	var h_path: Rect2 = Rect2(1136.0, 285.0, 594.0, 50.0)
 	draw_rect(h_path, sand_color, true)
-	draw_line(Vector2(940.0, 245.0), Vector2(1560.0, 245.0), sand_border, 2.0)
-	draw_line(Vector2(940.0, 295.0), Vector2(1560.0, 295.0), sand_border, 2.0)
+	draw_line(Vector2(1136.0, 285.0), Vector2(1730.0, 285.0), sand_border, 2.0)
+	draw_line(Vector2(1136.0, 335.0), Vector2(1730.0, 335.0), sand_border, 2.0)
 	
-	# Central North-South Avenue between enclosures (x: 1285 to 1335)
-	var v_path: Rect2 = Rect2(1285.0, 90.0, 50.0, 360.0)
+	# Entrance Plaza connector to Feed Shop (x: 1136 to 1176, y: 310 to 455)
+	var shop_path: Rect2 = Rect2(1136.0, 310.0, 42.0, 145.0)
+	draw_rect(shop_path, sand_color, true)
+	draw_line(Vector2(1178.0, 335.0), Vector2(1178.0, 455.0), sand_border, 2.0)
+	draw_line(Vector2(1136.0, 455.0), Vector2(1178.0, 455.0), sand_border, 2.0)
+	
+	# Central North-South Avenue between enclosures (x: 1450 to 1500)
+	var v_path: Rect2 = Rect2(1450.0, 135.0, 50.0, 350.0)
 	draw_rect(v_path, sand_color, true)
-	draw_line(Vector2(1285.0, 90.0), Vector2(1285.0, 450.0), sand_border, 2.0)
-	draw_line(Vector2(1335.0, 90.0), Vector2(1335.0, 450.0), sand_border, 2.0)
+	draw_line(Vector2(1450.0, 135.0), Vector2(1450.0, 485.0), sand_border, 2.0)
+	draw_line(Vector2(1500.0, 135.0), Vector2(1500.0, 485.0), sand_border, 2.0)
 	
 	# Central Plaza Circle for Hot Air Balloon
-	draw_circle(Vector2(1310.0, 270.0), 40.0, sand_color)
-	draw_arc(Vector2(1310.0, 270.0), 40.0, 0.0, TAU, 32, sand_border, 2.0)
+	draw_circle(Vector2(1475.0, 310.0), 40.0, sand_color)
+	draw_arc(Vector2(1475.0, 310.0), 40.0, 0.0, TAU, 32, sand_border, 2.0)
 
 func _process(delta: float) -> void:
 	_timer += delta
 	# Hot Air Balloon gentle floating bob
-	if _balloon_sprite != null:
+	if not _is_flying_tour and _balloon_sprite != null:
 		var float_y: float = sin(_timer * 2.2) * 7.5
 		_balloon_sprite.position.y = -40.0 + float_y
 		if _balloon_shadow != null:
@@ -55,7 +62,7 @@ func _setup_zoo_sanctuary() -> void:
 	if entrance_gate == null:
 		entrance_gate = Node2D.new()
 		entrance_gate.name = "ZooEntrance"
-		entrance_gate.position = Vector2(1040.0, 270.0)
+		entrance_gate.position = Vector2(1155.0, 310.0)
 		entrance_gate.y_sort_enabled = true
 		
 		var sp_gate: Sprite2D = Sprite2D.new()
@@ -63,14 +70,14 @@ func _setup_zoo_sanctuary() -> void:
 		sp_gate.centered = true
 		if SpriteAtlasManager.has_texture("zoo_entrance"):
 			sp_gate.texture = SpriteAtlasManager.get_texture("zoo_entrance")
-		SpriteAtlasManager.set_sprite_pixel_size(sp_gate, Vector2(90.0, 90.0))
+		SpriteAtlasManager.set_sprite_pixel_size(sp_gate, Vector2(84.0, 84.0))
 		entrance_gate.add_child(sp_gate)
 		
 		var lbl_sign: Label = Label.new()
 		lbl_sign.text = "⛩️ CỔNG SỞ THÚ BỜ ĐÔNG"
 		lbl_sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_sign.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl_sign.position = Vector2(-75.0, -56.0)
+		lbl_sign.position = Vector2(-75.0, -52.0)
 		lbl_sign.custom_minimum_size = Vector2(150.0, 20.0)
 		lbl_sign.add_theme_font_size_override("font_size", 10)
 		lbl_sign.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
@@ -86,7 +93,7 @@ func _setup_zoo_sanctuary() -> void:
 	if feed_shop == null:
 		feed_shop = Node2D.new()
 		feed_shop.name = "ZooFeedShop"
-		feed_shop.position = Vector2(1040.0, 390.0)
+		feed_shop.position = Vector2(1155.0, 430.0)
 		feed_shop.y_sort_enabled = true
 		feed_shop.add_to_group("interactable")
 		feed_shop.set_meta("interact_type", "zoo_feed_shop")
@@ -126,7 +133,7 @@ func _setup_zoo_sanctuary() -> void:
 	if hot_air_balloon == null:
 		hot_air_balloon = Node2D.new()
 		hot_air_balloon.name = "HotAirBalloon"
-		hot_air_balloon.position = Vector2(1310.0, 270.0)
+		hot_air_balloon.position = Vector2(1475.0, 310.0)
 		hot_air_balloon.y_sort_enabled = true
 		hot_air_balloon.add_to_group("interactable")
 		
@@ -182,7 +189,7 @@ func _setup_zoo_sanctuary() -> void:
 			"id": "zoo_capybara",
 			"name": "Capybara",
 			"title": "Hồ Capybara 🍊",
-			"pos": Vector2(1180.0, 175.0),
+			"pos": Vector2(1340.0, 210.0),
 			"foods": ["carrot", "sanctuary_feed"],
 			"pieces": 1,
 			"gold": 200,
@@ -192,7 +199,7 @@ func _setup_zoo_sanctuary() -> void:
 			"id": "zoo_panda",
 			"name": "Gấu Trúc",
 			"title": "Rừng Trúc Gấu Trúc 🐼",
-			"pos": Vector2(1440.0, 175.0),
+			"pos": Vector2(1610.0, 210.0),
 			"foods": ["apple", "sugarcane", "sanctuary_feed"],
 			"pieces": 2,
 			"gold": 350,
@@ -202,7 +209,7 @@ func _setup_zoo_sanctuary() -> void:
 			"id": "zoo_penguin",
 			"name": "Chim Cánh Cụt",
 			"title": "Bờ Đá Chim Cánh Cụt 🐧",
-			"pos": Vector2(1180.0, 365.0),
+			"pos": Vector2(1340.0, 410.0),
 			"foods": ["fish_carp", "fish_bass", "sanctuary_feed"],
 			"pieces": 2,
 			"gold": 400,
@@ -212,7 +219,7 @@ func _setup_zoo_sanctuary() -> void:
 			"id": "zoo_giraffe",
 			"name": "Hươu Cao Cổ",
 			"title": "Thảo Nguyên Hươu Cao Cổ 🦒",
-			"pos": Vector2(1440.0, 365.0),
+			"pos": Vector2(1610.0, 410.0),
 			"foods": ["wheat", "sanctuary_feed"],
 			"pieces": 3,
 			"gold": 500,
@@ -242,24 +249,46 @@ func _setup_zoo_sanctuary() -> void:
 	call_deferred("_clear_overlapping_scenery")
 
 func _on_balloon_clicked() -> void:
-	AudioManager.play_sfx("level_up")
-	StorageManager.coins += 20
-	EventBus.coins_changed.emit(StorageManager.coins, 20)
+	AudioManager.play_sfx("click")
+	var farm: Node2D = get_tree().current_scene as Node2D
+	var hud: UIHud = null
+	if farm != null and farm.get("ui_hud") != null:
+		hud = farm.get("ui_hud") as UIHud
+	if hud != null:
+		hud.open_hot_air_balloon_modal()
+
+func fly_balloon_tour(on_finish: Callable) -> void:
+	if _is_flying_tour or _balloon_sprite == null:
+		if on_finish.is_valid():
+			on_finish.call()
+		return
+	_is_flying_tour = true
+	var orig_y: float = -40.0
+	var tw: Tween = create_tween().set_parallel(true)
+	tw.tween_property(_balloon_sprite, "position:y", -220.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_balloon_sprite, "scale", _balloon_sprite.scale * 1.15, 1.2)
+	if _balloon_shadow != null:
+		tw.tween_property(_balloon_shadow, "scale", Vector2(0.4, 0.4), 1.2)
 	
-	var hud: Node = get_tree().current_scene.find_child("UIHud", true, false)
-	if hud != null and hud.has_method("show_floating_notice"):
-		hud.call("show_floating_notice", "🎈 Khinh Khí Cầu đón đoàn khách tham quan! (+20 ✨ Xu Du Lịch)")
-		
-	# Summon immediate visitors
-	var vm: Node = get_tree().current_scene.find_child("VisitorManager", true, false)
-	if vm != null and vm.has_method("spawn_tourist"):
-		vm.call("spawn_tourist")
+	await tw.finished
+	await get_tree().create_timer(0.3).timeout
+	
+	var tw_down: Tween = create_tween().set_parallel(true)
+	tw_down.tween_property(_balloon_sprite, "position:y", orig_y, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tw_down.tween_property(_balloon_sprite, "scale", _balloon_sprite.scale / 1.15, 1.0)
+	if _balloon_shadow != null:
+		tw_down.tween_property(_balloon_shadow, "scale", Vector2.ONE, 1.0)
+	
+	await tw_down.finished
+	_is_flying_tour = false
+	if on_finish.is_valid():
+		on_finish.call()
 
 func _clear_overlapping_scenery() -> void:
 	var farm: Node2D = get_tree().current_scene as Node2D
 	if farm != null:
 		var sc_container: Node2D = farm.get("_scenery_container") as Node2D
-		var zoo_rect: Rect2 = Rect2(940.0, 80.0, 560.0, 420.0)
+		var zoo_rect: Rect2 = Rect2(1130.0, 90.0, 485.0, 430.0)
 		if sc_container != null:
 			for elem: Node in sc_container.get_children():
 				if elem is Node2D and zoo_rect.has_point((elem as Node2D).global_position):
@@ -292,6 +321,7 @@ func get_enclosure(animal_id: String) -> ZooEnclosure:
 
 func get_total_attraction_score() -> int:
 	var total: int = 15 # Base zoo entrance
+	total += SaveManager.balloon_level * 10 # Balloon upgrade bonus (+10 per level)
 	for a_id: String in enclosures:
 		if SaveManager.is_animal_unlocked(a_id):
 			var enc: ZooEnclosure = enclosures[a_id]

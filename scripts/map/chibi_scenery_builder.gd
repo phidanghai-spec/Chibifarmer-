@@ -56,8 +56,8 @@ static func is_position_safe_for_scenery(pos: Vector2) -> bool:
 				if pos.distance_to(cell_center) < 48.0:
 					return false
 
-	# 9. Vùng Quy hoạch Khu Bảo Tồn Sở Thú Bờ Đông (Tránh đè lên Cổng và 4 Chuồng Thú)
-	if pos.x >= 780.0 and pos.x <= 1580.0 and pos.y >= 120.0 and pos.y <= 660.0:
+	# 9. Vùng 4 Chuồng Thú & Khinh Khí Cầu / Quầy Phục Vụ Bờ Đông (Vùng cấm tuyệt đối x: 1100..1860, y: 95..615)
+	if pos.x >= 1100.0 and pos.x <= 1860.0 and pos.y >= 95.0 and pos.y <= 615.0:
 		return false
 
 	return true
@@ -104,6 +104,9 @@ func build_scenery(
 	# 4. Nhóm 3 — Garden & Riverside Details (Tiểu cảnh ven đường & bờ sông)
 	_build_garden_and_riverside_details(scenery_container, scenic_elements_list)
 
+	# 5. Nhóm 5 — Zoo East Park (Công viên sinh thái dải cỏ phía Đông & Đông Nam Sở Thú)
+	_build_zoo_east_park(scenery_container, scenic_elements_list)
+
 	print("[ChibiSceneryBuilder] Successfully generated %d cozy 2.5D scenery elements!" % scenic_elements_list.size())
 
 ## Nhóm 1: Mây bồng bềnh phía Bắc (z_index = -12, không có vách núi chặn để mở rộng thế giới)
@@ -133,8 +136,8 @@ func _build_horizon_layer(container: Node2D, list: Array[Node2D]) -> void:
 func _build_border_scenery(container: Node2D, list: Array[Node2D]) -> void:
 	# 1. Hàng cây Bắc che chắn sau xưởng chế biến (Y: 95..110) - Không có đá/núi chặn
 	var north_clusters: Array[Dictionary] = [
-		{"id": "env_cherry_tree", "pos": Vector2(340.0, 95.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
-		{"id": "chibi_flower_bush_1", "pos": Vector2(385.0, 112.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "env_cherry_tree", "pos": Vector2(385.0, 95.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
+		{"id": "chibi_flower_bush_1", "pos": Vector2(430.0, 112.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
 
 		{"id": "env_lush_green_tree", "pos": Vector2(520.0, 100.0), "size": Vector2(90.0, 95.0), "shadow": Vector2(38.0, 16.0)},
 		{"id": "chibi_flower_bush_3", "pos": Vector2(565.0, 114.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
@@ -158,6 +161,8 @@ func _build_border_scenery(container: Node2D, list: Array[Node2D]) -> void:
 
 		{"id": "chibi_special_peach_tree", "pos": Vector2(80.0, 480.0), "size": Vector2(86.0, 92.0), "shadow": Vector2(36.0, 15.0)},
 		{"id": "chibi_hedge_2", "pos": Vector2(112.0, 508.0), "size": Vector2(36.0, 28.0), "shadow": Vector2(15.0, 7.0)},
+		{"id": "sunflower", "pos": Vector2(125.0, 450.0), "size": Vector2(34.0, 42.0), "shadow": Vector2(14.0, 7.0)},
+		{"id": "decor_hay_bale", "pos": Vector2(125.0, 545.0), "size": Vector2(36.0, 34.0), "shadow": Vector2(15.0, 8.0)},
 
 		{"id": "chibi_tree_tall", "pos": Vector2(75.0, 620.0), "size": Vector2(84.0, 96.0), "shadow": Vector2(34.0, 14.0)},
 		{"id": "chibi_flower_bush_4", "pos": Vector2(110.0, 642.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)}
@@ -226,15 +231,61 @@ func _build_garden_and_riverside_details(container: Node2D, list: Array[Node2D])
 		# Lối đi & đầu cầu gỗ (Visual leading lines)
 		{"id": "chibi_floral_6", "pos": Vector2(120.0, 615.0), "size": Vector2(32.0, 26.0), "shadow": Vector2(13.0, 6.0)},
 		{"id": "decor_wooden_bench", "pos": Vector2(160.0, 615.0), "size": Vector2(38.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "flowerbed_daisies", "pos": Vector2(235.0, 615.0), "size": Vector2(36.0, 30.0), "shadow": Vector2(15.0, 8.0)},
 		{"id": "chibi_floral_1", "pos": Vector2(280.0, 615.0), "size": Vector2(32.0, 26.0), "shadow": Vector2(13.0, 6.0)},
 		{"id": "decor_hay_bale", "pos": Vector2(335.0, 610.0), "size": Vector2(36.0, 34.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "sunflower", "pos": Vector2(375.0, 615.0), "size": Vector2(34.0, 42.0), "shadow": Vector2(14.0, 7.0)},
+		{"id": "flowerbed_roses", "pos": Vector2(530.0, 615.0), "size": Vector2(36.0, 30.0), "shadow": Vector2(15.0, 8.0)},
 		{"id": "decor_wooden_bench", "pos": Vector2(575.0, 615.0), "size": Vector2(38.0, 36.0), "shadow": Vector2(16.0, 8.0)},
 		{"id": "decor_hay_bale", "pos": Vector2(625.0, 610.0), "size": Vector2(36.0, 34.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "flowerbed_lavender", "pos": Vector2(675.0, 615.0), "size": Vector2(36.0, 30.0), "shadow": Vector2(15.0, 8.0)},
 		{"id": "chibi_bush_green", "pos": Vector2(745.0, 605.0), "size": Vector2(34.0, 28.0), "shadow": Vector2(14.0, 7.0)},
 		{"id": "chibi_bush_green", "pos": Vector2(1020.0, 605.0), "size": Vector2(34.0, 28.0), "shadow": Vector2(14.0, 7.0)}
 	]
 
 	for d: Dictionary in path_and_river_details:
+		_add_element_if_safe(container, list, d)
+
+## Nhóm 5: Công viên sinh thái bao quanh rìa ngoài Sở Thú (y < 90, y > 615 hoặc x > 1860)
+func _build_zoo_east_park(container: Node2D, list: Array[Node2D]) -> void:
+	var zoo_forbidden: Rect2 = Rect2(1100.0, 95.0, 760.0, 520.0)
+	var zoo_park_props: Array[Dictionary] = [
+		# 1. Rìa ngoài phía Bắc Sở Thú (y = 78..84, không bị thanh HUD che)
+		{"id": "env_cherry_tree", "pos": Vector2(1230.0, 80.0), "size": Vector2(80.0, 84.0), "shadow": Vector2(34.0, 14.0)},
+		{"id": "chibi_tree_oak", "pos": Vector2(1420.0, 78.0), "size": Vector2(84.0, 88.0), "shadow": Vector2(35.0, 15.0)},
+		{"id": "env_cherry_tree", "pos": Vector2(1600.0, 80.0), "size": Vector2(80.0, 84.0), "shadow": Vector2(34.0, 14.0)},
+		{"id": "chibi_tree_tall", "pos": Vector2(1780.0, 78.0), "size": Vector2(78.0, 88.0), "shadow": Vector2(32.0, 14.0)},
+		{"id": "flowerbed_daisies", "pos": Vector2(1330.0, 84.0), "size": Vector2(38.0, 32.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "sunflower", "pos": Vector2(1510.0, 84.0), "size": Vector2(36.0, 44.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "flowerbed_roses", "pos": Vector2(1690.0, 84.0), "size": Vector2(38.0, 32.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(1460.0, 84.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		
+		# 2. Rìa ngoài phía Nam đường đi Sở Thú (y > 615)
+		{"id": "env_cherry_tree", "pos": Vector2(1220.0, 645.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
+		{"id": "chibi_tree_oak", "pos": Vector2(1400.0, 660.0), "size": Vector2(92.0, 96.0), "shadow": Vector2(38.0, 16.0)},
+		{"id": "env_cherry_tree", "pos": Vector2(1580.0, 650.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
+		{"id": "chibi_tree_oak", "pos": Vector2(1760.0, 655.0), "size": Vector2(92.0, 96.0), "shadow": Vector2(38.0, 16.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(1310.0, 635.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "decor_hay_bale", "pos": Vector2(1490.0, 638.0), "size": Vector2(38.0, 34.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "flowerbed_lavender", "pos": Vector2(1670.0, 640.0), "size": Vector2(38.0, 32.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "sunflower", "pos": Vector2(1820.0, 635.0), "size": Vector2(36.0, 44.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(1850.0, 650.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		
+		# 3. Rìa cực Đông ngoài hàng rào Chuồng Thú (x > 1860)
+		{"id": "env_cherry_tree", "pos": Vector2(1920.0, 130.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
+		{"id": "chibi_tree_tall", "pos": Vector2(1910.0, 260.0), "size": Vector2(84.0, 98.0), "shadow": Vector2(35.0, 15.0)},
+		{"id": "env_lush_green_tree", "pos": Vector2(1925.0, 380.0), "size": Vector2(90.0, 95.0), "shadow": Vector2(38.0, 16.0)},
+		{"id": "env_cherry_tree", "pos": Vector2(1915.0, 500.0), "size": Vector2(88.0, 92.0), "shadow": Vector2(36.0, 15.0)},
+		{"id": "decor_wooden_bench", "pos": Vector2(1890.0, 200.0), "size": Vector2(40.0, 36.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "flowerbed_roses", "pos": Vector2(1895.0, 320.0), "size": Vector2(38.0, 32.0), "shadow": Vector2(16.0, 8.0)},
+		{"id": "decor_hay_bale", "pos": Vector2(1890.0, 440.0), "size": Vector2(38.0, 34.0), "shadow": Vector2(15.0, 8.0)},
+		{"id": "chibi_floral_1", "pos": Vector2(1890.0, 560.0), "size": Vector2(34.0, 28.0), "shadow": Vector2(14.0, 7.0)}
+	]
+	
+	for d: Dictionary in zoo_park_props:
+		var p: Vector2 = d.get("pos", Vector2.ZERO) as Vector2
+		if zoo_forbidden.has_point(p):
+			continue
 		_add_element_if_safe(container, list, d)
 
 ## Thêm vật thể nếu vượt qua kiểm tra an toàn vùng cấm

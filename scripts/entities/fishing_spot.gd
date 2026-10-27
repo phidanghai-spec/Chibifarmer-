@@ -62,7 +62,7 @@ func _ready() -> void:
 
 	# 2. Status Label directly above the roof of the Fishing Hut (không đè lên cầu gỗ)
 	_label_status = Label.new()
-	_label_status.text = "🎣 BẤM CÂU CÁ"
+	_label_status.text = ""
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -162,8 +162,7 @@ func _on_second_ticked(_current_unix: int) -> void:
 	if state == SpotState.COOLDOWN:
 		if TickManager.is_finished(finish_timestamp):
 			state = SpotState.READY
-			_label_status.text = "🎣 BẤM CÂU CÁ"
-			_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.2))
+			_label_status.text = ""
 		else:
 			var remaining: int = TickManager.get_time_remaining(finish_timestamp)
 			_label_status.text = "⏳ HỒI: 00:%02d" % maxi(0, remaining)
@@ -283,19 +282,27 @@ func _draw() -> void:
 		draw_circle(p_right + Vector2(-0.8, -0.8), 1.6, pebble_light)
 		p_y += p_step
 
-	# E. Static Water Lilies along the river meander
-	var lily_positions: Array[Vector2] = [
+	# E. Soft Translucent River Current Ripples (Replacing rigid radar dots)
+	var river_flow_ripples: Array[Vector2] = [
 		Vector2(950.0, 320.0), Vector2(980.0, 360.0), Vector2(810.0, 560.0),
-		Vector2(830.0, 810.0), Vector2(920.0, 1020.0), Vector2(940.0, 1060.0)
+		Vector2(830.0, 810.0), Vector2(920.0, 1020.0), Vector2(940.0, 1060.0),
+		Vector2(890.0, 460.0), Vector2(930.0, 780.0)
 	]
-	var lily_col: Color = Color(0.24, 0.62, 0.22)
-	var lily_dark: Color = Color(0.18, 0.48, 0.16)
-	for lp: Vector2 in lily_positions:
-		draw_circle(lp, 8.5, lily_col)
-		draw_arc(lp, 8.5, 0.2, TAU - 0.2, 12, lily_dark, 1.4)
-	draw_circle(Vector2(950.0, 320.0), 3.0, Color(1.0, 0.55, 0.75))
-	draw_circle(Vector2(810.0, 560.0), 3.0, Color(1.0, 1.0, 1.0))
-	draw_circle(Vector2(920.0, 1020.0), 3.0, Color(1.0, 0.88, 0.35))
+	var flow_soft: Color = Color(0.88, 0.96, 1.0, 0.38)
+	var flow_bright: Color = Color(1.0, 1.0, 1.0, 0.50)
+	for fp: Vector2 in river_flow_ripples:
+		draw_arc(fp, 9.0, -0.65, 0.65, 8, flow_soft, 1.3)
+		draw_arc(fp + Vector2(4.0, 2.0), 5.5, -0.5, 0.5, 6, flow_bright, 1.0)
+
+	# F. Soft Water Ripple Arcs (Delicate river flow)
+	var ripple_positions: Array[Vector2] = [
+		Vector2(910.0, 240.0), Vector2(960.0, 420.0), Vector2(870.0, 510.0),
+		Vector2(840.0, 750.0), Vector2(890.0, 910.0), Vector2(950.0, 1140.0)
+	]
+	var ripple_col: Color = Color(1.0, 1.0, 1.0, 0.32)
+	for rp: Vector2 in ripple_positions:
+		draw_arc(rp, 13.0, -0.6, 0.6, 8, ripple_col, 1.4)
+		draw_arc(rp + Vector2(10.0, 4.0), 8.5, -0.5, 0.5, 6, ripple_col, 1.1)
 
 	# ====================================================================
 	# 2. WOODEN RIVER BRIDGE (CẦU GỖ BẮC QUA SÔNG) AT Y = 660

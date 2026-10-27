@@ -3,59 +3,59 @@
 [ext_resource type="Script" path="res://scripts/interaction/ui_hud.gd" id="1_hud"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold"]
-bg_color = Color(1, 0.992, 0.961, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.3, 0.21, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_color = Color(0.42, 0.3, 0.21, 0.18)
+bg_color = Color(0.99, 0.95, 0.86, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.46, 0.18, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0.4, 0.22, 0.1, 0.22)
 shadow_size = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_star"]
-bg_color = Color(0.85, 0.92, 0.98, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.3, 0.21, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-shadow_color = Color(0.42, 0.3, 0.21, 0.18)
+bg_color = Color(0.98, 0.76, 0.12, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.35, 0.18, 0.08, 1)
+corner_radius_top_left = 17
+corner_radius_top_right = 17
+corner_radius_bottom_right = 17
+corner_radius_bottom_left = 17
+shadow_color = Color(0.35, 0.18, 0.08, 0.25)
 shadow_size = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_diamond"]
-bg_color = Color(1, 0.992, 0.961, 0.96)
+bg_color = Color(0.99, 0.95, 0.86, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.46, 0.18, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0.4, 0.22, 0.1, 0.22)
+shadow_size = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xp"]
+bg_color = Color(0.28, 0.16, 0.08, 0.92)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.42, 0.3, 0.21, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_color = Color(0.42, 0.3, 0.21, 0.18)
-shadow_size = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xp"]
-bg_color = Color(0.18, 0.14, 0.10, 0.75)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.42, 0.3, 0.21, 0.8)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.2)
+border_color = Color(0.82, 0.65, 0.25, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+shadow_color = Color(0, 0, 0, 0.3)
 shadow_size = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
@@ -66,32 +66,32 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_silo"]
-bg_color = Color(1, 0.992, 0.961, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.3, 0.21, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-shadow_color = Color(0.42, 0.3, 0.21, 0.18)
-shadow_size = 3
+bg_color = Color(0.99, 0.95, 0.86, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.46, 0.18, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0.4, 0.22, 0.1, 0.22)
+shadow_size = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_barn"]
-bg_color = Color(1, 0.992, 0.961, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.3, 0.21, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-shadow_color = Color(0.42, 0.3, 0.21, 0.18)
-shadow_size = 3
+bg_color = Color(0.99, 0.95, 0.86, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.46, 0.18, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0.4, 0.22, 0.1, 0.22)
+shadow_size = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
 bg_color = Color(1, 0.992, 0.961, 0.98)
@@ -108,27 +108,30 @@ shadow_color = Color(0.42, 0.3, 0.21, 0.3)
 shadow_size = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer"]
-bg_color = Color(1, 0.992, 0.961, 0.96)
-border_width_top = 3
-border_color = Color(0.42, 0.3, 0.21, 1)
+bg_color = Color(0.98, 0.93, 0.82, 0.96)
+border_width_left = 2
+border_width_top = 4
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.68, 0.42, 0.18, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
-shadow_color = Color(0.42, 0.3, 0.21, 0.2)
+shadow_color = Color(0.35, 0.2, 0.1, 0.25)
 shadow_size = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_avatar_frame"]
-bg_color = Color(0.98, 0.95, 0.88, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.55, 0.38, 0.18, 1)
+bg_color = Color(0.98, 0.91, 0.76, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.82, 0.48, 0.16, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
-shadow_color = Color(0.42, 0.3, 0.21, 0.25)
-shadow_size = 5
+shadow_color = Color(0.35, 0.2, 0.1, 0.35)
+shadow_size = 6
 
 [node name="UIHud" type="CanvasLayer"]
 mouse_filter = 2
@@ -148,13 +151,13 @@ layout_mode = 2
 theme_override_constants/separation = 3
 
 [node name="AvatarFrame" type="PanelContainer" parent="TopLeftHUD/AvatarBox"]
-custom_minimum_size = Vector2(76, 76)
+custom_minimum_size = Vector2(84, 84)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_avatar_frame")
 
 [node name="AvatarPortrait" type="TextureRect" parent="TopLeftHUD/AvatarBox/AvatarFrame"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(68, 68)
+custom_minimum_size = Vector2(76, 76)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -163,7 +166,7 @@ stretch_mode = 5
 
 [node name="BadgeLevel" type="PanelContainer" parent="TopLeftHUD/AvatarBox/AvatarFrame"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(28, 20)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
@@ -172,38 +175,45 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_star")
 [node name="LabelLevel" type="Label" parent="TopLeftHUD/AvatarBox/AvatarFrame/BadgeLevel"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
+theme_override_colors/font_color = Color(0.35, 0.18, 0.08, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 13
 text = "33"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ProgressXP" type="ProgressBar" parent="TopLeftHUD/AvatarBox"]
+[node name="XPContainer" type="PanelContainer" parent="TopLeftHUD/AvatarBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 6)
+custom_minimum_size = Vector2(84, 18)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xp")
+
+[node name="ProgressXP" type="ProgressBar" parent="TopLeftHUD/AvatarBox/XPContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 show_percentage = false
 
-[node name="LabelXP" type="Label" parent="TopLeftHUD/AvatarBox"]
+[node name="LabelXP" type="Label" parent="TopLeftHUD/AvatarBox/XPContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.24, 0.15, 0.14, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
 text = "0 / 100 XP"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BtnQuickStorage" type="Button" parent="TopLeftHUD/AvatarBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 22)
+custom_minimum_size = Vector2(84, 34)
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = "🌾 Kho"
+theme_override_font_sizes/font_size = 12
+text = "🏪 Kho Hàng"
 
 [node name="ResourceHBox" type="HBoxContainer" parent="TopLeftHUD"]
 mouse_filter = 2
@@ -213,7 +223,7 @@ theme_override_constants/separation = 8
 
 [node name="PillCoins" type="PanelContainer" parent="TopLeftHUD/ResourceHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(130, 34)
+custom_minimum_size = Vector2(145, 36)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold")
 
@@ -239,20 +249,23 @@ unique_name_in_owner = true
 mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.36, 0.18, 0.06, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
 text = "50 Xu"
 horizontal_alignment = 1
 
 [node name="BtnPlusCoins" type="Button" parent="TopLeftHUD/ResourceHBox/PillCoins/Margin/HBox"]
-custom_minimum_size = Vector2(20, 20)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 13
 text = "+"
 
 [node name="PillDiamonds" type="PanelContainer" parent="TopLeftHUD/ResourceHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(110, 34)
+custom_minimum_size = Vector2(115, 36)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_diamond")
 
@@ -278,20 +291,23 @@ unique_name_in_owner = true
 mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.36, 0.18, 0.06, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
 text = "10"
 horizontal_alignment = 1
 
 [node name="BtnPlusDiamond" type="Button" parent="TopLeftHUD/ResourceHBox/PillDiamonds/Margin/HBox"]
-custom_minimum_size = Vector2(20, 20)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 13
 text = "+"
 
 [node name="PillGold" type="PanelContainer" parent="TopLeftHUD/ResourceHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 34)
+custom_minimum_size = Vector2(150, 36)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold")
 
@@ -319,19 +335,22 @@ unique_name_in_owner = true
 mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.3, 0.2, 0.08, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.36, 0.18, 0.06, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
 text = "500"
 horizontal_alignment = 1
 
 [node name="BtnPlusGold" type="Button" parent="TopLeftHUD/ResourceHBox/PillGold/Margin/HBox"]
-custom_minimum_size = Vector2(20, 20)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 13
 text = "+"
 
 [node name="PillSilo" type="PanelContainer" parent="TopLeftHUD/ResourceHBox"]
-custom_minimum_size = Vector2(105, 34)
+custom_minimum_size = Vector2(105, 36)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_silo")
 
@@ -349,15 +368,17 @@ theme_override_constants/separation = 4
 [node name="IconSilo" type="Label" parent="TopLeftHUD/ResourceHBox/PillSilo/Margin/HBox"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 12
 text = "🌾"
 
 [node name="LabelSilo" type="Label" parent="TopLeftHUD/ResourceHBox/PillSilo/Margin/HBox"]
 unique_name_in_owner = true
 mouse_filter = 2
 layout_mode = 2
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.36, 0.18, 0.06, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 13
 text = "5/100"
 
 [node name="ProgressSilo" type="ProgressBar" parent="TopLeftHUD/ResourceHBox/PillSilo/Margin/HBox"]
@@ -366,7 +387,7 @@ visible = false
 layout_mode = 2
 
 [node name="PillBarn" type="PanelContainer" parent="TopLeftHUD/ResourceHBox"]
-custom_minimum_size = Vector2(105, 34)
+custom_minimum_size = Vector2(105, 36)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_barn")
 
@@ -384,15 +405,17 @@ theme_override_constants/separation = 4
 [node name="IconBarn" type="Label" parent="TopLeftHUD/ResourceHBox/PillBarn/Margin/HBox"]
 mouse_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 12
 text = "📦"
 
 [node name="LabelBarn" type="Label" parent="TopLeftHUD/ResourceHBox/PillBarn/Margin/HBox"]
 unique_name_in_owner = true
 mouse_filter = 2
 layout_mode = 2
-theme_override_colors/font_color = Color(0.24, 0.15, 0.14, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.36, 0.18, 0.06, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 13
 text = "5/100"
 
 [node name="ProgressBarn" type="ProgressBar" parent="TopLeftHUD/ResourceHBox/PillBarn/Margin/HBox"]
@@ -413,13 +436,30 @@ grow_horizontal = 0
 theme_override_constants/separation = 6
 alignment = 2
 
-[node name="LabelAttraction" type="Label" parent="TopRightHUD"]
-mouse_filter = 2
+[node name="PillAttraction" type="PanelContainer" parent="TopRightHUD"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(74, 34)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.7, 0.9, 1)
-theme_override_font_sizes/font_size = 14
-text = "✨ 10"
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gold")
+
+[node name="Margin" type="MarginContainer" parent="TopRightHUD/PillAttraction"]
+mouse_filter = 2
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_right = 6
+
+[node name="LabelAttraction" type="Label" parent="TopRightHUD/PillAttraction/Margin"]
+unique_name_in_owner = true
+mouse_filter = 2
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.22, 0.08, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+text = "✨ 85"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BtnZoo" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true

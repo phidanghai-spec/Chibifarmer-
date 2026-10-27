@@ -9,6 +9,9 @@ signal player_settings_changed()
 signal zoo_updated(animal_id: String)
 signal puzzle_pieces_changed(new_count: int)
 signal quest_updated(quest_id: String)
+signal balloon_upgraded(new_level: int)
+signal poodle_updated()
+signal newspaper_updated()
 
 var custom_decorations: Array = []
 var building_custom_names: Dictionary = {} # building_id -> String
@@ -18,14 +21,23 @@ var player_name: String = "Minh"
 var instant_interact: bool = true
 var player_position: Vector2 = Vector2(70.0, 640.0)
 
-# Zoo Sanctuary & Puzzle System
+# Zoo Sanctuary & Balloon System
 var puzzle_pieces: int = 5
+var balloon_level: int = 1
 var zoo_data: Dictionary = {
 	"zoo_capybara": { "unlocked": true, "fed_until": 0, "love_count": 0 },
 	"zoo_panda": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 	"zoo_penguin": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 	"zoo_giraffe": { "unlocked": false, "fed_until": 0, "love_count": 0 }
 }
+
+# Pet Poodle
+var poodle_affinity: int = 0
+var poodle_feed_count: int = 0
+
+# Daily Newspaper
+var newspaper_data: Dictionary = {}
+var newspaper_next_refresh: int = 0
 
 # Quest System
 var quests_data: Dictionary = {}
@@ -117,6 +129,9 @@ func set_sandbox_level_33() -> void:
 	StorageManager.silo_capacity = 600
 	StorageManager.barn_capacity = 600
 	puzzle_pieces = 25
+	balloon_level = 2
+	poodle_affinity = 120
+	poodle_feed_count = 3
 	
 	# Unlock all sanctuary animals
 	unlock_animal("zoo_capybara")
@@ -214,10 +229,21 @@ func save_game() -> void:
 		"position_y": player_position.y
 	}
 	
-	# Save Zoo Sanctuary
+	# Save Zoo Sanctuary & Balloon
 	save_data["zoo_sanctuary"] = {
 		"puzzle_pieces": puzzle_pieces,
-		"animals": zoo_data.duplicate(true)
+		"animals": zoo_data.duplicate(true),
+		"balloon_level": balloon_level
+	}
+	
+	# Save Pet Poodle & Newspaper
+	save_data["poodle"] = {
+		"affinity": poodle_affinity,
+		"feed_count": poodle_feed_count
+	}
+	save_data["newspaper"] = {
+		"data": newspaper_data.duplicate(true),
+		"next_refresh": newspaper_next_refresh
 	}
 	
 	# Save Quests
@@ -373,10 +399,21 @@ func load_game() -> bool:
 	if data.has("zoo_sanctuary"):
 		var z_data: Dictionary = data["zoo_sanctuary"] as Dictionary
 		puzzle_pieces = int(z_data.get("puzzle_pieces", 5))
+		balloon_level = int(z_data.get("balloon_level", 1))
 		if z_data.has("animals"):
 			var anims: Dictionary = z_data["animals"] as Dictionary
 			for k: String in anims:
 				zoo_data[k] = (anims[k] as Dictionary).duplicate()
+	
+	# Restore Pet Poodle & Newspaper
+	if data.has("poodle"):
+		var p_d: Dictionary = data["poodle"] as Dictionary
+		poodle_affinity = int(p_d.get("affinity", 0))
+		poodle_feed_count = int(p_d.get("feed_count", 0))
+	if data.has("newspaper"):
+		var n_d: Dictionary = data["newspaper"] as Dictionary
+		newspaper_data = (n_d.get("data", {}) as Dictionary).duplicate(true)
+		newspaper_next_refresh = int(n_d.get("next_refresh", 0))
 	
 	# Restore Quests
 	if data.has("quests"):

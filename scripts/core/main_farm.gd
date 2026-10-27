@@ -43,6 +43,13 @@ const ChibiSceneryBuilderClass = preload("res://scripts/map/chibi_scenery_builde
 const WalkGridClass = preload("res://scripts/core/walk_grid.gd")
 const PlayerAvatarClass = preload("res://scripts/entities/player_avatar.gd")
 const PlayerInputClass = preload("res://scripts/core/player_input.gd")
+const PetPoodleClass = preload("res://scripts/entities/pet_poodle.gd")
+const PetHousePoodleClass = preload("res://scripts/entities/pet_house_poodle.gd")
+const MailboxNewspaperPropClass = preload("res://scripts/entities/mailbox_newspaper_prop.gd")
+
+var pet_poodle: Node2D = null
+var pet_house_poodle: Node2D = null
+var mailbox_newspaper_prop: Node2D = null
 
 var _ghost_preview_node: Node2D = null
 var _ghost_box: Polygon2D = null
@@ -167,6 +174,9 @@ func _ready() -> void:
 	# Spawn Specialized NPCs at functional buildings
 	_spawn_specialized_npcs()
 
+	# Spawn Pet Poodle, Kennel & Daily Newspaper Mailbox
+	_spawn_new_props_and_pets()
+
 	# Position Player Avatar at saved position or default farm gate
 	if player_avatar != null:
 		if SaveManager.player_position != Vector2.ZERO:
@@ -174,19 +184,20 @@ func _ready() -> void:
 		else:
 			player_avatar.position = Vector2(70.0, 640.0)
 
-	# Check screenshot test mode
-	var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-	for arg: String in args:
-		if arg == "--screenshot" or arg == "--run-tests":
-			var zoo_target: Vector2 = Vector2(1290.0, 390.0)
-			if player_avatar != null and walk_grid != null:
-				var path: Array[Vector2] = walk_grid.find_path(player_avatar.position, Vector2(1170.0, 480.0))
-				player_avatar.go_to(path, null)
-			if camera_2d != null:
-				camera_2d.position = zoo_target
-				camera_2d.zoom = Vector2(0.85, 0.85)
-			_capture_screenshot_and_quit()
-			break
+	# Check screenshot test mode when main_farm is the primary scene
+	if get_tree().current_scene == self:
+		var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+		for arg: String in args:
+			if "screenshot" in arg or "run-tests" in arg:
+				var zoo_target: Vector2 = Vector2(1290.0, 390.0)
+				if player_avatar != null and walk_grid != null:
+					var path: Array[Vector2] = walk_grid.find_path(player_avatar.position, Vector2(1170.0, 480.0))
+					player_avatar.go_to(path, null)
+				if camera_2d != null:
+					camera_2d.position = zoo_target
+					camera_2d.zoom = Vector2(0.85, 0.85)
+				_capture_screenshot_and_quit()
+				break
 
 func _on_drag_tool_changed(new_tool: DragActionManager.ToolType) -> void:
 	if _ghost_preview_node == null:
@@ -794,13 +805,35 @@ func _draw() -> void:
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.96, 0.82, 0.45), true)
 	draw_rect(Rect2(gate_pos, Vector2(12, 32)), Color(0.42, 0.30, 0.21), false, 1.8)
 
+func _spawn_new_props_and_pets() -> void:
+	# 1. Hòm Thư "Báo Nông Thôn" bên trái Sạp Hàng Ven Đường
+	if mailbox_newspaper_prop == null:
+		mailbox_newspaper_prop = MailboxNewspaperPropClass.new()
+		mailbox_newspaper_prop.name = "MailboxNewspaperProp"
+		mailbox_newspaper_prop.position = Vector2(135.0, 545.0)
+		buildings_container.add_child(mailbox_newspaper_prop)
+
+	# 2. Nhà Gỗ Chó Poodle trên bãi cỏ thoáng dưới Nhà Chính Nấm Đỏ (315, 285)
+	if pet_house_poodle == null:
+		pet_house_poodle = PetHousePoodleClass.new()
+		pet_house_poodle.name = "PetHousePoodle"
+		pet_house_poodle.position = Vector2(315.0, 285.0)
+		buildings_container.add_child(pet_house_poodle)
+
+	# 3. Chú Chó Poodle Chibi đi theo chủ
+	if pet_poodle == null:
+		pet_poodle = PetPoodleClass.new()
+		pet_poodle.name = "PetPoodle"
+		pet_poodle.position = Vector2(345.0, 300.0)
+		add_child(pet_poodle)
+
 func _capture_screenshot_and_quit() -> void:
 	SaveManager.set_sandbox_level_33()
 	# 1. Capture East Bank Zoo Sanctuary with Hot Air Balloon and Horizontal Top Bar
 	if camera_2d != null:
-		camera_2d.position = Vector2(1230.0, 310.0)
-		camera_2d.zoom = Vector2(0.95, 0.95)
-		camera_2d.target_zoom = Vector2(0.95, 0.95)
+		camera_2d.position = Vector2(1420.0, 310.0)
+		camera_2d.zoom = Vector2(0.85, 0.85)
+		camera_2d.target_zoom = Vector2(0.85, 0.85)
 	
 	await get_tree().create_timer(3.0).timeout
 	await RenderingServer.frame_post_draw
@@ -811,23 +844,22 @@ func _capture_screenshot_and_quit() -> void:
 		img.save_png(save_path)
 		print("[MainFarm] Captured zoo preview to ", save_path)
 	
-	# 2. Capture Avatar on Field Plot to verify avatar is on top of soil
-	if player_avatar != null and camera_2d != null:
-		(player_avatar as Node2D).position = Vector2(430.0, 560.0)
-		camera_2d.position = Vector2(440.0, 560.0)
-		camera_2d.zoom = Vector2(1.6, 1.6)
-		camera_2d.target_zoom = Vector2(1.6, 1.6)
+	# 2. Capture West Bank Farm Overview (Fields, Poodle, Kennel, Mailbox, Roadside Shop)
+	if camera_2d != null:
+		camera_2d.position = Vector2(360.0, 520.0)
+		camera_2d.zoom = Vector2(0.95, 0.95)
+		camera_2d.target_zoom = Vector2(0.95, 0.95)
 		await get_tree().create_timer(0.6).timeout
 		await RenderingServer.frame_post_draw
-		var img_plot: Image = vp.get_texture().get_image()
-		if img_plot != null and not img_plot.is_empty():
-			img_plot.save_png(ProjectSettings.globalize_path("res://debug_avatar_plot.png"))
-			print("[MainFarm] Captured avatar on plot to res://debug_avatar_plot.png")
+		var img_farm: Image = vp.get_texture().get_image()
+		if img_farm != null and not img_farm.is_empty():
+			img_farm.save_png(ProjectSettings.globalize_path("res://debug_farm_west.png"))
+			print("[MainFarm] Captured west farm preview to res://debug_farm_west.png")
 	
-	# 3. Capture Zoo Feed Shop Modal (if available)
+	# 3. Capture Zoo Feed Shop Modal
 	if ui_hud != null and ui_hud.has_method("open_zoo_feed_shop_modal"):
 		ui_hud.call("open_zoo_feed_shop_modal")
-		await get_tree().create_timer(0.6).timeout
+		await get_tree().create_timer(0.5).timeout
 		await RenderingServer.frame_post_draw
 		var img_shop: Image = vp.get_texture().get_image()
 		if img_shop != null and not img_shop.is_empty():
@@ -836,6 +868,32 @@ func _capture_screenshot_and_quit() -> void:
 		var s_modal: PanelContainer = ui_hud.get("_zoo_feed_shop_modal") as PanelContainer
 		if s_modal != null:
 			s_modal.queue_free()
+
+	# 4. Capture Newspaper Modal
+	if ui_hud != null and ui_hud.has_method("open_newspaper_modal"):
+		ui_hud.call("open_newspaper_modal")
+		await get_tree().create_timer(0.5).timeout
+		await RenderingServer.frame_post_draw
+		var img_news: Image = vp.get_texture().get_image()
+		if img_news != null and not img_news.is_empty():
+			img_news.save_png(ProjectSettings.globalize_path("res://debug_newspaper.png"))
+			print("[MainFarm] Captured Daily Newspaper modal to res://debug_newspaper.png")
+		var n_modal: PanelContainer = ui_hud.get("_newspaper_modal") as PanelContainer
+		if n_modal != null:
+			n_modal.queue_free()
+
+	# 5. Capture Hot Air Balloon Modal
+	if ui_hud != null and ui_hud.has_method("open_hot_air_balloon_modal"):
+		ui_hud.call("open_hot_air_balloon_modal")
+		await get_tree().create_timer(0.5).timeout
+		await RenderingServer.frame_post_draw
+		var img_bal: Image = vp.get_texture().get_image()
+		if img_bal != null and not img_bal.is_empty():
+			img_bal.save_png(ProjectSettings.globalize_path("res://debug_balloon.png"))
+			print("[MainFarm] Captured Hot Air Balloon modal to res://debug_balloon.png")
+		var b_modal: PanelContainer = ui_hud.get("_hot_air_balloon_modal") as PanelContainer
+		if b_modal != null:
+			b_modal.queue_free()
 			
 	get_tree().quit()
 

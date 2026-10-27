@@ -47,6 +47,13 @@ class_name UIHud
 @onready var pill_barn: PanelContainer = find_child("PillBarn", true, false) as PanelContainer
 @onready var avatar_portrait: TextureRect = %AvatarPortrait
 @onready var btn_quick_storage: Button = %BtnQuickStorage
+@onready var avatar_frame: PanelContainer = find_child("AvatarFrame", true, false) as PanelContainer
+@onready var badge_level: PanelContainer = %BadgeLevel
+@onready var xp_container: PanelContainer = %XPContainer
+@onready var btn_plus_coins: Button = %BtnPlusCoins
+@onready var btn_plus_diamond: Button = %BtnPlusDiamond
+@onready var btn_plus_gold: Button = %BtnPlusGold
+@onready var bottom_panel: PanelContainer = find_child("BottomPanel", true, false) as PanelContainer
 
 const StockAlertSystemClass = preload("res://scripts/systems/stock_alert_system.gd")
 const LevelProgressionManagerClass = preload("res://scripts/core/level_progression_manager.gd")
@@ -60,6 +67,8 @@ var _sell_picker_modal: PanelContainer = null
 var _quests_modal: PanelContainer = null
 var _zoo_modal: PanelContainer = null
 var _zoo_feed_shop_modal: PanelContainer = null
+var _hot_air_balloon_modal: PanelContainer = null
+var _newspaper_modal: PanelContainer = null
 var _active_quest_tab: int = 0 # 0: Story, 1: Daily
 
 var _tool_buttons: Dictionary = {}
@@ -246,6 +255,19 @@ func _ready() -> void:
 			open_storage_popup("silo")
 		)
 	
+	if btn_plus_coins != null:
+		btn_plus_coins.pressed.connect(func() -> void:
+			show_floating_notice("✨ Mở Sạp Hàng ven đường hoặc đón thêm du khách để nhận Xu Du Lịch!")
+		)
+	if btn_plus_diamond != null:
+		btn_plus_diamond.pressed.connect(func() -> void:
+			show_floating_notice("💎 Hoàn thành Nhiệm Vụ & giải cứu thú sở thú để nhận thêm Kim Cương!")
+		)
+	if btn_plus_gold != null:
+		btn_plus_gold.pressed.connect(func() -> void:
+			show_floating_notice("💰 Thu hoạch cây trồng & giao hàng Xe Tải để tích lũy Vàng!")
+		)
+	
 	panel_shop.visible = false
 	panel_truck.visible = false
 	if panel_seeds_menu != null:
@@ -254,15 +276,7 @@ func _ready() -> void:
 	if icon_gold != null and SpriteAtlasManager != null and SpriteAtlasManager.has_texture("icon_gold"):
 		icon_gold.texture = SpriteAtlasManager.get_texture("icon_gold")
 	
-	# Ensure crisp readability for HUD numbers: dark brown with white outline
-	var dark_brown: Color = Color(0.24, 0.15, 0.14) # #3E2723
-	var white_outline: Color = Color(1.0, 1.0, 1.0)
-	for lbl in [label_silo, label_barn, label_level, label_diamonds, label_gold, label_xp]:
-		if lbl != null:
-			lbl.add_theme_color_override("font_color", dark_brown)
-			lbl.add_theme_color_override("font_outline_color", white_outline)
-			lbl.add_theme_constant_override("outline_size", 2)
-
+	_apply_cozy_wooden_hud_theme()
 	_refresh_all_hud()
 	_refresh_shop_ui()
 	_refresh_truck_ui()
@@ -374,6 +388,251 @@ func cancel_all_active_tools() -> void:
 		drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
 	_highlight_active_button(DragActionManager.ToolType.NONE)
 
+func _apply_cozy_wooden_hud_theme() -> void:
+	# 1. Avatar Frame & Level Badge & XP Container & Quick Storage Button
+	if avatar_frame != null:
+		var sb_av: StyleBoxFlat = _create_box_style(Color(0.98, 0.91, 0.76), Color(0.82, 0.48, 0.16), 4, 16, 6, Color(0.35, 0.20, 0.10, 0.35))
+		avatar_frame.add_theme_stylebox_override("panel", sb_av)
+	
+	if badge_level != null:
+		var sb_lvl: StyleBoxFlat = _create_box_style(Color(0.98, 0.76, 0.12), Color(0.35, 0.18, 0.08), 3, 17, 3, Color(0.35, 0.18, 0.08, 0.25))
+		badge_level.add_theme_stylebox_override("panel", sb_lvl)
+	if label_level != null:
+		label_level.add_theme_color_override("font_color", Color(0.35, 0.18, 0.08))
+		label_level.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+		label_level.add_theme_constant_override("outline_size", 2)
+		label_level.add_theme_font_size_override("font_size", 13)
+	
+	if xp_container != null:
+		var sb_xp: StyleBoxFlat = _create_box_style(Color(0.28, 0.16, 0.08, 0.92), Color(0.82, 0.65, 0.25), 2, 9, 2, Color(0, 0, 0, 0.3))
+		xp_container.add_theme_stylebox_override("panel", sb_xp)
+	
+	if progress_xp != null:
+		var sb_xp_bg: StyleBoxFlat = StyleBoxFlat.new()
+		sb_xp_bg.bg_color = Color(0.18, 0.10, 0.05, 0.5)
+		sb_xp_bg.set_corner_radius_all(7)
+		progress_xp.add_theme_stylebox_override("background", sb_xp_bg)
+		
+		var sb_xp_fill: StyleBoxFlat = StyleBoxFlat.new()
+		sb_xp_fill.bg_color = Color(0.20, 0.85, 0.48)
+		sb_xp_fill.set_corner_radius_all(7)
+		progress_xp.add_theme_stylebox_override("fill", sb_xp_fill)
+	
+	if label_xp != null:
+		label_xp.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+		label_xp.add_theme_color_override("font_outline_color", Color(0.24, 0.15, 0.14))
+		label_xp.add_theme_constant_override("outline_size", 3)
+		label_xp.add_theme_font_size_override("font_size", 10)
+	
+	if btn_quick_storage != null:
+		_apply_wooden_button_style(
+			btn_quick_storage,
+			Color(0.94, 0.64, 0.22), # Golden orange wood
+			Color(0.98, 0.72, 0.30),
+			Color(0.86, 0.54, 0.16),
+			Color(0.55, 0.30, 0.10),
+			2, 10,
+			Color(0.32, 0.15, 0.05),
+			Color(1.0, 1.0, 1.0, 0.8),
+			2, 12
+		)
+	
+	# 2. Resource Pills (Cream ivory with thick orange-wood border)
+	var pill_bg: Color = Color(0.99, 0.95, 0.86)
+	var pill_border: Color = Color(0.78, 0.46, 0.18)
+	var pill_nodes: Array[PanelContainer] = [
+		find_child("PillCoins", true, false) as PanelContainer,
+		find_child("PillDiamonds", true, false) as PanelContainer,
+		find_child("PillGold", true, false) as PanelContainer,
+		pill_silo,
+		pill_barn
+	]
+	for p: PanelContainer in pill_nodes:
+		if p != null:
+			var sb_pill: StyleBoxFlat = _create_box_style(pill_bg, pill_border, 3, 18, 4, Color(0.40, 0.22, 0.10, 0.22))
+			p.add_theme_stylebox_override("panel", sb_pill)
+	
+	# Number labels in pills: Bold dark brown with crisp white outline
+	var dark_brown: Color = Color(0.36, 0.18, 0.06)
+	var white_outline: Color = Color(1.0, 1.0, 1.0)
+	for lbl: Label in [label_coins, label_diamonds, label_gold]:
+		if lbl != null:
+			lbl.add_theme_color_override("font_color", dark_brown)
+			lbl.add_theme_color_override("font_outline_color", white_outline)
+			lbl.add_theme_constant_override("outline_size", 2)
+			lbl.add_theme_font_size_override("font_size", 15)
+	for lbl: Label in [label_silo, label_barn]:
+		if lbl != null:
+			lbl.add_theme_color_override("font_color", dark_brown)
+			lbl.add_theme_color_override("font_outline_color", white_outline)
+			lbl.add_theme_constant_override("outline_size", 2)
+			lbl.add_theme_font_size_override("font_size", 13)
+	
+	# Plus Buttons: Circular fresh green (#2ECC71) with white border
+	var plus_buttons: Array[Button] = [btn_plus_coins, btn_plus_diamond, btn_plus_gold]
+	for btn_p: Button in plus_buttons:
+		if btn_p != null:
+			_apply_wooden_button_style(
+				btn_p,
+				Color(0.18, 0.80, 0.44), # Vibrant fresh green
+				Color(0.24, 0.88, 0.50),
+				Color(0.14, 0.70, 0.38),
+				Color(1.0, 1.0, 1.0),
+				2, 12, # 12px radius = circle for 24x24
+				Color(1.0, 1.0, 1.0),
+				Color(0.10, 0.45, 0.25),
+				2, 13
+			)
+	
+	# 3. Top Right Buttons
+	if btn_zoo != null:
+		_apply_wooden_button_style(
+			btn_zoo,
+			Color(0.96, 0.62, 0.20),
+			Color(1.0, 0.70, 0.28),
+			Color(0.88, 0.52, 0.14),
+			Color(0.55, 0.25, 0.08),
+			2, 10,
+			Color(1.0, 1.0, 1.0),
+			Color(0.35, 0.18, 0.08),
+			2, 14
+		)
+	if btn_quests != null:
+		_apply_wooden_button_style(
+			btn_quests,
+			Color(0.96, 0.62, 0.20),
+			Color(1.0, 0.70, 0.28),
+			Color(0.88, 0.52, 0.14),
+			Color(0.55, 0.25, 0.08),
+			2, 10,
+			Color(1.0, 1.0, 1.0),
+			Color(0.35, 0.18, 0.08),
+			2, 14
+		)
+	if btn_audio_toggle != null:
+		_apply_wooden_button_style(
+			btn_audio_toggle,
+			Color(0.92, 0.72, 0.42),
+			Color(0.98, 0.80, 0.52),
+			Color(0.82, 0.60, 0.32),
+			Color(0.48, 0.26, 0.10),
+			2, 10,
+			Color(0.36, 0.18, 0.06),
+			Color(1.0, 1.0, 1.0, 0.8),
+			2, 14
+		)
+	if btn_settings != null:
+		_apply_wooden_button_style(
+			btn_settings,
+			Color(0.92, 0.72, 0.42),
+			Color(0.98, 0.80, 0.52),
+			Color(0.82, 0.60, 0.32),
+			Color(0.48, 0.26, 0.10),
+			2, 10,
+			Color(0.36, 0.18, 0.06),
+			Color(1.0, 1.0, 1.0, 0.8),
+			2, 14
+		)
+	
+	# 4. Bottom Taskbar Dock & Tool Buttons
+	if bottom_panel != null:
+		var sb_dock: StyleBoxFlat = StyleBoxFlat.new()
+		sb_dock.bg_color = Color(0.98, 0.93, 0.82, 0.96)
+		sb_dock.border_color = Color(0.68, 0.42, 0.18)
+		sb_dock.border_width_top = 4
+		sb_dock.border_width_left = 2
+		sb_dock.border_width_right = 2
+		sb_dock.border_width_bottom = 2
+		sb_dock.corner_radius_top_left = 16
+		sb_dock.corner_radius_top_right = 16
+		sb_dock.shadow_color = Color(0.35, 0.20, 0.10, 0.25)
+		sb_dock.shadow_size = 6
+		bottom_panel.add_theme_stylebox_override("panel", sb_dock)
+	
+	var standard_tool_buttons: Array[Button] = [
+		btn_view, btn_seeds, btn_sickle, btn_build_field, btn_build_path, btn_dismantle
+	]
+	for b_tool: Button in standard_tool_buttons:
+		if b_tool != null:
+			_apply_wooden_button_style(
+				b_tool,
+				Color(0.92, 0.72, 0.42), # Warm golden-camel wood
+				Color(0.98, 0.80, 0.52), # Hover highlight
+				Color(0.84, 0.62, 0.32), # Pressed
+				Color(0.48, 0.26, 0.10), # Dark wood border
+				2, 10,
+				Color(0.36, 0.18, 0.06), # Dark brown text
+				Color(1.0, 1.0, 1.0, 0.9), # Crisp white outline
+				2, 13
+			)
+	
+	# Special Golden-Orange buttons for Roadside Shop & Truck
+	if btn_open_shop != null:
+		_apply_wooden_button_style(
+			btn_open_shop,
+			Color(0.96, 0.62, 0.20),
+			Color(1.0, 0.70, 0.28),
+			Color(0.88, 0.52, 0.14),
+			Color(0.55, 0.25, 0.08),
+			2, 10,
+			Color(0.30, 0.14, 0.04),
+			Color(1.0, 1.0, 1.0, 0.9),
+			2, 13
+		)
+	if btn_open_truck != null:
+		_apply_wooden_button_style(
+			btn_open_truck,
+			Color(0.96, 0.62, 0.20),
+			Color(1.0, 0.70, 0.28),
+			Color(0.88, 0.52, 0.14),
+			Color(0.55, 0.25, 0.08),
+			2, 10,
+			Color(0.30, 0.14, 0.04),
+			Color(1.0, 1.0, 1.0, 0.9),
+			2, 13
+		)
+
+func _create_box_style(bg: Color, border: Color, border_w: int, corner: int, shadow: int, shadow_col: Color = Color(0, 0, 0, 0.25)) -> StyleBoxFlat:
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(border_w)
+	sb.set_corner_radius_all(corner)
+	sb.shadow_size = shadow
+	sb.shadow_color = shadow_col
+	return sb
+
+func _apply_wooden_button_style(
+	btn: Button,
+	normal_bg: Color,
+	hover_bg: Color,
+	pressed_bg: Color,
+	border_col: Color,
+	border_w: int,
+	corner_rad: int,
+	text_col: Color,
+	outline_col: Color,
+	outline_sz: int,
+	font_sz: int
+) -> void:
+	var sb_normal: StyleBoxFlat = _create_box_style(normal_bg, border_col, border_w, corner_rad, 3, Color(0.35, 0.20, 0.10, 0.25))
+	var sb_hover: StyleBoxFlat = _create_box_style(hover_bg, border_col, border_w, corner_rad, 4, Color(0.35, 0.20, 0.10, 0.35))
+	var sb_pressed: StyleBoxFlat = _create_box_style(pressed_bg, border_col, border_w + 1, corner_rad, 1, Color(0.35, 0.20, 0.10, 0.20))
+	
+	btn.add_theme_stylebox_override("normal", sb_normal)
+	btn.add_theme_stylebox_override("hover", sb_hover)
+	btn.add_theme_stylebox_override("pressed", sb_pressed)
+	btn.add_theme_stylebox_override("focus", sb_hover)
+	
+	btn.add_theme_color_override("font_color", text_col)
+	btn.add_theme_color_override("font_hover_color", text_col)
+	btn.add_theme_color_override("font_pressed_color", text_col)
+	btn.add_theme_color_override("font_focus_color", text_col)
+	
+	btn.add_theme_color_override("font_outline_color", outline_col)
+	btn.add_theme_constant_override("outline_size", outline_sz)
+	btn.add_theme_font_size_override("font_size", font_sz)
+
 func _refresh_all_hud() -> void:
 	if label_gold != null and StorageManager != null:
 		label_gold.text = "%s" % _format_number(StorageManager.gold)
@@ -382,7 +641,7 @@ func _refresh_all_hud() -> void:
 	if label_coins != null and StorageManager != null:
 		label_coins.text = "%s Xu" % _format_number(StorageManager.coins)
 	if label_level != null and StorageManager != null:
-		label_level.text = "Lv.%d" % StorageManager.level
+		label_level.text = "%d" % StorageManager.level
 	if label_xp != null and StorageManager != null:
 		var needed_xp: int = StorageManager.get_required_xp(StorageManager.level)
 		label_xp.text = "XP: %s / %s" % [_format_number(StorageManager.xp), _format_number(needed_xp)]
@@ -784,8 +1043,7 @@ func open_settings_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(28, 28)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_settings_modal.queue_free()
 	)
@@ -1105,8 +1363,7 @@ func open_sell_item_picker(slot_index: int) -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(28, 28)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_sell_picker_modal.queue_free()
 	)
@@ -1551,8 +1808,7 @@ func _refresh_storage_modal() -> void:
 	hbox_head.add_child(btn_rename)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(28, 28)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_storage_modal.visible = false
 	)
@@ -1813,8 +2069,7 @@ func open_build_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(28, 28)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_build_modal.visible = false
 	)
@@ -1962,8 +2217,8 @@ func open_contextual_seed_popup(plot: FieldPlot) -> void:
 	hbox_head.add_child(lbl)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(20, 20)
+	_apply_dialog_close_button(btn_close)
+	btn_close.custom_minimum_size = Vector2(24, 24)
 	btn_close.pressed.connect(func() -> void:
 		if is_instance_valid(_contextual_seed_popup):
 			_contextual_seed_popup.queue_free()
@@ -2104,8 +2359,7 @@ func open_production_recipe_modal(machine: ProductionMachine) -> void:
 	hbox_head.add_child(btn_rename)
 
 	var btn_close: Button = Button.new()
-	btn_close.text = "✕"
-	btn_close.custom_minimum_size = Vector2(28, 28)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_recipe_modal.queue_free()
 	)
@@ -2351,8 +2605,7 @@ func open_quests_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "❌"
-	btn_close.custom_minimum_size = Vector2(32, 32)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_quests_modal.queue_free()
 	)
@@ -2886,8 +3139,7 @@ func open_zoo_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "❌"
-	btn_close.custom_minimum_size = Vector2(32, 32)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		_zoo_modal.queue_free()
 	)
@@ -3202,8 +3454,7 @@ func open_zoo_feed_shop_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_close: Button = Button.new()
-	btn_close.text = "❌"
-	btn_close.custom_minimum_size = Vector2(30, 30)
+	_apply_dialog_close_button(btn_close)
 	btn_close.pressed.connect(func() -> void:
 		AudioManager.play_sfx("click")
 		_zoo_feed_shop_modal.queue_free()
@@ -3370,10 +3621,486 @@ func _create_feed_shop_card(title: String, desc: String, status_text: String, bt
 	
 	var btn_action: Button = Button.new()
 	btn_action.text = btn_text
-	btn_action.custom_minimum_size = Vector2(140, 36)
+	btn_action.custom_minimum_size = Vector2(165, 38)
 	btn_action.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	btn_action.add_theme_font_size_override("font_size", 11)
+	btn_action.add_theme_font_size_override("font_size", 14)
 	btn_action.pressed.connect(on_action)
+	_apply_dialog_action_button(btn_action, false)
 	hbox.add_child(btn_action)
+	
+	return card
+
+func _apply_dialog_close_button(btn: Button) -> void:
+	if btn == null:
+		return
+	btn.text = "✕"
+	btn.custom_minimum_size = Vector2(30, 30)
+	btn.focus_mode = Control.FOCUS_NONE
+	
+	var sb_norm: StyleBoxFlat = StyleBoxFlat.new()
+	sb_norm.bg_color = Color(0.91, 0.30, 0.24) # #E74C3C 3D Red-Orange
+	sb_norm.border_color = Color(0.75, 0.20, 0.15) # #C0392B
+	sb_norm.set_border_width_all(2)
+	sb_norm.set_corner_radius_all(8)
+	sb_norm.shadow_color = Color(0.2, 0.05, 0.05, 0.3)
+	sb_norm.shadow_size = 2
+	
+	var sb_hov: StyleBoxFlat = StyleBoxFlat.new()
+	sb_hov.bg_color = Color(0.95, 0.38, 0.32)
+	sb_hov.border_color = Color(0.85, 0.25, 0.20)
+	sb_hov.set_border_width_all(2)
+	sb_hov.set_corner_radius_all(8)
+	sb_hov.shadow_color = Color(0.2, 0.05, 0.05, 0.4)
+	sb_hov.shadow_size = 3
+	
+	var sb_press: StyleBoxFlat = StyleBoxFlat.new()
+	sb_press.bg_color = Color(0.80, 0.22, 0.16)
+	sb_press.border_color = Color(0.65, 0.18, 0.12)
+	sb_press.set_border_width_all(2)
+	sb_press.set_corner_radius_all(8)
+	
+	btn.add_theme_stylebox_override("normal", sb_norm)
+	btn.add_theme_stylebox_override("hover", sb_hov)
+	btn.add_theme_stylebox_override("pressed", sb_press)
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0.35, 0.1, 0.08))
+	btn.add_theme_constant_override("outline_size", 1)
+	btn.add_theme_font_size_override("font_size", 13)
+
+func _apply_dialog_action_button(btn: Button, is_secondary: bool = false) -> void:
+	if btn == null:
+		return
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
+	var sb_norm: StyleBoxFlat = StyleBoxFlat.new()
+	var sb_hov: StyleBoxFlat = StyleBoxFlat.new()
+	var sb_press: StyleBoxFlat = StyleBoxFlat.new()
+	
+	if not is_secondary:
+		# Vibrant 3D Green (#2ECC71, viền #1E8449)
+		sb_norm.bg_color = Color(0.18, 0.80, 0.44)
+		sb_norm.border_color = Color(0.12, 0.52, 0.29)
+		sb_norm.set_border_width_all(2)
+		sb_norm.set_corner_radius_all(8)
+		sb_norm.shadow_color = Color(0.06, 0.28, 0.15, 0.35)
+		sb_norm.shadow_size = 2
+		
+		sb_hov.bg_color = Color(0.24, 0.88, 0.50)
+		sb_hov.border_color = Color(0.15, 0.60, 0.33)
+		sb_hov.set_border_width_all(2)
+		sb_hov.set_corner_radius_all(8)
+		sb_hov.shadow_color = Color(0.06, 0.28, 0.15, 0.45)
+		sb_hov.shadow_size = 3
+		
+		sb_press.bg_color = Color(0.14, 0.68, 0.36)
+		sb_press.border_color = Color(0.10, 0.45, 0.24)
+		sb_press.set_border_width_all(2)
+		sb_press.set_corner_radius_all(8)
+		
+		btn.add_theme_color_override("font_outline_color", Color(0.08, 0.35, 0.20)) # #145A32
+	else:
+		# Vibrant 3D Warm Wood / Orange Gold (#E67E22)
+		sb_norm.bg_color = Color(0.92, 0.55, 0.18)
+		sb_norm.border_color = Color(0.70, 0.38, 0.10)
+		sb_norm.set_border_width_all(2)
+		sb_norm.set_corner_radius_all(8)
+		sb_norm.shadow_color = Color(0.35, 0.18, 0.05, 0.35)
+		sb_norm.shadow_size = 2
+		
+		sb_hov.bg_color = Color(0.98, 0.63, 0.25)
+		sb_hov.border_color = Color(0.78, 0.45, 0.14)
+		sb_hov.set_border_width_all(2)
+		sb_hov.set_corner_radius_all(8)
+		sb_hov.shadow_color = Color(0.35, 0.18, 0.05, 0.45)
+		sb_hov.shadow_size = 3
+		
+		sb_press.bg_color = Color(0.82, 0.48, 0.15)
+		sb_press.border_color = Color(0.60, 0.32, 0.08)
+		sb_press.set_border_width_all(2)
+		sb_press.set_corner_radius_all(8)
+		
+		btn.add_theme_color_override("font_outline_color", Color(0.38, 0.18, 0.06))
+	
+	btn.add_theme_stylebox_override("normal", sb_norm)
+	btn.add_theme_stylebox_override("hover", sb_hov)
+	btn.add_theme_stylebox_override("pressed", sb_press)
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_constant_override("outline_size", 1)
+	btn.add_theme_font_size_override("font_size", 14)
+
+func open_hot_air_balloon_modal() -> void:
+	if _hot_air_balloon_modal != null and is_instance_valid(_hot_air_balloon_modal):
+		_hot_air_balloon_modal.queue_free()
+	
+	_hot_air_balloon_modal = PanelContainer.new()
+	_hot_air_balloon_modal.name = "HotAirBalloonModal"
+	_hot_air_balloon_modal.custom_minimum_size = Vector2(460, 340)
+	_hot_air_balloon_modal.anchors_preset = Control.PRESET_CENTER
+	_hot_air_balloon_modal.anchor_left = 0.5
+	_hot_air_balloon_modal.anchor_top = 0.5
+	_hot_air_balloon_modal.anchor_right = 0.5
+	_hot_air_balloon_modal.anchor_bottom = 0.5
+	_hot_air_balloon_modal.offset_left = -230
+	_hot_air_balloon_modal.offset_top = -170
+	_hot_air_balloon_modal.offset_right = 230
+	_hot_air_balloon_modal.offset_bottom = 170
+	_hot_air_balloon_modal.z_index = 100
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.98, 0.93, 0.98)
+	sb.border_color = Color(0.72, 0.45, 0.18, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.shadow_color = Color(0.18, 0.10, 0.04, 0.45)
+	sb.shadow_size = 10
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	_hot_air_balloon_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 10)
+	_hot_air_balloon_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🎈 KHINH KHÍ CẦU NGẮM CẢNH SỞ THÚ"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
+	lbl_title.add_theme_color_override("font_outline_color", Color.WHITE)
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	_apply_dialog_close_button(btn_close)
+	btn_close.pressed.connect(func() -> void:
+		AudioManager.play_sfx("click")
+		_hot_air_balloon_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	var lbl_sub: Label = Label.new()
+	lbl_sub.text = "Thưởng ngoạn toàn cảnh Sở Thú từ trên mây & tăng tiền Tip du khách (Hiện tại: Lv.%d/5 - Tip +%d%%)" % [SaveManager.balloon_level, SaveManager.balloon_level * 10]
+	lbl_sub.add_theme_font_size_override("font_size", 10)
+	lbl_sub.add_theme_color_override("font_color", Color(0.48, 0.32, 0.18))
+	vbox_main.add_child(lbl_sub)
+	
+	var vbox_cards: VBoxContainer = VBoxContainer.new()
+	vbox_cards.add_theme_constant_override("separation", 8)
+	vbox_main.add_child(vbox_cards)
+	
+	# Card 1: Khởi hành bay ngắm cảnh (120 Vàng)
+	var card1: PanelContainer = _create_feed_shop_card(
+		"🚀 Khởi Hành Bay Ngắm Cảnh (120 Vàng)",
+		"Khinh khí cầu bay lượn trên bầu trời 2.5s, nhận ngay +150 Xu Du Lịch, +80 XP và +1 Mảnh Ghép 🧩!",
+		"Chi phí: 120 Vàng (Bạn có: %d Vàng)" % StorageManager.gold,
+		"🚀 Bay Ngắm Cảnh",
+		func() -> void:
+			if StorageManager.has_gold(120):
+				StorageManager.spend_gold(120)
+				EventBus.gold_changed.emit(StorageManager.gold, -120)
+				AudioManager.play_sfx("click")
+				_hot_air_balloon_modal.queue_free()
+				
+				var farm: Node = get_tree().current_scene
+				var zm: ZooManager = farm.find_child("ZooManager", true, false) as ZooManager if farm != null else null
+				if zm != null:
+					zm.fly_balloon_tour(func() -> void:
+						StorageManager.coins += 150
+						EventBus.coins_changed.emit(StorageManager.coins, 150)
+						StorageManager.add_xp(80)
+						SaveManager.add_puzzle_pieces(1)
+						AudioManager.play_sfx("fanfare")
+						show_floating_notice("🎉 Chuyến bay ngắm cảnh thành công! +150 Xu Du Lịch, +80 XP & +1 Mảnh Ghép 🧩!")
+						EventBus.loot_collected.emit("coins", 150, Vector2(1475.0, 310.0))
+						EventBus.loot_collected.emit("puzzle_piece", 1, Vector2(1475.0, 310.0))
+						_refresh_all_hud()
+					)
+				else:
+					StorageManager.coins += 150
+					EventBus.coins_changed.emit(StorageManager.coins, 150)
+					StorageManager.add_xp(80)
+					SaveManager.add_puzzle_pieces(1)
+					show_floating_notice("🎉 +150 Xu Du Lịch, +80 XP & +1 Mảnh Ghép 🧩!")
+					_refresh_all_hud()
+			else:
+				AudioManager.play_sfx("error")
+				show_floating_notice("⚠️ Bạn cần 120 Vàng để khởi hành chuyến bay!")
+	)
+	vbox_cards.add_child(card1)
+	
+	# Card 2: Nâng cấp Khinh Khí Cầu
+	var cur_lvl: int = SaveManager.balloon_level
+	if cur_lvl < 5:
+		var cost: int = cur_lvl * 150 + 100
+		var card2: PanelContainer = _create_feed_shop_card(
+			"⬆️ Nâng Cấp Khinh Khí Cầu (Lv.%d -> Lv.%d)" % [cur_lvl, cur_lvl + 1],
+			"Tăng vĩnh viễn +10% tiền Tip Xu Du Lịch mỗi cấp khi du khách chụp ảnh & +10 Điểm Năng Động.",
+			"Chi phí: %d Vàng (Bạn có: %d Vàng)" % [cost, StorageManager.gold],
+			"⬆️ Nâng Cấp (Lv.%d)" % (cur_lvl + 1),
+			func() -> void:
+				if StorageManager.has_gold(cost):
+					StorageManager.spend_gold(cost)
+					EventBus.gold_changed.emit(StorageManager.gold, -cost)
+					SaveManager.balloon_level += 1
+					SaveManager.save_game()
+					GridManager.add_attraction_score(10)
+					AudioManager.play_sfx("level_up")
+					show_floating_notice("🎈 Khinh Khí Cầu đã lên Cấp %d! (+10%% Tip Xu Du Lịch & +10 Năng Động)" % SaveManager.balloon_level)
+					_refresh_all_hud()
+					open_hot_air_balloon_modal()
+				else:
+					AudioManager.play_sfx("error")
+					show_floating_notice("⚠️ Cần %d Vàng để nâng cấp Khinh Khí Cầu!" % cost)
+		)
+		vbox_cards.add_child(card2)
+	else:
+		var card_max: PanelContainer = _create_feed_shop_card(
+			"⭐ Khinh Khí Cầu Đạt Cấp Tối Đa (Lv.5)",
+			"Đã mở khóa toàn bộ hiệu suất! Tip du khách tại Sở Thú tăng tối đa +50% vĩnh viễn.",
+			"Trạng thái: Tối đa (Level 5)",
+			"⭐ Đã Tối Đa",
+			func() -> void:
+				show_floating_notice("⭐ Khinh Khí Cầu đã đạt cấp độ tối đa!")
+		)
+		vbox_cards.add_child(card_max)
+	
+	add_child(_hot_air_balloon_modal)
+
+func open_newspaper_modal() -> void:
+	if _newspaper_modal != null and is_instance_valid(_newspaper_modal):
+		_newspaper_modal.queue_free()
+	
+	_newspaper_modal = PanelContainer.new()
+	_newspaper_modal.name = "NewspaperModal"
+	_newspaper_modal.custom_minimum_size = Vector2(640, 480)
+	_newspaper_modal.anchors_preset = Control.PRESET_CENTER
+	_newspaper_modal.anchor_left = 0.5
+	_newspaper_modal.anchor_top = 0.5
+	_newspaper_modal.anchor_right = 0.5
+	_newspaper_modal.anchor_bottom = 0.5
+	_newspaper_modal.offset_left = -320
+	_newspaper_modal.offset_top = -240
+	_newspaper_modal.offset_right = 320
+	_newspaper_modal.offset_bottom = 240
+	_newspaper_modal.z_index = 100
+	
+	# Warm Vintage Newspaper StyleBox
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.98, 0.95, 0.88, 0.99)
+	sb.border_color = Color(0.48, 0.32, 0.18, 1.0)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(14)
+	sb.shadow_color = Color(0.18, 0.10, 0.04, 0.45)
+	sb.shadow_size = 12
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	_newspaper_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 8)
+	_newspaper_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "📰 BÁO NÔNG THÔN - CHỢ PHIÊN HÔM NAY"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 14)
+	lbl_title.add_theme_color_override("font_color", Color(0.32, 0.18, 0.08))
+	lbl_title.add_theme_color_override("font_outline_color", Color.WHITE)
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	_apply_dialog_close_button(btn_close)
+	btn_close.pressed.connect(func() -> void:
+		AudioManager.play_sfx("click")
+		_newspaper_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	# Subtitle / Toolbar Bar
+	var hbox_bar: HBoxContainer = HBoxContainer.new()
+	hbox_bar.add_theme_constant_override("separation", 12)
+	vbox_main.add_child(hbox_bar)
+	
+	var remaining_time: int = DailyNewspaper.get_time_remaining()
+	var lbl_timer: Label = Label.new()
+	lbl_timer.text = "⏳ Tự động đổi số báo sau: %02d:%02d" % [remaining_time / 60, remaining_time % 60]
+	lbl_timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_timer.add_theme_font_size_override("font_size", 11)
+	lbl_timer.add_theme_color_override("font_color", Color(0.45, 0.30, 0.15))
+	hbox_bar.add_child(lbl_timer)
+	
+	var btn_refresh: Button = Button.new()
+	btn_refresh.text = "🔄 Đổi Số Báo Mới (50 Vàng)"
+	btn_refresh.custom_minimum_size = Vector2(170, 30)
+	_apply_dialog_action_button(btn_refresh, false)
+	btn_refresh.pressed.connect(func() -> void:
+		if StorageManager.has_gold(50):
+			StorageManager.spend_gold(50)
+			EventBus.gold_changed.emit(StorageManager.gold, -50)
+			DailyNewspaper.force_refresh_newspaper()
+			AudioManager.play_sfx("sell")
+			show_floating_notice("📰 Đã phát hành số báo mới từ các nông trại láng giềng!")
+			_refresh_all_hud()
+			open_newspaper_modal()
+		else:
+			AudioManager.play_sfx("error")
+			show_floating_notice("⚠️ Cần 50 Vàng để đổi số báo mới ngay lập tức!")
+	)
+	hbox_bar.add_child(btn_refresh)
+	
+	# Grid Container: 3 cols x 2 rows (6 classified ads)
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox_main.add_child(grid)
+	
+	var slots: Array[Dictionary] = DailyNewspaper.get_newspaper_slots()
+	for i in range(slots.size()):
+		var slot_data: Dictionary = slots[i]
+		var card: PanelContainer = _create_newspaper_slot_card(slot_data, i)
+		grid.add_child(card)
+	
+	add_child(_newspaper_modal)
+
+func _create_newspaper_slot_card(slot: Dictionary, slot_idx: int) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	card.custom_minimum_size = Vector2(195, 175)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
+	var csb: StyleBoxFlat = StyleBoxFlat.new()
+	var is_sold: bool = bool(slot.get("is_sold", false))
+	if is_sold:
+		csb.bg_color = Color(0.92, 0.90, 0.84, 0.8)
+		csb.border_color = Color(0.72, 0.68, 0.60, 0.7)
+	else:
+		csb.bg_color = Color(1.0, 0.99, 0.96, 0.98)
+		csb.border_color = Color(0.78, 0.60, 0.40, 0.9)
+	csb.set_border_width_all(2)
+	csb.set_corner_radius_all(10)
+	csb.content_margin_left = 8
+	csb.content_margin_right = 8
+	csb.content_margin_top = 6
+	csb.content_margin_bottom = 6
+	card.add_theme_stylebox_override("panel", csb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	card.add_child(vbox)
+	
+	# Seller info & Discount Tag
+	var hbox_seller: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox_seller)
+	
+	var seller_str: String = String(slot.get("neighbor_name", slot.get("seller_name", "Nông Trại")))
+	var lbl_seller: Label = Label.new()
+	lbl_seller.text = "🏡 %s" % seller_str
+	lbl_seller.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_seller.add_theme_font_size_override("font_size", 10)
+	lbl_seller.add_theme_color_override("font_color", Color(0.38, 0.22, 0.10))
+	hbox_seller.add_child(lbl_seller)
+	
+	var disc_pct: int = int(slot.get("discount", slot.get("discount_pct", 30)))
+	var lbl_disc: Label = Label.new()
+	lbl_disc.text = "-%d%%" % disc_pct
+	lbl_disc.add_theme_font_size_override("font_size", 9)
+	lbl_disc.add_theme_color_override("font_color", Color(0.9, 0.15, 0.15))
+	hbox_seller.add_child(lbl_disc)
+	
+	# Item Name & Count
+	var lbl_item: Label = Label.new()
+	var item_name: String = String(slot.get("item_name", "Vật Phẩm"))
+	var count: int = int(slot.get("count", 1))
+	lbl_item.text = "%s x%d" % [item_name, count]
+	lbl_item.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_item.add_theme_font_size_override("font_size", 11)
+	lbl_item.add_theme_color_override("font_color", Color(0.20, 0.12, 0.05))
+	vbox.add_child(lbl_item)
+	
+	# Item Icon / Sprite Preview
+	var icon_box: CenterContainer = CenterContainer.new()
+	icon_box.custom_minimum_size = Vector2(40, 40)
+	vbox.add_child(icon_box)
+	
+	var tex_id: String = String(slot.get("item_id", ""))
+	if SpriteAtlasManager.has_texture(tex_id):
+		var sp: TextureRect = TextureRect.new()
+		sp.texture = SpriteAtlasManager.get_texture(tex_id)
+		sp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sp.custom_minimum_size = Vector2(36, 36)
+		icon_box.add_child(sp)
+	else:
+		var lbl_emoji: Label = Label.new()
+		lbl_emoji.text = "📦"
+		lbl_emoji.add_theme_font_size_override("font_size", 20)
+		icon_box.add_child(lbl_emoji)
+	
+	# Price Display: Original Price struck out & Sale Price
+	var hbox_p: HBoxContainer = HBoxContainer.new()
+	hbox_p.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox_p.add_theme_constant_override("separation", 6)
+	vbox.add_child(hbox_p)
+	
+	var orig_p: int = int(slot.get("original_price", 0))
+	var sale_p: int = int(slot.get("sale_price", 0))
+	
+	var lbl_orig: Label = Label.new()
+	lbl_orig.text = "%dV" % orig_p
+	lbl_orig.add_theme_font_size_override("font_size", 9)
+	lbl_orig.add_theme_color_override("font_color", Color(0.60, 0.50, 0.40))
+	hbox_p.add_child(lbl_orig)
+	
+	var lbl_sale: Label = Label.new()
+	lbl_sale.text = "💰 %d Vàng" % sale_p
+	lbl_sale.add_theme_font_size_override("font_size", 11)
+	lbl_sale.add_theme_color_override("font_color", Color(0.85, 0.45, 0.05))
+	hbox_p.add_child(lbl_sale)
+	
+	# Buy Action or "ĐÃ MUA" Banner
+	if is_sold:
+		var lbl_bought: Label = Label.new()
+		lbl_bought.text = "✅ ĐÃ BÁN HẾT"
+		lbl_bought.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_bought.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_bought.custom_minimum_size = Vector2(140, 28)
+		lbl_bought.add_theme_font_size_override("font_size", 10)
+		lbl_bought.add_theme_color_override("font_color", Color(0.4, 0.5, 0.35))
+		vbox.add_child(lbl_bought)
+	else:
+		var btn_buy: Button = Button.new()
+		btn_buy.text = "🛒 Mua Ngay"
+		btn_buy.custom_minimum_size = Vector2(140, 28)
+		_apply_dialog_action_button(btn_buy, false)
+		btn_buy.pressed.connect(func() -> void:
+			var res: Dictionary = DailyNewspaper.buy_slot(slot_idx)
+			if bool(res.get("success", false)):
+				AudioManager.play_sfx("sell")
+				show_floating_notice(String(res.get("message", "Đã mua hàng thành công!")))
+				EventBus.loot_collected.emit(tex_id, count, Vector2(135.0, 550.0))
+				_refresh_all_hud()
+				open_newspaper_modal()
+			else:
+				AudioManager.play_sfx("error")
+				show_floating_notice(String(res.get("message", "Không đủ Vàng hoặc kho đã đầy!")))
+		)
+		vbox.add_child(btn_buy)
 	
 	return card

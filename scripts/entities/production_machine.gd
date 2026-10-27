@@ -55,7 +55,7 @@ func _ready() -> void:
 
 	# 3. Status Label raised higher above roof with crisp dark outline and bright yellow text
 	_label_status = Label.new()
-	_label_status.text = "SẴN SÀNG"
+	_label_status.text = ""
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label_status.position = Vector2(-80, -68)
@@ -120,10 +120,7 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
 			_label_status.add_theme_constant_override("outline_size", 4)
 		else:
-			_label_status.text = "SẴN SÀNG"
-			_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
-			_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
-			_label_status.add_theme_constant_override("outline_size", 4)
+			_label_status.text = ""
 
 func handle_machine_click() -> bool:
 	var farm: Node = get_tree().current_scene

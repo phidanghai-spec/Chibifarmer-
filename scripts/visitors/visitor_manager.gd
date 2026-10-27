@@ -130,11 +130,13 @@ func spawn_random_visitor() -> VisitorNPC:
 func summon_zoo_visitors(count: int = 2) -> int:
 	var spawned: int = 0
 	var zoo_spots: Array[Vector2] = [
-		Vector2(1290.0, 195.0), # Capybara
-		Vector2(1450.0, 195.0), # Panda
-		Vector2(1290.0, 395.0), # Penguin
-		Vector2(1450.0, 395.0), # Giraffe
-		Vector2(1185.0, 440.0)  # Sanctuary Entrance
+		Vector2(1340.0, 295.0), # Capybara viewing
+		Vector2(1610.0, 295.0), # Panda viewing
+		Vector2(1340.0, 325.0), # Penguin viewing
+		Vector2(1610.0, 325.0), # Giraffe viewing
+		Vector2(1475.0, 310.0), # Hot Air Balloon Centerpiece
+		Vector2(1155.0, 310.0), # Zoo Entrance Gate
+		Vector2(1155.0, 430.0)  # Feed Shop Plaza
 	]
 	var start_pos: Vector2 = GridManager.grid_to_world(GridManager.ENTRANCE_CELL)
 	for npc: VisitorNPC in _pool:
