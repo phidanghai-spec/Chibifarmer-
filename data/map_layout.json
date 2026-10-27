@@ -60,7 +60,7 @@
       "id": "feed_mill",
       "type": "machine",
       "machine_id": "feed_mill",
-      "cell": [20, 13],
+      "cell": [21, 13],
       "tile_size": [3, 3]
     },
     {
@@ -102,7 +102,7 @@
       "id": "juice_stand",
       "type": "machine",
       "machine_id": "juice_stand",
-      "cell": [22, 8],
+      "cell": [17, 13],
       "tile_size": [3, 3]
     }
   ],

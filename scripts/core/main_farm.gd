@@ -46,10 +46,14 @@ const PlayerInputClass = preload("res://scripts/core/player_input.gd")
 const PetPoodleClass = preload("res://scripts/entities/pet_poodle.gd")
 const PetHousePoodleClass = preload("res://scripts/entities/pet_house_poodle.gd")
 const MailboxNewspaperPropClass = preload("res://scripts/entities/mailbox_newspaper_prop.gd")
+const RiverSteamboatClass = preload("res://scripts/entities/river_steamboat.gd")
+const BeehiveTreeClass = preload("res://scripts/entities/beehive_tree.gd")
 
 var pet_poodle: Node2D = null
 var pet_house_poodle: Node2D = null
 var mailbox_newspaper_prop: Node2D = null
+var river_steamboat: Node2D = null
+var beehive_tree: Node2D = null
 
 var _ghost_preview_node: Node2D = null
 var _ghost_box: Polygon2D = null
@@ -827,6 +831,22 @@ func _spawn_new_props_and_pets() -> void:
 		pet_poodle.position = Vector2(345.0, 300.0)
 		add_child(pet_poodle)
 
+	# 4. Bến Tàu Hơi Nước Trên Sông tại bờ Tây phía Bắc Cầu Gỗ (695, 290)
+	if river_steamboat == null:
+		river_steamboat = RiverSteamboatClass.new()
+		river_steamboat.name = "RiverSteamboat"
+		river_steamboat.position = Vector2(695.0, 290.0)
+		river_steamboat.z_index = 5
+		add_child(river_steamboat)
+
+	# 5. Cây Tổ Ong Mật & Đàn Ong Chibi tại vườn hoa Tây (150, 355)
+	if beehive_tree == null:
+		beehive_tree = BeehiveTreeClass.new()
+		beehive_tree.name = "BeehiveTree"
+		beehive_tree.position = Vector2(150.0, 355.0)
+		beehive_tree.z_index = 6
+		buildings_container.add_child(beehive_tree)
+
 func _capture_screenshot_and_quit() -> void:
 	SaveManager.set_sandbox_level_33()
 	# 1. Capture East Bank Zoo Sanctuary with Hot Air Balloon and Horizontal Top Bar
@@ -1118,7 +1138,7 @@ func _spawn_specialized_npcs() -> void:
 	add_child(_specialized_npcs_container)
 
 	# Tính toán vị trí thực tế của Quầy Nước Pha Chế (juice_stand) và Nhà Câu Cá (fishing_spot)
-	var barista_pos: Vector2 = Vector2(752.0, 349.0)
+	var barista_pos: Vector2 = Vector2(592.0, 509.0)
 	for m: ProductionMachine in _production_machines:
 		if m.machine_id == "juice_stand":
 			barista_pos = m.position + Vector2(0.0, 45.0)

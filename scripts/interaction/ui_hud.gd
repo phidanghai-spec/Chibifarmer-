@@ -69,6 +69,7 @@ var _zoo_modal: PanelContainer = null
 var _zoo_feed_shop_modal: PanelContainer = null
 var _hot_air_balloon_modal: PanelContainer = null
 var _newspaper_modal: PanelContainer = null
+var _steamboat_modal: PanelContainer = null
 var _active_quest_tab: int = 0 # 0: Story, 1: Daily
 
 var _tool_buttons: Dictionary = {}
@@ -4103,4 +4104,256 @@ func _create_newspaper_slot_card(slot: Dictionary, slot_idx: int) -> PanelContai
 		)
 		vbox.add_child(btn_buy)
 	
+	return card
+
+func open_steamboat_modal(boat: Node2D = null) -> void:
+	if _steamboat_modal != null and is_instance_valid(_steamboat_modal):
+		_steamboat_modal.queue_free()
+	
+	if boat == null:
+		var farm: Node = get_tree().current_scene
+		if farm != null:
+			boat = farm.find_child("RiverSteamboat", true, false) as Node2D
+			
+	if boat == null:
+		return
+		
+	_steamboat_modal = PanelContainer.new()
+	_steamboat_modal.name = "SteamboatModal"
+	_steamboat_modal.custom_minimum_size = Vector2(500, 430)
+	_steamboat_modal.anchors_preset = Control.PRESET_CENTER
+	_steamboat_modal.anchor_left = 0.5
+	_steamboat_modal.anchor_top = 0.5
+	_steamboat_modal.anchor_right = 0.5
+	_steamboat_modal.anchor_bottom = 0.5
+	_steamboat_modal.offset_left = -250
+	_steamboat_modal.offset_top = -215
+	_steamboat_modal.offset_right = 250
+	_steamboat_modal.offset_bottom = 215
+	_steamboat_modal.z_index = 100
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.98, 0.93, 0.98) # Warm cream
+	sb.border_color = Color(0.70, 0.48, 0.25, 0.95)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(12)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 12
+	sb.content_margin_bottom = 12
+	sb.shadow_color = Color(0.12, 0.08, 0.04, 0.45)
+	sb.shadow_size = 6
+	_steamboat_modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox_main: VBoxContainer = VBoxContainer.new()
+	vbox_main.add_theme_constant_override("separation", 10)
+	_steamboat_modal.add_child(vbox_main)
+	
+	# Header
+	var hbox_head: HBoxContainer = HBoxContainer.new()
+	vbox_main.add_child(hbox_head)
+	
+	var lbl_title: Label = Label.new()
+	lbl_title.text = "🚢 CHUYẾN TÀU NÔNG SẢN ĐƯỜNG SÔNG"
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_title.add_theme_font_size_override("font_size", 14)
+	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.08))
+	lbl_title.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0))
+	lbl_title.add_theme_constant_override("outline_size", 2)
+	hbox_head.add_child(lbl_title)
+	
+	var btn_close: Button = Button.new()
+	_apply_dialog_close_button(btn_close)
+	btn_close.pressed.connect(func() -> void:
+		AudioManager.play_sfx("click")
+		_steamboat_modal.queue_free()
+	)
+	hbox_head.add_child(btn_close)
+	
+	var is_cooldown: bool = (int(boat.get("state")) == 3) # BoatState.COOLDOWN
+	
+	if is_cooldown:
+		var lbl_cd: Label = Label.new()
+		lbl_cd.text = "⏳ Tàu đang trên đường quay lại bến..."
+		lbl_cd.add_theme_font_size_override("font_size", 12)
+		lbl_cd.add_theme_color_override("font_color", Color(0.48, 0.32, 0.18))
+		vbox_main.add_child(lbl_cd)
+		
+		var btn_instant: Button = Button.new()
+		btn_instant.text = "⚡ Gọi Tàu Cập Bến Ngay (Miễn Phí)"
+		btn_instant.custom_minimum_size = Vector2(250, 38)
+		btn_instant.add_theme_font_size_override("font_size", 14)
+		_apply_dialog_action_button(btn_instant, false)
+		btn_instant.pressed.connect(func() -> void:
+			if boat.has_method("instant_summon_boat"):
+				boat.call("instant_summon_boat")
+			_steamboat_modal.queue_free()
+		)
+		vbox_main.add_child(btn_instant)
+		add_child(_steamboat_modal)
+		return
+	
+	var lbl_sub: Label = Label.new()
+	lbl_sub.text = "Đóng đủ 3 kiện hàng để nhận Rương Bến Tàu & Mảnh Ghép Sở Thú 🧩!"
+	lbl_sub.add_theme_font_size_override("font_size", 11)
+	lbl_sub.add_theme_color_override("font_color", Color(0.45, 0.28, 0.15))
+	vbox_main.add_child(lbl_sub)
+	
+	# Crates Container (3 vertical rows)
+	var vbox_crates: VBoxContainer = VBoxContainer.new()
+	vbox_crates.add_theme_constant_override("separation", 8)
+	vbox_main.add_child(vbox_crates)
+	
+	var crates_arr: Array = boat.get("crates") as Array if boat.get("crates") != null else []
+	for i: int in range(crates_arr.size()):
+		var crate: Dictionary = crates_arr[i] as Dictionary
+		var card: PanelContainer = _create_steamboat_crate_card(boat, crate, i)
+		vbox_crates.add_child(card)
+		
+	# Footer: Grand Chest or Progress
+	var hbox_foot: HBoxContainer = HBoxContainer.new()
+	hbox_foot.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox_main.add_child(hbox_foot)
+	
+	var all_filled: bool = bool(boat.call("are_all_crates_filled")) if boat.has_method("are_all_crates_filled") else false
+	if all_filled:
+		var btn_chest: Button = Button.new()
+		btn_chest.text = "🎁 Nhận Rương Bến Tàu & Cho Tàu Khởi Hành"
+		btn_chest.custom_minimum_size = Vector2(380, 42)
+		btn_chest.add_theme_font_size_override("font_size", 14)
+		_apply_dialog_action_button(btn_chest, false)
+		btn_chest.pressed.connect(func() -> void:
+			var res: Dictionary = boat.call("claim_chest_and_depart") as Dictionary
+			if bool(res.get("success", false)):
+				show_floating_notice(String(res.get("message", "Đã nhận thưởng Rương Bến Tàu!")))
+				_refresh_all_hud()
+				_steamboat_modal.queue_free()
+		)
+		hbox_foot.add_child(btn_chest)
+	else:
+		var filled_cnt: int = int(boat.call("get_filled_crates_count")) if boat.has_method("get_filled_crates_count") else 0
+		var lbl_prog: Label = Label.new()
+		lbl_prog.text = "📦 Tiến độ: %d/3 kiện hàng đã đóng. Hãy đóng đủ 3 kiện để tàu nhổ neo!" % filled_cnt
+		lbl_prog.add_theme_font_size_override("font_size", 11)
+		lbl_prog.add_theme_color_override("font_color", Color(0.48, 0.30, 0.16))
+		hbox_foot.add_child(lbl_prog)
+		
+	add_child(_steamboat_modal)
+
+func _create_steamboat_crate_card(boat: Node2D, crate: Dictionary, idx: int) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	var csb: StyleBoxFlat = StyleBoxFlat.new()
+	csb.bg_color = Color(1.0, 0.98, 0.93, 0.95)
+	csb.border_color = Color(0.75, 0.55, 0.35, 0.8)
+	csb.set_border_width_all(2)
+	csb.set_corner_radius_all(10)
+	csb.content_margin_left = 12
+	csb.content_margin_right = 12
+	csb.content_margin_top = 8
+	csb.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", csb)
+	
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	card.add_child(hbox)
+	
+	# Icon Preview
+	var icon_box: CenterContainer = CenterContainer.new()
+	icon_box.custom_minimum_size = Vector2(40, 40)
+	hbox.add_child(icon_box)
+	
+	var item_id: String = String(crate.get("item_id", ""))
+	if SpriteAtlasManager.has_texture(item_id):
+		var sp: TextureRect = TextureRect.new()
+		sp.texture = SpriteAtlasManager.get_texture(item_id)
+		sp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sp.custom_minimum_size = Vector2(36, 36)
+		icon_box.add_child(sp)
+	else:
+		var lbl_em: Label = Label.new()
+		lbl_em.text = "📦"
+		lbl_em.add_theme_font_size_override("font_size", 20)
+		icon_box.add_child(lbl_em)
+		
+	# Text Info
+	var vbox_text: VBoxContainer = VBoxContainer.new()
+	vbox_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_text.add_theme_constant_override("separation", 2)
+	hbox.add_child(vbox_text)
+	
+	var item_name: String = String(crate.get("item_name", "Vật phẩm"))
+	var qty: int = int(crate.get("qty", 1))
+	var gold_r: int = int(crate.get("gold_reward", 20))
+	var xp_r: int = int(crate.get("xp_reward", 20))
+	var is_filled: bool = bool(crate.get("filled", false))
+	
+	var lbl_n: Label = Label.new()
+	lbl_n.text = "%s x%d" % [item_name, qty]
+	lbl_n.add_theme_font_size_override("font_size", 12)
+	lbl_n.add_theme_color_override("font_color", Color(0.35, 0.18, 0.08))
+	vbox_text.add_child(lbl_n)
+	
+	var cur_stock: int = StorageManager.get_item_count(item_id)
+	var lbl_stock: Label = Label.new()
+	lbl_stock.text = "Kho có: %d/%d" % [cur_stock, qty]
+	lbl_stock.add_theme_font_size_override("font_size", 10)
+	if cur_stock >= qty:
+		lbl_stock.add_theme_color_override("font_color", Color(0.15, 0.55, 0.25))
+	else:
+		lbl_stock.add_theme_color_override("font_color", Color(0.80, 0.40, 0.10))
+	vbox_text.add_child(lbl_stock)
+	
+	var lbl_rew: Label = Label.new()
+	lbl_rew.text = "+%d Vàng, +%d XP, +15 Xu" % [gold_r, xp_r]
+	lbl_rew.add_theme_font_size_override("font_size", 9)
+	lbl_rew.add_theme_color_override("font_color", Color(0.85, 0.50, 0.08))
+	vbox_text.add_child(lbl_rew)
+	
+	# Action Button
+	if is_filled:
+		var lbl_done: Label = Label.new()
+		lbl_done.text = "✅ ĐÃ ĐÓNG KIỆN"
+		lbl_done.custom_minimum_size = Vector2(165, 38)
+		lbl_done.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_done.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_done.add_theme_font_size_override("font_size", 12)
+		lbl_done.add_theme_color_override("font_color", Color(0.18, 0.65, 0.28))
+		hbox.add_child(lbl_done)
+	else:
+		var can_fill: bool = (cur_stock >= qty)
+		var btn_crate: Button = Button.new()
+		btn_crate.custom_minimum_size = Vector2(165, 38)
+		btn_crate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		btn_crate.add_theme_font_size_override("font_size", 14)
+		
+		if can_fill:
+			btn_crate.text = "📦 Đóng Kiện (+%dV)" % gold_r
+			_apply_dialog_action_button(btn_crate, false)
+			btn_crate.pressed.connect(func() -> void:
+				var res: Dictionary = boat.call("fill_crate", idx, false) as Dictionary
+				if bool(res.get("success", false)):
+					AudioManager.play_sfx("harvest")
+					show_floating_notice(String(res.get("message", "Đã đóng kiện hàng!")))
+					_refresh_all_hud()
+					open_steamboat_modal(boat)
+				else:
+					AudioManager.play_sfx("error")
+					show_floating_notice(String(res.get("message", "Không đủ vật phẩm!")))
+			)
+		else:
+			btn_crate.text = "⚡ Đóng Hộ (80 Vàng)"
+			_apply_dialog_action_button(btn_crate, true)
+			btn_crate.pressed.connect(func() -> void:
+				var res: Dictionary = boat.call("fill_crate", idx, true) as Dictionary
+				if bool(res.get("success", false)):
+					AudioManager.play_sfx("sell")
+					show_floating_notice(String(res.get("message", "Đã thuê đóng hộ kiện hàng!")))
+					_refresh_all_hud()
+					open_steamboat_modal(boat)
+				else:
+					AudioManager.play_sfx("error")
+					show_floating_notice(String(res.get("message", "Cần 80 Vàng!")))
+			)
+		hbox.add_child(btn_crate)
+		
 	return card

@@ -388,6 +388,16 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("pet_poodle", "res://assets/sprites/pet_poodle.png")
 	_load_standalone_texture("pet_house_poodle", "res://assets/sprites/pet_house_poodle.png")
 	_load_standalone_texture("mailbox_newspaper", "res://assets/sprites/mailbox_newspaper.png")
+
+	# Đợt 11: Steamboat, River Dock, Beehive Tree, Bee Chibi & Honey
+	_load_standalone_texture("river_dock", "res://assets/sprites/river_dock.png")
+	_load_standalone_texture("steamboat_chibi", "res://assets/sprites/steamboat_chibi.png")
+	_load_standalone_texture("steamboat", "res://assets/sprites/steamboat_chibi.png")
+	_load_standalone_texture("beehive_tree", "res://assets/sprites/beehive_tree.png")
+	_load_standalone_texture("bee_chibi", "res://assets/sprites/bee_chibi.png")
+	_load_standalone_texture("item_honey", "res://assets/sprites/item_honey.png")
+	_load_standalone_texture("honey", "res://assets/sprites/item_honey.png")
+
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)

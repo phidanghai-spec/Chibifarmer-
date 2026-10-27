@@ -1,5 +1,7 @@
 extends Node
 
+const RiverSteamboatClass = preload("res://scripts/entities/river_steamboat.gd")
+
 func _ready() -> void:
 	SaveManager.set_sandbox_level_33()
 	var farm_scene: PackedScene = load("res://scenes/main_farm.tscn")
@@ -25,21 +27,35 @@ func _ready() -> void:
 		img.save_png("res://debug_preview.png")
 		print("[SCREENSHOT] Saved zoo & balloon preview to res://debug_preview.png")
 	
-	# 2. Capture West Bank Farm (Poodle at Mushroom Farmhouse Lawn, Kennel, Central Fields)
+	# 2. Capture West Bank Farm (Beehive Tree at 150,355, Poodle & Kennel at 315,285, River Steamboat & Dock at 695,290)
 	if cam != null:
-		cam.position = Vector2(340.0, 320.0)
-		cam.zoom = Vector2(0.95, 0.95)
-		cam.set("target_zoom", Vector2(0.95, 0.95))
+		cam.position = Vector2(430.0, 330.0)
+		cam.zoom = Vector2(0.72, 0.72)
+		cam.set("target_zoom", Vector2(0.72, 0.72))
 	
-	for i: int in range(20):
+	for i: int in range(25):
 		await get_tree().process_frame
 	
 	var img_farm: Image = get_viewport().get_texture().get_image()
 	if img_farm != null and not img_farm.is_empty():
 		img_farm.save_png("res://debug_farm_west.png")
-		print("[SCREENSHOT] Saved west farm preview to res://debug_farm_west.png")
+		print("[SCREENSHOT] Saved west farm preview (Beehive, Poodle, Steamboat) to res://debug_farm_west.png")
 	
-	# 3. Capture Zoo Feed Shop Modal (Crisp text on green buttons)
+	# 3. Capture River Steamboat Cargo Modal (3 Crates, Cozy Wood styling)
+	var boat: Node2D = farm.find_child("RiverSteamboat", true, false) as Node2D
+	if hud != null and boat != null:
+		hud.open_steamboat_modal(boat)
+		for i: int in range(20):
+			await get_tree().process_frame
+		var img_boat: Image = get_viewport().get_texture().get_image()
+		if img_boat != null and not img_boat.is_empty():
+			img_boat.save_png("res://debug_steamboat_modal.png")
+			print("[SCREENSHOT] Saved Steamboat Modal to res://debug_steamboat_modal.png")
+		var b_modal: PanelContainer = hud.get("_steamboat_modal") as PanelContainer
+		if b_modal != null:
+			b_modal.queue_free()
+
+	# 4. Capture Zoo Feed Shop Modal (Crisp text on green buttons)
 	if hud != null:
 		hud.open_zoo_feed_shop_modal()
 		for i: int in range(15):
@@ -52,7 +68,7 @@ func _ready() -> void:
 		if s_modal != null:
 			s_modal.queue_free()
 
-	# 4. Capture Daily Newspaper Modal
+	# 5. Capture Daily Newspaper Modal
 	if hud != null:
 		hud.open_newspaper_modal()
 		for i: int in range(15):
@@ -65,7 +81,7 @@ func _ready() -> void:
 		if n_modal != null:
 			n_modal.queue_free()
 
-	# 5. Capture Hot Air Balloon Flight & Upgrade Modal (Crisp text on green buttons)
+	# 6. Capture Hot Air Balloon Flight & Upgrade Modal (Crisp text on green buttons)
 	if hud != null:
 		hud.open_hot_air_balloon_modal()
 		for i: int in range(15):
@@ -74,11 +90,11 @@ func _ready() -> void:
 		if img_bal != null and not img_bal.is_empty():
 			img_bal.save_png("res://debug_balloon.png")
 			print("[SCREENSHOT] Saved Hot Air Balloon modal to res://debug_balloon.png")
-		var b_modal: PanelContainer = hud.get("_hot_air_balloon_modal") as PanelContainer
-		if b_modal != null:
-			b_modal.queue_free()
+		var bl_modal: PanelContainer = hud.get("_hot_air_balloon_modal") as PanelContainer
+		if bl_modal != null:
+			bl_modal.queue_free()
 
-	# 6. Capture Poodle following across the Wooden Bridge
+	# 7. Capture Poodle following across the Wooden Bridge
 	if avatar != null and poodle != null and cam != null:
 		avatar.global_position = Vector2(1200.0, 656.0)
 		poodle.global_position = Vector2(920.0, 656.0) # On the wooden bridge deck
@@ -92,5 +108,5 @@ func _ready() -> void:
 			img_bridge.save_png("res://debug_poodle_bridge.png")
 			print("[SCREENSHOT] Saved Poodle on Bridge preview to res://debug_poodle_bridge.png")
 	
-	print("[SCREENSHOT] All Đợt 10 screenshots successfully captured!")
+	print("[SCREENSHOT] All Đợt 11 screenshots successfully captured!")
 	get_tree().quit()

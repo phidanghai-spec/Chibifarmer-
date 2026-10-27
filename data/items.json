@@ -387,5 +387,17 @@
     "unlock_level": 1,
     "storage_type": "barn",
     "description": "Mảnh ghép kỳ diệu dùng để mở khóa các loài thú quý hiếm trong Khu Bảo Tồn."
+  },
+  "honey": {
+    "id": "honey",
+    "name": "Mật ong rừng",
+    "category": "animal_product",
+    "storage": "barn",
+    "storage_type": "barn",
+    "base_price": 68,
+    "xp": 20,
+    "xp_reward": 20,
+    "unlock_level": 1,
+    "description": "Hũ mật ong hoa rừng vàng óng thơm ngọt do đàn ong Chibi cần cù thu hoạch."
   }
 }

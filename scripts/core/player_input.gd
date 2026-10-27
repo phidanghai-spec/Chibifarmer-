@@ -3,6 +3,8 @@ class_name PlayerInput
 
 const WalkGridClass = preload("res://scripts/core/walk_grid.gd")
 const PlayerAvatarClass = preload("res://scripts/entities/player_avatar.gd")
+const RiverSteamboatClass = preload("res://scripts/entities/river_steamboat.gd")
+const BeehiveTreeClass = preload("res://scripts/entities/beehive_tree.gd")
 
 @export var main_farm: Node2D
 @export var player_avatar: Node2D
@@ -76,6 +78,26 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					return
 
+	# 4. PRIORITY 4: Check River Steamboat (1-Click Popup Modal)
+	if main_farm != null and is_instance_valid(main_farm.river_steamboat):
+		var local_boat: Vector2 = mpos - main_farm.river_steamboat.global_position
+		if Rect2(-45.0, -50.0, 175.0, 110.0).has_point(local_boat):
+			if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+				main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+			main_farm.river_steamboat.handle_steamboat_click()
+			get_viewport().set_input_as_handled()
+			return
+
+	# 5. PRIORITY 5: Check Beehive Tree (1-Click Harvest / Quick Boost)
+	if main_farm != null and is_instance_valid(main_farm.beehive_tree):
+		var local_hive: Vector2 = mpos - main_farm.beehive_tree.global_position
+		if Rect2(-36.0, -48.0, 72.0, 84.0).has_point(local_hive):
+			if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
+				main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
+			main_farm.beehive_tree.handle_beehive_click()
+			get_viewport().set_input_as_handled()
+			return
+
 	# Ignore clicks if a tool is currently selected (e.g. planting seeds or harvesting crops)
 	if main_farm != null:
 		if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
@@ -132,6 +154,12 @@ func interact_with(target: Node) -> void:
 		var md: MovableDecor = target as MovableDecor
 		target_pos = md.global_position
 		stand_dist = 36.0
+	elif target is RiverSteamboatClass:
+		target.call("handle_steamboat_click")
+		return
+	elif target is BeehiveTreeClass:
+		target.call("handle_beehive_click")
+		return
 	elif target is Node2D:
 		target_pos = (target as Node2D).global_position
 		stand_dist = 42.0
@@ -192,7 +220,18 @@ func find_interactable_at(world_pos: Vector2) -> Node:
 		if world_pos.distance_to(main_farm._roadside_shop_prop.global_position) <= 65.0:
 			return main_farm._roadside_shop_prop
 
-	# 7. Generic registered interactables
+	# 7. River Steamboat & Beehive Tree
+	if main_farm.river_steamboat != null and is_instance_valid(main_farm.river_steamboat):
+		var local_b: Vector2 = world_pos - main_farm.river_steamboat.global_position
+		if Rect2(-45.0, -50.0, 175.0, 110.0).has_point(local_b):
+			return main_farm.river_steamboat
+
+	if main_farm.beehive_tree != null and is_instance_valid(main_farm.beehive_tree):
+		var local_h: Vector2 = world_pos - main_farm.beehive_tree.global_position
+		if Rect2(-36.0, -48.0, 72.0, 84.0).has_point(local_h):
+			return main_farm.beehive_tree
+
+	# 8. Generic registered interactables
 	for node: Node in get_tree().get_nodes_in_group("interactable"):
 		if node is Node2D and is_instance_valid(node):
 			var n2d: Node2D = node as Node2D

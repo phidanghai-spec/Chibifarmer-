@@ -39,6 +39,11 @@ var poodle_feed_count: int = 0
 var newspaper_data: Dictionary = {}
 var newspaper_next_refresh: int = 0
 
+# River Steamboat
+var steamboat_data: Dictionary = {}
+var steamboat_next_arrival: int = 0
+signal steamboat_updated()
+
 # Quest System
 var quests_data: Dictionary = {}
 var daily_quests_data: Dictionary = {}
@@ -245,6 +250,10 @@ func save_game() -> void:
 		"data": newspaper_data.duplicate(true),
 		"next_refresh": newspaper_next_refresh
 	}
+	save_data["steamboat"] = {
+		"data": steamboat_data.duplicate(true),
+		"next_arrival": steamboat_next_arrival
+	}
 	
 	# Save Quests
 	save_data["quests"] = {
@@ -414,6 +423,12 @@ func load_game() -> bool:
 		var n_d: Dictionary = data["newspaper"] as Dictionary
 		newspaper_data = (n_d.get("data", {}) as Dictionary).duplicate(true)
 		newspaper_next_refresh = int(n_d.get("next_refresh", 0))
+	
+	# Restore Steamboat
+	if data.has("steamboat"):
+		var sb_d: Dictionary = data["steamboat"] as Dictionary
+		steamboat_data = (sb_d.get("data", {}) as Dictionary).duplicate(true)
+		steamboat_next_arrival = int(sb_d.get("next_arrival", 0))
 	
 	# Restore Quests
 	if data.has("quests"):
