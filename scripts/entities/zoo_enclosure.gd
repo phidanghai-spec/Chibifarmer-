@@ -286,7 +286,10 @@ func _update_state() -> void:
 	queue_redraw()
 
 func on_player_interact(_avatar: Node2D) -> void:
-	var hud: Node = get_tree().current_scene.find_child("UIHud", true, false)
+	var cs: Node = get_tree().current_scene if get_tree() != null else null
+	if cs == null and get_tree() != null and get_tree().root.get_child_count() > 0:
+		cs = get_tree().root.get_child(get_tree().root.get_child_count() - 1)
+	var hud: Node = cs.find_child("UIHud", true, false) if cs != null else null
 	
 	# 1. If Locked: Prompt to Unlock
 	if not SaveManager.is_animal_unlocked(animal_id):

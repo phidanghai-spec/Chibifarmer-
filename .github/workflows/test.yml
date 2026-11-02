@@ -1,0 +1,35 @@
+name: "🌾 Chibifarmer Godot 4 Automated Tests & Visual Audit"
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  godot-tests:
+    name: "Run gdUnit4 Logic & Visual Invariant Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Audit Python Sprite Assets (Watermark & Transparency Check)
+        run: |
+          python3 -m pip install pillow numpy
+          if [ -f "tools/asset_audit.py" ]; then
+            python3 tools/asset_audit.py
+          fi
+
+      - name: Run gdUnit4 Tests & 200-Step Playtest Bot
+        uses: MikeSchulze/gdUnit4-action@v1
+        with:
+          godot-version: '4.3'
+          version: 'latest'
+          paths: |
+            res://tests/unit
+            res://tests/playtest
+          arguments: '--ignoreHeadlessMode'
