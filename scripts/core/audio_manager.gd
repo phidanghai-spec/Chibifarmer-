@@ -35,7 +35,13 @@ const SFX_MAP: Dictionary = {
 	"steamboat_whistle": "res://assets/audio/sfx_steamboat_whistle.wav",
 	"sfx_steamboat_whistle": "res://assets/audio/sfx_steamboat_whistle.wav",
 	"coins_jingle": "res://assets/audio/sfx_coins_jingle.wav",
-	"sfx_coins_jingle": "res://assets/audio/sfx_coins_jingle.wav"
+	"sfx_coins_jingle": "res://assets/audio/sfx_coins_jingle.wav",
+	"camera_shutter": "res://assets/audio/sfx_camera_shutter_chibi.wav",
+	"sfx_camera_shutter": "res://assets/audio/sfx_camera_shutter_chibi.wav",
+	"gentle_rain": "res://assets/audio/sfx_gentle_rain_loop.wav",
+	"sfx_gentle_rain": "res://assets/audio/sfx_gentle_rain_loop.wav",
+	"page_flip": "res://assets/audio/sfx_page_flip_almanac.wav",
+	"sfx_page_flip": "res://assets/audio/sfx_page_flip_almanac.wav"
 }
 
 func _ready() -> void:

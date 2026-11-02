@@ -44,3 +44,4 @@ static func evaluate_offline_progress(save_data: Dictionary) -> Dictionary:
 		"honey_collected": honey_collected
 	}
 	return report
+

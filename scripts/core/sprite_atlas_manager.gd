@@ -478,6 +478,9 @@ func _setup_aliases() -> void:
 	_load_standalone_texture("npc_elder_portrait", "res://assets/sprites/npc_elder_portrait.png")
 	_load_standalone_texture("ui_hand_pointer_chibi", "res://assets/sprites/ui_hand_pointer_chibi.png")
 	_load_standalone_texture("ui_offline_chest_banner", "res://assets/sprites/ui_offline_chest_banner.png")
+	_load_standalone_texture("decor_zoo_photobooth", "res://assets/sprites/decor_zoo_photobooth.png")
+	_load_standalone_texture("decor_warm_lantern", "res://assets/sprites/decor_warm_lantern.png")
+	_load_standalone_texture("ui_weather_badges_sheet", "res://assets/sprites/ui_weather_badges_sheet.png")
 	
 	# Environment aliases
 	# _alias("env_cherry_tree", "env_cherry_tree")
@@ -800,3 +803,17 @@ func _generate_carp_icon() -> ImageTexture:
 
 func get_region_texture(region_id: String) -> Texture2D:
 	return get_texture(region_id)
+func get_weather_badge_texture(badge_key: String) -> Texture2D:
+	var base_tex: Texture2D = get_texture("ui_weather_badges_sheet")
+	if base_tex == null:
+		return null
+	var col_idx: int = 0
+	match badge_key.to_lower():
+		"sunny", "sunny_breeze": col_idx = 0
+		"rain", "cozy_rain": col_idx = 1
+		"festival", "balloon_festival": col_idx = 2
+		"night": col_idx = 3
+	var atlas_tex: AtlasTexture = AtlasTexture.new()
+	atlas_tex.atlas = base_tex
+	atlas_tex.region = Rect2(col_idx * 64, 0, 64, 64)
+	return atlas_tex

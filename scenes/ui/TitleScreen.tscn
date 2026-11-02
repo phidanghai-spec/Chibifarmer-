@@ -53,6 +53,8 @@ corner_radius_bottom_left = 20
 shadow_color = Color(0.18, 0.1, 0.04, 0.5)
 shadow_size = 12
 
+[ext_resource type="PackedScene" path="res://scenes/ui/FarmAlmanacModal.tscn" id="14_almanac"]
+
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -294,3 +296,5 @@ text = "Đóng"
 
 [node name="AudioStreamPlayerBGM" type="AudioStreamPlayer" parent="."]
 bus = &"Master"
+
+[node name="FarmAlmanacModal" parent="UILayer" instance=ExtResource("14_almanac")]

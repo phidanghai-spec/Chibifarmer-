@@ -1,0 +1,131 @@
+[gd_scene format=3 uid="uid://calmanac001"]
+
+[ext_resource type="Script" path="res://scripts/ui/farm_almanac_modal.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_almanac"]
+bg_color = Color(1, 0.976471, 0.92549, 0.98)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 5
+border_color = Color(0.486275, 0.298039, 0.141176, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 14
+shadow_offset = Vector2(0, 6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_detail"]
+bg_color = Color(0.952941, 0.909804, 0.819608, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.678431, 0.490196, 0.317647, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_close"]
+bg_color = Color(0.85098, 0.317647, 0.254902, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.55, 0.18, 0.15, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+
+[node name="FarmAlmanacModal" type="PanelContainer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -390.0
+offset_top = -260.0
+offset_right = 390.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_almanac")
+script = ExtResource("1_script")
+
+[node name="AlmanacVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderHBox" type="HBoxContainer" parent="AlmanacVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="AlmanacVBox/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.423529, 0.227451, 0.0980392, 1)
+theme_override_font_sizes/font_size = 17
+text = "📖 BÁCH KHOA NÔNG TRẠI (FARM ALMANAC)"
+
+[node name="BtnCloseAlmanac" type="Button" parent="AlmanacVBox/HeaderHBox"]
+custom_minimum_size = Vector2(36, 32)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_close")
+text = "✖"
+
+[node name="AlmanacTabs" type="TabBar" parent="AlmanacVBox"]
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_selected_color = Color(0.35, 0.18, 0.08, 1)
+theme_override_colors/font_unselected_color = Color(0.55, 0.45, 0.35, 1)
+theme_override_font_sizes/font_size = 14
+tab_count = 4
+tab_0/title = "1. Cây Trồng (9)"
+tab_1/title = "2. Thú Nuôi & Zoo (8)"
+tab_2/title = "3. Ẩm Thực (8)"
+tab_3/title = "4. Du Khách (6)"
+
+[node name="EntryGridScroll" type="ScrollContainer" parent="AlmanacVBox"]
+custom_minimum_size = Vector2(0, 275)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EntryCardsGrid" type="GridContainer" parent="AlmanacVBox/EntryGridScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 10
+columns = 4
+
+[node name="DetailInspectorPanel" type="PanelContainer" parent="AlmanacVBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_detail")
+
+[node name="DetailTextLabel" type="Label" parent="AlmanacVBox/DetailInspectorPanel"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.243137, 0.152941, 0.0784314, 1)
+theme_override_font_sizes/font_size = 13
+text = "Chọn một mục bên trên để xem chi tiết bách khoa nông trại."
+autowrap_mode = 2

@@ -263,3 +263,4 @@ func _connect_gameplay_events() -> void:
 func _check_step_1_completion() -> void:
 	if _harvested_count >= 1 and _planted_count >= 1:
 		_advance_to_step(Step.STEP_2_MILL_AND_FEED)
+

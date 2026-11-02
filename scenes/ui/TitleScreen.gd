@@ -18,6 +18,7 @@ const MAIN_FARM_SCENE: String = "res://scenes/main/MainFarm.tscn"
 @onready var save_slot_modal: PanelContainer = $UILayer/SaveSlotModal
 @onready var slot_cards_hbox: HBoxContainer = $UILayer/SaveSlotModal.find_child("SlotCardsHBox", true, false) as HBoxContainer
 @onready var settings_modal: PanelContainer = $UILayer/SettingsModal
+@onready var farm_almanac_modal: FarmAlmanacModal = $UILayer/FarmAlmanacModal
 @onready var btn_close_slots: Button = $UILayer/SaveSlotModal.find_child("BtnCloseSlots", true, false) as Button
 @onready var btn_close_settings: Button = $UILayer/SettingsModal.find_child("BtnCloseSettings", true, false) as Button
 @onready var btn_toggle_audio: Button = $UILayer/SettingsModal.find_child("BtnToggleAudio", true, false) as Button
@@ -137,9 +138,11 @@ func _on_new_farm_pressed() -> void:
 
 func _on_almanac_pressed() -> void:
 	AudioManager.play_sfx("ui_wood_click")
-	# Hiển thị thông báo hoặc mở sổ tay nông trại
-	_populate_slot_cards()
-	save_slot_modal.visible = true
+	if farm_almanac_modal != null:
+		farm_almanac_modal.toggle_modal(true)
+	else:
+		_populate_slot_cards()
+		save_slot_modal.visible = true
 
 func _populate_slot_cards() -> void:
 	if slot_cards_hbox == null:

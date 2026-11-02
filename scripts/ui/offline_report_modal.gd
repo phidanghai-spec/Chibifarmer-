@@ -105,3 +105,4 @@ func _on_claim_pressed() -> void:
 		visible = false
 		scale = Vector2.ONE
 	)
+

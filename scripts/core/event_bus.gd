@@ -74,3 +74,12 @@ signal crop_harvested(crop_id: String, grid_pos: Vector2i)
 signal crop_planted(crop_id: String, grid_pos: Vector2i)
 signal decor_placed(decor_id: String, attraction_delta: int)
 signal offline_report_claimed(total_gold_added: int)
+# --- Weather, Day-Night & 5-Star Tourism (Sprint 4) ---
+signal time_of_day_changed(phase_id: String, ambient_color: Color, is_night: bool)
+signal weather_state_changed(weather_id: String, crop_speed_multiplier: float, fish_luck_bonus: float)
+signal tourism_star_rating_updated(new_star_count: int, total_attraction_score: int)
+signal zoo_photo_checkin_completed(visitor_id: String, animal_id: String, tip_gold: int)
+
+# --- Farm Almanac Encyclopedia (Sprint 5) ---
+signal almanac_entry_unlocked(category: String, item_id: String, reward_gold: int)
+signal almanac_modal_toggled(is_open: bool)

@@ -88,3 +88,4 @@ theme_override_colors/font_hover_color = Color(1, 0.98, 0.85, 1)
 theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 text = "🎉 NHẬN THƯỞNG BỘI THU"
+

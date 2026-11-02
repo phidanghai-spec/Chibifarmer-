@@ -294,6 +294,65 @@ def gen_coins_jingle() -> list[float]:
                 samples[idx] += val * 0.5
     return samples
 
+
+def gen_camera_shutter_chibi() -> list[float]:
+    duration = 0.28
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = [0.0] * num_samples
+    import random
+    rng = random.Random(42)
+    for i in range(int(0.04 * SAMPLE_RATE)):
+        t = i / float(SAMPLE_RATE)
+        env = math.exp(-120.0 * t)
+        val = (rng.uniform(-0.8, 0.8) + math.sin(2.0 * math.pi * 1200.0 * t) * 0.4) * env
+        samples[i] += val * 0.5
+    offset = int(0.08 * SAMPLE_RATE)
+    for i in range(int(0.05 * SAMPLE_RATE)):
+        t = i / float(SAMPLE_RATE)
+        env = math.exp(-100.0 * t)
+        val = (rng.uniform(-0.9, 0.9) + math.sin(2.0 * math.pi * 950.0 * t) * 0.4) * env
+        if offset + i < num_samples:
+            samples[offset + i] += val * 0.6
+    flash_offset = int(0.11 * SAMPLE_RATE)
+    for i in range(int(0.15 * SAMPLE_RATE)):
+        t = i / float(SAMPLE_RATE)
+        env = math.exp(-22.0 * t) * (1.0 - math.exp(-150.0 * t))
+        val = math.sin(2.0 * math.pi * 2637.0 * t) * env
+        if flash_offset + i < num_samples:
+            samples[flash_offset + i] += val * 0.4
+    return samples
+
+def gen_gentle_rain_loop() -> list[float]:
+    duration = 2.0
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = []
+    import random
+    rng = random.Random(777)
+    last_val = 0.0
+    for i in range(num_samples):
+        t = i / float(SAMPLE_RATE)
+        white = rng.uniform(-1.0, 1.0)
+        pink = last_val + 0.05 * (white - last_val)
+        last_val = pink
+        drop_mod = 1.0 + 0.15 * math.sin(2.0 * math.pi * 4.2 * t) + 0.10 * math.cos(2.0 * math.pi * 9.7 * t)
+        val = pink * drop_mod * 0.35
+        samples.append(val)
+    return samples
+
+def gen_page_flip_almanac() -> list[float]:
+    duration = 0.22
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = []
+    import random
+    rng = random.Random(999)
+    for i in range(num_samples):
+        t = i / float(SAMPLE_RATE)
+        env = math.sin(math.pi * (t / duration)) ** 1.8
+        noise = rng.uniform(-1.0, 1.0) * 0.65
+        flutter = math.sin(2.0 * math.pi * 480.0 * t) * 0.25
+        samples.append((noise + flutter) * env * 0.45)
+    return samples
+
 def main():
     print("==================================================")
     print("  GENERATING COZY 2.5D CHIBI SFX (.WAV MONO 44.1kHz)")
@@ -310,6 +369,9 @@ def main():
     write_wav("sfx_dice_roll.wav", gen_dice_roll())
     write_wav("sfx_steamboat_whistle.wav", gen_steamboat_whistle())
     write_wav("sfx_coins_jingle.wav", gen_coins_jingle())
+    write_wav("sfx_camera_shutter_chibi.wav", gen_camera_shutter_chibi())
+    write_wav("sfx_gentle_rain_loop.wav", gen_gentle_rain_loop())
+    write_wav("sfx_page_flip_almanac.wav", gen_page_flip_almanac())
     print("[SFX] All audio files generated successfully!")
 
 if __name__ == "__main__":
