@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://csprint1screens001"]
+
+[ext_resource type="Script" path="res://tests/capture_sprint1_screens.gd" id="1_test"]
+
+[node name="CaptureSprint1Screens" type="Node"]
+script = ExtResource("1_test")
+

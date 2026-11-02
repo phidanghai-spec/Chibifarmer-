@@ -18,6 +18,15 @@ var building_custom_names: Dictionary = {} # building_id -> String
 
 var selected_character: String = "minh" # "minh" or "mai"
 var player_name: String = "Minh"
+var avatar_config: Dictionary = {
+	"body": "body_warm_ivory",
+	"eyes": "eyes_sparkle_brown",
+	"hair": "hair_braid_chestnut",
+	"outfit": "outfit_denim_overalls",
+	"hat": "hat_straw_ribbon",
+	"poodle": "poodle_apricot_red"
+}
+
 var instant_interact: bool = true
 var player_position: Vector2 = Vector2(70.0, 640.0)
 
@@ -55,9 +64,26 @@ var vip_requests: Array = []
 
 var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
+var current_slot: int = 1
+
+func get_active_save_path() -> String:
+	return SaveSlotService.get_slot_path(current_slot)
+
 
 func _ready() -> void:
+	SaveSlotService.ensure_save_directory()
+	EventBus.save_slot_selected.connect(_on_save_slot_selected)
+	var latest: int = SaveSlotService.get_latest_active_slot()
+	if latest != -1:
+		current_slot = latest
 	load_game()
+
+func _on_save_slot_selected(slot_index: int, is_new_game: bool) -> void:
+	current_slot = clampi(slot_index, 1, SaveSlotService.MAX_SLOTS)
+	if is_new_game:
+		reset_to_level_1()
+	else:
+		load_game()
 
 func get_building_name(building_id: String, default_name: String) -> String:
 	return String(building_custom_names.get(building_id, default_name))
@@ -266,20 +292,29 @@ func save_game() -> void:
 	}
 	
 	var json_str: String = JSON.stringify(save_data, "\t")
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var target_path: String = get_active_save_path()
+	var file: FileAccess = FileAccess.open(target_path, FileAccess.WRITE)
 	if file != null:
 		file.store_string(json_str)
 		file.close()
-		print("[SaveManager] Game state saved successfully to ", SAVE_PATH)
+		print("[SaveManager] Game state saved successfully to slot %d: %s" % [current_slot, target_path])
+	var leg_file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if leg_file != null:
+		leg_file.store_string(json_str)
+		leg_file.close()
 	else:
 		push_error("[SaveManager] Failed to write save file: " + str(FileAccess.get_open_error()))
 
 func load_game() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
-		print("[SaveManager] No save file found, starting fresh game.")
-		return false
+	var target_path: String = get_active_save_path()
+	if not FileAccess.file_exists(target_path):
+		if FileAccess.file_exists(SAVE_PATH):
+			target_path = SAVE_PATH
+		else:
+			print("[SaveManager] No save file found for slot %d, starting fresh game." % current_slot)
+			return false
 	
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(target_path, FileAccess.READ)
 	if file == null:
 		return false
 	

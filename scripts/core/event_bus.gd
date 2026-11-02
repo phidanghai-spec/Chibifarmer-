@@ -54,3 +54,14 @@ signal roadside_shop_item_sold(slot_index: int, item_id: String, count: int, pri
 signal zoo_animal_fed(animal_id: String)
 signal zoo_enclosure_unlocked(animal_id: String)
 signal quest_completed(quest_id: String)
+# --- Navigation & Save Slots (Sprint 1) ---
+signal boot_preload_progress(percent: float, status_text: String)
+signal boot_preload_completed()
+signal save_slot_selected(slot_index: int, is_new_game: bool)
+signal save_slot_deleted(slot_index: int)
+signal scene_transition_requested(target_scene_path: String)
+signal offline_earnings_calculated(elapsed_seconds: int, summary_data: Dictionary)
+# --- Avatar Customization & Paper-Doll (Sprint 2) ---
+signal avatar_part_equipped(category: String, part_id: String)
+signal avatar_config_randomized(full_config: Dictionary)
+signal character_creation_confirmed(slot_index: int, player_name: String, farm_name: String, avatar_config: Dictionary)

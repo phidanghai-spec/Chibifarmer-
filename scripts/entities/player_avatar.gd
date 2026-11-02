@@ -10,6 +10,7 @@ var target_node: Node = null
 var is_moving: bool = false
 
 var _sprite: Sprite2D = null
+var _modular_avatar: ModularChibiAvatar = null
 var _name_label: Label = null
 var _shadow_poly: Polygon2D = null
 
@@ -58,6 +59,15 @@ func _setup_nodes() -> void:
 	_sprite.frame = 0
 	add_child(_sprite)
 	
+	# 2b. Modular Avatar (Sprint 2)
+	var mod_scene: PackedScene = load("res://scenes/entities/ModularChibiAvatar.tscn") as PackedScene
+	if mod_scene != null:
+		_modular_avatar = mod_scene.instantiate() as ModularChibiAvatar
+		_modular_avatar.position = Vector2(0.0, -26.0)
+		_modular_avatar.scale = Vector2(0.48, 0.48)
+		_modular_avatar.visible = false
+		add_child(_modular_avatar)
+	
 	# 3. Name Label above head
 	_name_label = Label.new()
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -81,6 +91,15 @@ func _on_settings_changed() -> void:
 func _update_appearance() -> void:
 	if _name_label != null:
 		_name_label.text = SaveManager.player_name
+	
+	if _modular_avatar != null and SaveManager.avatar_config != null and not SaveManager.avatar_config.is_empty():
+		_modular_avatar.visible = true
+		_modular_avatar.apply_full_config(SaveManager.avatar_config)
+		if _sprite != null:
+			_sprite.visible = false
+		if _shadow_poly != null:
+			_shadow_poly.visible = false
+		return
 	
 	if _sprite == null:
 		return
@@ -123,8 +142,13 @@ func go_to(path: Array[Vector2], target: Node = null) -> void:
 	if is_moving and current_path.size() > 0:
 		var final_dest: Vector2 = current_path[-1]
 		var total_dx: float = final_dest.x - position.x
-		if abs(total_dx) > 12.0 and _sprite != null:
-			_sprite.flip_h = (total_dx < 0.0)
+		if abs(total_dx) > 12.0:
+			if _sprite != null:
+				_sprite.flip_h = (total_dx < 0.0)
+			if _modular_avatar != null:
+				_modular_avatar.scale.x = -0.48 if total_dx < 0.0 else 0.48
+		if _modular_avatar != null:
+			_modular_avatar.set_preview_action(ModularChibiAvatar.PreviewMode.WALK)
 	else:
 		_on_destination_reached()
 
@@ -137,6 +161,8 @@ func stop() -> void:
 		_sprite.frame = 0
 		_sprite.rotation_degrees = 0.0
 		_sprite.position.y = -26.0
+	if _modular_avatar != null:
+		_modular_avatar.set_preview_action(ModularChibiAvatar.PreviewMode.IDLE)
 
 func _process(delta: float) -> void:
 	if not is_moving or current_path.is_empty():
@@ -200,6 +226,8 @@ func _on_destination_reached() -> void:
 		_sprite.frame = 0
 		_sprite.rotation_degrees = 0.0
 		_sprite.position.y = -26.0
+	if _modular_avatar != null:
+		_modular_avatar.set_preview_action(ModularChibiAvatar.PreviewMode.IDLE)
 	if _shadow_poly != null:
 		_shadow_poly.scale = Vector2.ONE
 	

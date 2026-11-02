@@ -50,7 +50,7 @@ const GOODS_CATALOG: Array[Dictionary] = [
 func _ready() -> void:
 	EventBus.second_ticked.connect(_on_second_ticked)
 	# Check if existing slots saved in SaveManager
-	if SaveManager.newspaper_data.has("slots") and not (SaveManager.newspaper_data["slots"] as Array).is_empty():
+	if SaveManager != null and SaveManager.newspaper_data != null and SaveManager.newspaper_data.has("slots") and not (SaveManager.newspaper_data["slots"] as Array).is_empty():
 		var saved_arr: Array = SaveManager.newspaper_data["slots"] as Array
 		slots.clear()
 		for s in saved_arr:

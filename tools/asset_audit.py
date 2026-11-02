@@ -1,3 +1,5 @@
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import os
 import csv
 from PIL import Image, ImageDraw
@@ -104,10 +106,10 @@ def main() -> None:
     for r in rows:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     print("=" * 60)
-    print("Tổng số ảnh:", len(rows))
+    print("Total images audited:", len(rows))
     for k, v in counts.items():
         print(f"  {k}: {v}")
-    print("Không có file nào bị di chuyển hay xóa.")
+    print("No files were moved or deleted.")
 
 
 if __name__ == "__main__":

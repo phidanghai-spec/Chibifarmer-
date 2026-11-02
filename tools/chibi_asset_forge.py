@@ -158,6 +158,29 @@ def remove_background_corner_floodfill(img: Image.Image) -> Image.Image:
 
     return result_img
 
+def normalize_paperdoll_layer(rgba_img: Image.Image, canvas_size: int = 128, foot_margin: int = 8) -> Image.Image:
+    """
+    Canh chỉnh lớp nhân vật/trang phục vào khung chuẩn 128x128 sau khi chạy Corner Floodfill BFS,
+    đảm bảo các lớp Mũ, Tóc, Yếm, Mắt khớp tâm Pivot 100% trong Godot.
+    """
+    arr = np.array(rgba_img)
+    alpha = arr[:, :, 3]
+    non_empty_cols = np.where(alpha.max(axis=0) > 10)[0]
+    non_empty_rows = np.where(alpha.max(axis=1) > 10)[0]
+    
+    if len(non_empty_cols) == 0 or len(non_empty_rows) == 0:
+        return Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+        
+    x0, x1 = non_empty_cols[0], non_empty_cols[-1] + 1
+    y0, y1 = non_empty_rows[0], non_empty_rows[-1] + 1
+    cropped = rgba_img.crop((x0, y0, x1, y1))
+    
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    paste_x = (canvas_size - cropped.width) // 2
+    paste_y = canvas_size - cropped.height - foot_margin
+    canvas.paste(cropped, (max(0, paste_x), max(0, paste_y)), cropped)
+    return canvas
+
 def generate_procedural_chibi(sprite_id: str, prompt: str, width: int = 128, height: int = 128) -> Image.Image:
     """Fallback tạo sprite Chibi ấm áp đồng bộ nét vẽ chuẩn Hay Day bằng PIL."""
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))

@@ -398,6 +398,35 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("item_honey", "res://assets/sprites/item_honey.png")
 	_load_standalone_texture("honey", "res://assets/sprites/item_honey.png")
 
+	_load_standalone_texture("ui_windmill_blades", "res://assets/sprites/ui_windmill_blades.png")
+	_load_standalone_texture("ui_logo_chibifarmer", "res://assets/sprites/ui_logo_chibifarmer.png")
+	_load_standalone_texture("ui_wood_button_ninepatch", "res://assets/sprites/ui_wood_button_ninepatch.png")
+	_load_standalone_texture("body_warm_ivory", "res://assets/sprites/body_warm_ivory.png")
+	_load_standalone_texture("body_peach_sunny", "res://assets/sprites/body_peach_sunny.png")
+	_load_standalone_texture("body_honey_tan", "res://assets/sprites/body_honey_tan.png")
+	_load_standalone_texture("body_cocoa_warm", "res://assets/sprites/body_cocoa_warm.png")
+	_load_standalone_texture("eyes_sparkle_brown", "res://assets/sprites/eyes_sparkle_brown.png")
+	_load_standalone_texture("eyes_emerald_gentle", "res://assets/sprites/eyes_emerald_gentle.png")
+	_load_standalone_texture("eyes_happy_arc", "res://assets/sprites/eyes_happy_arc.png")
+	_load_standalone_texture("eyes_sky_bright", "res://assets/sprites/eyes_sky_bright.png")
+	_load_standalone_texture("hair_braid_chestnut", "res://assets/sprites/hair_braid_chestnut.png")
+	_load_standalone_texture("hair_short_sunny", "res://assets/sprites/hair_short_sunny.png")
+	_load_standalone_texture("hair_curly_berry", "res://assets/sprites/hair_curly_berry.png")
+	_load_standalone_texture("hair_bun_baker", "res://assets/sprites/hair_bun_baker.png")
+	_load_standalone_texture("outfit_denim_overalls", "res://assets/sprites/outfit_denim_overalls.png")
+	_load_standalone_texture("outfit_floral_dress", "res://assets/sprites/outfit_floral_dress.png")
+	_load_standalone_texture("outfit_baker_apron", "res://assets/sprites/outfit_baker_apron.png")
+	_load_standalone_texture("outfit_carpenter_vest", "res://assets/sprites/outfit_carpenter_vest.png")
+	_load_standalone_texture("hat_straw_ribbon", "res://assets/sprites/hat_straw_ribbon.png")
+	_load_standalone_texture("hat_chef_toque", "res://assets/sprites/hat_chef_toque.png")
+	_load_standalone_texture("hat_postman_cap", "res://assets/sprites/hat_postman_cap.png")
+	_load_standalone_texture("hat_none", "res://assets/sprites/hat_none.png")
+	_load_standalone_texture("tool_sickle_chibi", "res://assets/sprites/tool_sickle_chibi.png")
+	_load_standalone_texture("tool_fishing_rod_chibi", "res://assets/sprites/tool_fishing_rod_chibi.png")
+	_load_standalone_texture("poodle_apricot_red", "res://assets/sprites/poodle_apricot_red.png")
+	_load_standalone_texture("poodle_cream_blue", "res://assets/sprites/poodle_cream_blue.png")
+	_load_standalone_texture("poodle_choco_yellow", "res://assets/sprites/poodle_choco_yellow.png")
+
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if FileAccess.file_exists(res_path):
 		var global_path: String = ProjectSettings.globalize_path(res_path)
@@ -765,3 +794,6 @@ func _generate_carp_icon() -> ImageTexture:
 	# Eye
 	img.set_pixel(27, 16, Color(0.1, 0.1, 0.1))
 	return ImageTexture.create_from_image(img)
+
+func get_region_texture(region_id: String) -> Texture2D:
+	return get_texture(region_id)

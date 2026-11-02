@@ -50,7 +50,12 @@ func _setup_visuals() -> void:
 	# 2. Chibi Poodle Sprite (strictly 40x40px display size)
 	_sprite = Sprite2D.new()
 	_sprite.centered = true
-	if SpriteAtlasManager.has_texture("pet_poodle"):
+	var p_id: String = "pet_poodle"
+	if SaveManager != null and SaveManager.avatar_config != null and SaveManager.avatar_config.has("poodle"):
+		p_id = str(SaveManager.avatar_config["poodle"])
+	if SpriteAtlasManager.has_texture(p_id):
+		_sprite.texture = SpriteAtlasManager.get_texture(p_id)
+	elif SpriteAtlasManager.has_texture("pet_poodle"):
 		_sprite.texture = SpriteAtlasManager.get_texture("pet_poodle")
 	SpriteAtlasManager.set_sprite_pixel_size(_sprite, Vector2(40.0, 40.0))
 	_base_scale = _sprite.scale

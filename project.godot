@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="HayDay Offline Tourism"
-run/main_scene="res://scenes/main_farm.tscn"
+run/main_scene="res://scenes/boot/BootSplash.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]

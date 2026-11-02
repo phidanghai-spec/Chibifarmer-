@@ -23,7 +23,15 @@ const SFX_MAP: Dictionary = {
 	"splash": "res://assets/audio/sfx_splash.wav",
 	"sfx_splash": "res://assets/audio/sfx_splash.wav",
 	"error": "res://assets/audio/sfx_error.wav",
-	"sfx_error": "res://assets/audio/sfx_error.wav"
+	"sfx_error": "res://assets/audio/sfx_error.wav",
+	"ui_wood_click": "res://assets/audio/sfx_ui_wood_click.wav",
+	"sfx_ui_wood_click": "res://assets/audio/sfx_ui_wood_click.wav",
+	"welcome_chime": "res://assets/audio/sfx_welcome_chime.wav",
+	"sfx_welcome_chime": "res://assets/audio/sfx_welcome_chime.wav",
+	"cloth_rustle": "res://assets/audio/sfx_cloth_rustle.wav",
+	"sfx_cloth_rustle": "res://assets/audio/sfx_cloth_rustle.wav",
+	"dice_roll": "res://assets/audio/sfx_dice_roll.wav",
+	"sfx_dice_roll": "res://assets/audio/sfx_dice_roll.wav"
 }
 
 func _ready() -> void:

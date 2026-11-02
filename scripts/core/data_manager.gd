@@ -7,6 +7,7 @@ var buildings: Dictionary = {}
 var recipes: Dictionary = {}
 var fishes: Dictionary = {}
 var visitors: Dictionary = {}
+var avatar_catalog: Dictionary = {}
 
 const ITEMS_PATH: String = "res://data/items.json"
 const CROPS_PATH: String = "res://data/crops.json"
@@ -15,6 +16,7 @@ const BUILDINGS_PATH: String = "res://data/buildings.json"
 const RECIPES_PATH: String = "res://data/recipes.json"
 const FISHES_PATH: String = "res://data/fishes.json"
 const VISITORS_PATH: String = "res://data/visitors.json"
+const AVATAR_CATALOG_PATH: String = "res://data/avatar_catalog.json"
 
 func _ready() -> void:
 	load_all_data()
@@ -27,6 +29,7 @@ func load_all_data() -> void:
 	recipes = _load_json(RECIPES_PATH)
 	fishes = _load_json(FISHES_PATH)
 	visitors = _load_json(VISITORS_PATH)
+	avatar_catalog = _load_json(AVATAR_CATALOG_PATH)
 	print("[DataManager] Successfully loaded all game data configurations.")
 
 func _load_json(file_path: String) -> Dictionary:

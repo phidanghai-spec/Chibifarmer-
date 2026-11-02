@@ -1,0 +1,37 @@
+{
+	"body": [
+		{"id": "body_warm_ivory", "name": "Da Kem Ấm", "sub": "eyes_sparkle_brown"},
+		{"id": "body_peach_sunny", "name": "Da Hồng Nắng", "sub": "eyes_emerald_gentle"},
+		{"id": "body_honey_tan", "name": "Da Mật Ong", "sub": "eyes_happy_arc"},
+		{"id": "body_cocoa_warm", "name": "Da Nâu Ấm", "sub": "eyes_sky_bright"}
+	],
+	"eyes": [
+		{"id": "eyes_sparkle_brown", "name": "Mắt Nâu Long Lanh"},
+		{"id": "eyes_emerald_gentle", "name": "Mắt Xanh Ngọc"},
+		{"id": "eyes_happy_arc", "name": "Mắt Cười Híp Mí"},
+		{"id": "eyes_sky_bright", "name": "Mắt Xanh Biếc"}
+	],
+	"hair": [
+		{"id": "hair_braid_chestnut", "name": "Tóc Bím Hạt Dẻ", "hat": "hat_straw_ribbon"},
+		{"id": "hair_short_sunny", "name": "Tóc Ngắn Vàng Rơm", "hat": "hat_postman_cap"},
+		{"id": "hair_bun_baker", "name": "Tóc Búi Thợ Bánh", "hat": "hat_chef_toque"},
+		{"id": "hair_curly_berry", "name": "Tóc Xoăn Đỏ Mận", "hat": "hat_none"}
+	],
+	"outfit": [
+		{"id": "outfit_denim_overalls", "name": "Yếm Jean Nông Dân"},
+		{"id": "outfit_floral_dress", "name": "Váy Hoa Đồng Nội"},
+		{"id": "outfit_baker_apron", "name": "Tạp Dề Lò Bánh"},
+		{"id": "outfit_carpenter_vest", "name": "Áo Khoác Thợ Mộc"}
+	],
+	"hat": [
+		{"id": "hat_straw_ribbon", "name": "Mũ Rơm Nơ Đỏ"},
+		{"id": "hat_chef_toque", "name": "Mũ Đầu Bếp Chibi"},
+		{"id": "hat_postman_cap", "name": "Mũ Bưu Tá Xanh"},
+		{"id": "hat_none", "name": "Không Đội Mũ"}
+	],
+	"poodle": [
+		{"id": "poodle_apricot_red", "name": "Poodle Vàng Mơ Khăn Đỏ"},
+		{"id": "poodle_cream_blue", "name": "Poodle Trắng Kem Khăn Xanh"},
+		{"id": "poodle_choco_yellow", "name": "Poodle Socola Khăn Vàng"}
+	]
+}

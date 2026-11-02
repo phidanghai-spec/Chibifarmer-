@@ -162,6 +162,82 @@ def gen_error() -> list[float]:
         samples.append(val * 0.7)
     return samples
 
+def gen_ui_wood_click() -> list[float]:
+    # Tiếng gõ nút gỗ ấm áp, trầm và đanh nhẹ (420Hz -> 280Hz, 0.12s)
+    duration = 0.12
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = []
+    freq0 = 420.0
+    for i in range(num_samples):
+        t = i / float(SAMPLE_RATE)
+        env = math.exp(-32.0 * t)
+        f = freq0 * (1.0 - 0.33 * (t / duration))
+        val = (
+            math.sin(2.0 * math.pi * f * t) * 0.70 +
+            math.sin(2.0 * math.pi * f * 2.2 * t) * 0.25 +
+            math.sin(2.0 * math.pi * f * 0.5 * t) * 0.15
+        ) * env
+        samples.append(val * 0.55)
+    return samples
+
+def gen_welcome_chime() -> list[float]:
+    # Tiếng chuông gió ngân vang ấm áp (Pentatonic C5 - E5 - G5 - C6, 1.2s)
+    duration = 1.2
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = [0.0] * num_samples
+    notes = [
+        (523.25, 0.00, 0.35),  # C5
+        (659.25, 0.12, 0.35),  # E5
+        (783.99, 0.24, 0.35),  # G5
+        (1046.50, 0.36, 0.45), # C6
+    ]
+    for freq, start_t, amp in notes:
+        start_idx = int(start_t * SAMPLE_RATE)
+        for i in range(start_idx, num_samples):
+            t = (i - start_idx) / float(SAMPLE_RATE)
+            env = math.exp(-4.5 * t)
+            val = (
+                math.sin(2.0 * math.pi * freq * t) * 0.65 +
+                math.sin(2.0 * math.pi * freq * 2.0 * t) * 0.25 +
+                math.sin(2.0 * math.pi * freq * 3.0 * t) * 0.10
+            ) * env * amp
+            samples[i] += val
+    return samples
+
+
+def gen_cloth_rustle() -> list[float]:
+    # Tiếng sột soạt vải mềm mại khi thử trang phục (0.16s)
+    duration = 0.16
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = []
+    import random
+    rng = random.Random(42)
+    for i in range(num_samples):
+        t = i / float(SAMPLE_RATE)
+        env = math.sin(math.pi * (t / duration)) ** 1.5
+        noise = rng.uniform(-1.0, 1.0) * 0.4
+        tone = math.sin(2.0 * math.pi * 320.0 * t) * 0.3
+        samples.append((noise + tone) * env * 0.5)
+    return samples
+
+def gen_dice_roll() -> list[float]:
+    # Tiếng xúc xắc gỗ lắc ngẫu nhiên vui nhộn (3 nhịp nảy nhanh, 0.24s)
+    duration = 0.24
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = [0.0] * num_samples
+    taps = [(0.00, 480.0), (0.07, 540.0), (0.14, 620.0)]
+    for start_t, freq in taps:
+        start_idx = int(start_t * SAMPLE_RATE)
+        tap_len = int(0.06 * SAMPLE_RATE)
+        for i in range(tap_len):
+            idx = start_idx + i
+            if idx < num_samples:
+                t = i / float(SAMPLE_RATE)
+                env = math.exp(-60.0 * t)
+                val = math.sin(2.0 * math.pi * freq * t) * env * 0.6
+                samples[idx] += val
+    return samples
+
 def main():
     print("==================================================")
     print("  GENERATING COZY 2.5D CHIBI SFX (.WAV MONO 44.1kHz)")
@@ -172,7 +248,11 @@ def main():
     write_wav("sfx_coin.wav", gen_coin())
     write_wav("sfx_splash.wav", gen_splash())
     write_wav("sfx_error.wav", gen_error())
-    print("[SFX] All 6 audio files generated successfully!")
+    write_wav("sfx_ui_wood_click.wav", gen_ui_wood_click())
+    write_wav("sfx_welcome_chime.wav", gen_welcome_chime())
+    write_wav("sfx_cloth_rustle.wav", gen_cloth_rustle())
+    write_wav("sfx_dice_roll.wav", gen_dice_roll())
+    print("[SFX] All audio files generated successfully!")
 
 if __name__ == "__main__":
     main()
