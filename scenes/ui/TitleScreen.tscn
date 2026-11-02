@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://ctitlescreen001"]
+[gd_scene load_steps=13 format=3 uid="uid://ctitlescreen001"]
 
 [ext_resource type="Script" path="res://scenes/ui/TitleScreen.gd" id="1_titlescreen"]
 [ext_resource type="Texture2D" path="res://assets/sprites/chibi_meadow_backdrop.png" id="2_backdrop"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/critter_bunny.png" id="6_rabbit"]
 [ext_resource type="Texture2D" path="res://assets/sprites/tree_apple_ripe.png" id="7_tree"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui_logo_chibifarmer.png" id="8_logo"]
+[ext_resource type="PackedScene" path="res://scenes/ui/FarmAlmanacModal.tscn" id="14_almanac"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.960784, 0.72549, 0.188235, 1)
@@ -53,7 +54,6 @@ corner_radius_bottom_left = 20
 shadow_color = Color(0.18, 0.1, 0.04, 0.5)
 shadow_size = 12
 
-[ext_resource type="PackedScene" path="res://scenes/ui/FarmAlmanacModal.tscn" id="14_almanac"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3

@@ -17,7 +17,7 @@ var _is_transitioning: bool = false
 func _ready() -> void:
 	SaveSlotService.ensure_save_directory()
 	progress_bar.value = 0.0
-	status_label.text = "Đang đánh thức nông trại Chibi..."
+	status_label.text = "Đang nạp dữ liệu nông trại..."
 	fade_overlay.modulate.a = 0.0
 
 func _process(delta: float) -> void:
@@ -45,15 +45,15 @@ func _execute_preload_step() -> void:
 	_load_step += 1
 	match _load_step:
 		1:
-			status_label.text = "Đang nạp dữ liệu hạt giống & công thức (DataManager)..."
+			status_label.text = "Đang nạp dữ liệu hạt giống & mùa màng..."
 			progress_bar.value = 35.0
 			EventBus.boot_preload_progress.emit(35.0, status_label.text)
 		2:
-			status_label.text = "Đang đăng ký Sprite Atlas 2.5D (SpriteAtlasManager)..."
+			status_label.text = "Đang nạp dữ liệu nông trại..."
 			progress_bar.value = 75.0
 			EventBus.boot_preload_progress.emit(75.0, status_label.text)
 		3:
-			status_label.text = "Đồng bộ thời gian thực (TickManager)..."
+			status_label.text = "Đồng bộ thời gian & sẵn sàng khởi hành..."
 			progress_bar.value = 100.0
 			EventBus.boot_preload_progress.emit(100.0, status_label.text)
 			EventBus.boot_preload_completed.emit()

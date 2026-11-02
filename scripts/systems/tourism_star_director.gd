@@ -87,3 +87,4 @@ func _play_camera_flash() -> void:
 	var tween: Tween = create_tween()
 	tween.tween_property(camera_flash_light, "energy", 0.0, 0.25)
 	tween.tween_callback(func() -> void: camera_flash_light.enabled = false)
+

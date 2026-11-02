@@ -398,6 +398,7 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("item_honey", "res://assets/sprites/item_honey.png")
 	_load_standalone_texture("honey", "res://assets/sprites/item_honey.png")
 
+	_load_standalone_texture("ui_windmill_base", "res://assets/sprites/ui_windmill_base.png")
 	_load_standalone_texture("ui_windmill_blades", "res://assets/sprites/ui_windmill_blades.png")
 	_load_standalone_texture("ui_logo_chibifarmer", "res://assets/sprites/ui_logo_chibifarmer.png")
 	_load_standalone_texture("ui_wood_button_ninepatch", "res://assets/sprites/ui_wood_button_ninepatch.png")

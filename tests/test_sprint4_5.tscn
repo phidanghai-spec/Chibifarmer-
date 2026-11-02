@@ -4,3 +4,4 @@
 
 [node name="TestSprint45" type="Node"]
 script = ExtResource("1_test")
+

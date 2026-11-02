@@ -50,3 +50,4 @@ func _rebuild_stars(star_count: int) -> void:
 		star_lbl.add_theme_font_size_override("font_size", 14)
 		star_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0) if i < star_count else Color(0.65, 0.60, 0.55, 0.8))
 		star_icons_hbox.add_child(star_lbl)
+

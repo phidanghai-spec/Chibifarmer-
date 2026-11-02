@@ -105,3 +105,4 @@ func _get_phase_key(phase: TimePhase) -> String:
 			return "sunset"
 		_:
 			return "night"
+

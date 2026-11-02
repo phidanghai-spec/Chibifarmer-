@@ -40,7 +40,6 @@ func _ready() -> void:
 	_refresh_continue_button()
 	_bind_ui_signals()
 	_populate_slot_cards()
-
 func _process(delta: float) -> void:
 	_time += delta
 	_animate_live_panorama()
