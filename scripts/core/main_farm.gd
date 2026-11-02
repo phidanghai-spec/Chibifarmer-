@@ -831,11 +831,11 @@ func _spawn_new_props_and_pets() -> void:
 		pet_poodle.position = Vector2(345.0, 300.0)
 		add_child(pet_poodle)
 
-	# 4. Bến Tàu Hơi Nước Trên Sông tại bờ Tây phía Bắc Cầu Gỗ (695, 290)
+	# 4. Bến Tàu Hơi Nước Trên Sông tại bờ Tây phía Bắc Cầu Gỗ (875, 310)
 	if river_steamboat == null:
 		river_steamboat = RiverSteamboatClass.new()
 		river_steamboat.name = "RiverSteamboat"
-		river_steamboat.position = Vector2(695.0, 290.0)
+		river_steamboat.position = Vector2(875.0, 310.0)
 		river_steamboat.z_index = 5
 		add_child(river_steamboat)
 

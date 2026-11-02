@@ -92,7 +92,11 @@ func _update_appearance() -> void:
 	if _name_label != null:
 		_name_label.text = SaveManager.player_name
 	
-	if _modular_avatar != null and SaveManager.avatar_config != null and not SaveManager.avatar_config.is_empty():
+	var is_custom: bool = false
+	if SaveManager.avatar_config != null and bool(SaveManager.avatar_config.get("is_custom", false)):
+		is_custom = true
+	
+	if is_custom and _modular_avatar != null:
 		_modular_avatar.visible = true
 		_modular_avatar.apply_full_config(SaveManager.avatar_config)
 		if _sprite != null:
@@ -101,32 +105,28 @@ func _update_appearance() -> void:
 			_shadow_poly.visible = false
 		return
 	
-	if _sprite == null:
-		return
+	if _modular_avatar != null:
+		_modular_avatar.visible = false
+	if _sprite != null:
+		_sprite.visible = true
+	if _shadow_poly != null:
+		_shadow_poly.visible = true
 		
-	var tex_key: String = "player_" + SaveManager.selected_character
+	var char_id: String = SaveManager.selected_character.to_lower()
+	if char_id != "mai":
+		char_id = "minh"
+	var tex_key: String = "player_" + char_id
 	var tex: Texture2D = SpriteAtlasManager.get_texture(tex_key)
-	if tex != null:
+	if tex == null:
+		tex = SpriteAtlasManager.get_texture("player_minh")
+	if tex != null and _sprite != null:
 		_sprite.texture = tex
-	else:
-		# Fallback to visitor Chibi if player sprite not loaded
-		var fallback_tex: Texture2D = SpriteAtlasManager.get_texture("visitor_farmer")
-		if fallback_tex != null:
-			_sprite.texture = fallback_tex
-			_sprite.hframes = 1
-			_sprite.vframes = 1
-			_sprite.scale = Vector2(0.8, 0.8)
-			if SaveManager.selected_character == "mai":
-				_sprite.modulate = Color(1.0, 0.85, 0.95)
-			else:
-				_sprite.modulate = Color(0.9, 0.95, 1.0)
-		return
-
-	_sprite.hframes = 4
-	_sprite.vframes = 4
-	_sprite.scale = Vector2(0.42, 0.42)
-	_sprite.modulate = Color.WHITE
-	_apply_frame()
+		_sprite.hframes = 4
+		_sprite.vframes = 4
+		_sprite.scale = Vector2(0.44, 0.44)
+		_sprite.modulate = Color.WHITE
+		_sprite.frame = 0
+		_facing_row = 0
 
 var _walk_time: float = 0.0
 
@@ -185,8 +185,25 @@ func _process(delta: float) -> void:
 	var dir: Vector2 = (next_point - position).normalized()
 	position += dir * move_dist
 	
-	if abs(dir.x) > 0.4 and _sprite != null:
-		_sprite.flip_h = (dir.x < 0.0)
+	# Direction tracking (Row 0: South/Down, Row 1: North/Up, Row 2: East/Right)
+	if abs(dir.x) > abs(dir.y):
+		_facing_row = 2
+		if _sprite != null:
+			_sprite.flip_h = (dir.x < 0.0)
+		if _modular_avatar != null:
+			_modular_avatar.scale.x = -0.48 if dir.x < 0.0 else 0.48
+	elif dir.y > 0.0:
+		_facing_row = 0
+		if _sprite != null:
+			_sprite.flip_h = false
+		if _modular_avatar != null:
+			_modular_avatar.scale.x = 0.48
+	else:
+		_facing_row = 1
+		if _sprite != null:
+			_sprite.flip_h = false
+		if _modular_avatar != null:
+			_modular_avatar.scale.x = 0.48
 		
 	_walk_process(delta)
 	
@@ -196,22 +213,25 @@ func _process(delta: float) -> void:
 func _walk_process(delta: float) -> void:
 	_walk_time += delta
 	if _sprite != null:
-		_sprite.frame = 0 # Locked to best 3/4 front cozy frame, no erratic angle spinning
-		var bob: float = abs(sin(_walk_time * 14.0)) * 3.0
+		var frame_in_row: int = int(_walk_time / ANIM_FRAME_TIME) % 4
+		_sprite.frame = _facing_row * 4 + frame_in_row
+		var bob: float = abs(sin(_walk_time * 12.0)) * 2.5
 		_sprite.position.y = -26.0 - bob
-		_sprite.rotation_degrees = sin(_walk_time * 7.0) * 4.0 # Soft tilt -4 to +4 deg
+		_sprite.rotation_degrees = sin(_walk_time * 6.0) * 2.5
 	if _shadow_poly != null:
-		var shrink: float = abs(sin(_walk_time * 14.0)) * 0.15
+		var shrink: float = abs(sin(_walk_time * 12.0)) * 0.12
 		_shadow_poly.scale = Vector2(1.0 - shrink, 1.0 - shrink)
 
 func _idle_process(_delta: float) -> void:
 	_walk_time = 0.0
+	_facing_row = 0 # Turn to face camera on idle
 	if _sprite != null:
-		_sprite.frame = 0
+		_sprite.frame = 0 # Cute front face frame
+		_sprite.flip_h = false
 		_sprite.rotation_degrees = 0.0
-		var breath: float = sin(Time.get_ticks_msec() * 0.003) * 0.6
+		var breath: float = sin(Time.get_ticks_msec() * 0.003) * 0.5
 		_sprite.position.y = -26.0 + breath
-		_sprite.scale = Vector2(0.42, 0.42 * (1.0 + breath * 0.015))
+		_sprite.scale = Vector2(0.44, 0.44 * (1.0 + breath * 0.015))
 	if _shadow_poly != null:
 		_shadow_poly.scale = Vector2.ONE
 

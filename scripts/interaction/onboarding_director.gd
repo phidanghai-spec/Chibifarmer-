@@ -135,7 +135,7 @@ func _play_steamboat_intro() -> void:
 
 	if steamboat_node != null:
 		_initial_dock_pos = steamboat_node.position
-		steamboat_node.position = _initial_dock_pos + Vector2(-220.0, 0.0)
+		steamboat_node.position = _initial_dock_pos + Vector2(0.0, -260.0)
 		
 		# Camera tập trung nhìn ra bến sông
 		if camera_node != null:

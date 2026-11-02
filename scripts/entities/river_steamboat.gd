@@ -13,7 +13,7 @@ enum BoatState {
 	COOLDOWN
 }
 
-const DOCK_BOAT_OFFSET: Vector2 = Vector2(72.0, 5.0)
+const DOCK_BOAT_OFFSET: Vector2 = Vector2(92.0, 0.0)
 const COOLDOWN_TIME: float = 15.0
 
 var state: BoatState = BoatState.DOCKED
@@ -280,7 +280,7 @@ func depart_and_schedule_next_boat() -> void:
 	tw.tween_property(_boat_sprite, "scale", _boat_base_scale, 0.22)
 
 	var tw_glide: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw_glide.tween_property(_boat_sprite, "position:y", -320.0, 2.5)
+	tw_glide.tween_property(_boat_sprite, "position:y", -420.0, 2.5)
 	tw_glide.tween_callback(func() -> void:
 		_start_cooldown()
 	)
@@ -299,7 +299,7 @@ func arrive_steamboat() -> void:
 	state = BoatState.ARRIVING
 	steamboat_state_changed.emit(state)
 	_boat_sprite.visible = true
-	_boat_sprite.position = Vector2(DOCK_BOAT_OFFSET.x, -300.0)
+	_boat_sprite.position = Vector2(DOCK_BOAT_OFFSET.x, -420.0)
 
 	var tw: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_boat_sprite, "position", DOCK_BOAT_OFFSET, 2.2)

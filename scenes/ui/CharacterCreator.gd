@@ -162,6 +162,9 @@ func _on_confirm_start_farm() -> void:
 	if f_name.is_empty():
 		f_name = "Nông Trại Nắng Ấm"
 		
+	var saved_avatar_cfg: Dictionary = avatar_preview.current_config.duplicate()
+	saved_avatar_cfg["is_custom"] = true
+	
 	var initial_save_payload: Dictionary = {
 		"slot_index": active_slot_index,
 		"player_name": p_name,
@@ -169,7 +172,7 @@ func _on_confirm_start_farm() -> void:
 		"level": 1,
 		"gold": 500,
 		"xp": 0,
-		"avatar_config": avatar_preview.current_config.duplicate(),
+		"avatar_config": saved_avatar_cfg,
 		"is_tutorial_completed": false
 	}
 	
