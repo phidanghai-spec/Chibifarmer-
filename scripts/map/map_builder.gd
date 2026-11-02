@@ -95,6 +95,7 @@ static func build_farm(farm: Node2D) -> void:
 			for ox: int in range(t_size.x):
 				for oy: int in range(t_size.y):
 					_occupied[cell + Vector2i(ox, oy)] = String(b.get("id", "building"))
+			GridManager.mark_footprint_solid(cell, t_size, true, 1000)
 
 			if b_type == "machine":
 				var m_id: String = String(b.get("machine_id", "bakery"))
@@ -164,6 +165,7 @@ static func build_farm(farm: Node2D) -> void:
 			for ox: int in range(t_size.x):
 				for oy: int in range(t_size.y):
 					_occupied[cell + Vector2i(ox, oy)] = a_id
+			GridManager.mark_footprint_solid(cell, t_size, true, 2000)
 			var count: int = int(a.get("count", 2))
 			farm._spawn_animal_pen(a_id, cell, count)
 
@@ -175,6 +177,7 @@ static func build_farm(farm: Node2D) -> void:
 	_occupied[f_cell + Vector2i(1, 0)] = "fishing_spot"
 	_occupied[f_cell + Vector2i(0, 1)] = "fishing_spot"
 	_occupied[f_cell + Vector2i(1, 1)] = "fishing_spot"
+	GridManager.mark_footprint_solid(f_cell, Vector2i(2, 2), true, 3000)
 	farm._spawn_fishing_spot(f_cell)
 
 	print("[MapBuilder] Grid 32px layout successfully generated for 5 farm zones! (Blocked cells: ", _blocked.size(), ", Occupied cells: ", _occupied.size(), ")")

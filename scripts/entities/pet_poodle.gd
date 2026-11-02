@@ -3,14 +3,12 @@
 class_name PetPoodle
 extends Node2D
 
-@export var follow_distance_min: float = 40.0
-@export var follow_distance_max: float = 58.0
-@export var move_speed: float = 68.0
+@export var follow_distance_min: float = 44.0
+@export var move_speed: float = 72.0
 
 var _sprite: Sprite2D = null
 var _shadow: Polygon2D = null
 var _label_status: Label = null
-var _emote_sprite: Sprite2D = null
 
 var _base_scale: Vector2 = Vector2.ONE
 var _player_target: Node2D = null
@@ -18,13 +16,10 @@ var _walk_phase: float = 0.0
 var _idle_timer: float = 0.0
 var _is_interacting: bool = false
 
-# River & Bridge Waypoints
-const RIVER_MIN_X: float = 635.0
-const RIVER_MAX_X: float = 1085.0
-const BRIDGE_WEST_X: float = 620.0
-const BRIDGE_EAST_X: float = 1100.0
-const BRIDGE_Y: float = 656.0
-const BRIDGE_ALT_Y: float = 528.0
+# River & Bridge Waypoints (Visual bridge at y: 636..684, x: 820..1080)
+const BRIDGE_WEST_X: float = 790.0
+const BRIDGE_EAST_X: float = 1110.0
+const BRIDGE_CROSSING_Y: float = 656.0
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -62,17 +57,7 @@ func _setup_visuals() -> void:
 	_sprite.position = Vector2(0.0, -2.0)
 	add_child(_sprite)
 
-	# 3. Emote Sprite (Heart / Music / Sparkle)
-	_emote_sprite = Sprite2D.new()
-	_emote_sprite.centered = true
-	if SpriteAtlasManager.has_texture("icon_heart"):
-		_emote_sprite.texture = SpriteAtlasManager.get_texture("icon_heart")
-	SpriteAtlasManager.set_sprite_pixel_size(_emote_sprite, Vector2(20.0, 20.0))
-	_emote_sprite.position = Vector2(0.0, -38.0)
-	_emote_sprite.visible = false
-	add_child(_emote_sprite)
-
-	# 4. Overhead Name & Mood Tag
+	# 3. Overhead Name & Mood Tag
 	_label_status = Label.new()
 	_label_status.text = "🐩 Poodle Bông"
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -86,7 +71,7 @@ func _setup_visuals() -> void:
 	_label_status.add_theme_constant_override("outline_size", 3)
 	add_child(_label_status)
 
-	# 5. Tap interaction button
+	# 4. Tap interaction button
 	var btn_tap: Button = Button.new()
 	btn_tap.flat = true
 	btn_tap.custom_minimum_size = Vector2(44.0, 48.0)
@@ -100,7 +85,6 @@ func _find_player_avatar() -> void:
 		_player_target = farm.find_child("PlayerAvatar", true, false) as Node2D
 
 func _process(delta: float) -> void:
-	# Safety clamp: Poodle sprite must never balloon out of Chibi scale
 	if _sprite != null and _sprite.scale.x > _base_scale.x * 1.3:
 		_sprite.scale = _base_scale
 
@@ -115,54 +99,55 @@ func _process(delta: float) -> void:
 	var cur_pos: Vector2 = global_position
 	var dist: float = cur_pos.distance_to(p_pos)
 
-	# Check which bank Poodle and Player are on
-	var is_poodle_west: bool = cur_pos.x < 750.0
-	var is_player_west: bool = p_pos.x < 750.0
+	# Bank detection (River bridge connects around x = 790..1110, y = 636..684)
+	var is_poodle_west: bool = cur_pos.x < 920.0
+	var is_player_west: bool = p_pos.x < 920.0
 	var crossing_river: bool = (is_poodle_west != is_player_west)
 
-	var target_dest: Vector2 = p_pos
-	# Choose bridge crossing Y (actual visual bridge row 20 at 656, or 528 if near upper bank)
-	var crossing_y: float = BRIDGE_ALT_Y if absf(p_pos.y - BRIDGE_ALT_Y) < 70.0 else BRIDGE_Y
+	# EMERGENCY WATER EVACUATION: If somehow placed in river, immediately return to safe bridge entrance
+	if GridManager != null and GridManager.is_in_water_or_sand(cur_pos):
+		cur_pos.x = BRIDGE_WEST_X if is_poodle_west else BRIDGE_EAST_X
+		cur_pos.y = BRIDGE_CROSSING_Y
+		global_position = cur_pos
 
+	var target_dest: Vector2 = p_pos
 	if crossing_river:
-		# Poodle must cross via Wooden Bridge Waypoints
-		if is_poodle_west:
-			if cur_pos.x < BRIDGE_WEST_X - 10.0:
-				target_dest = Vector2(BRIDGE_WEST_X, crossing_y)
-			else:
-				target_dest = Vector2(BRIDGE_EAST_X, crossing_y)
+		# Poodle must first travel to its bank's bridge entrance, then cross through the bridge center
+		var my_entrance: Vector2 = Vector2(BRIDGE_WEST_X, BRIDGE_CROSSING_Y) if is_poodle_west else Vector2(BRIDGE_EAST_X, BRIDGE_CROSSING_Y)
+		var other_entrance: Vector2 = Vector2(BRIDGE_EAST_X, BRIDGE_CROSSING_Y) if is_poodle_west else Vector2(BRIDGE_WEST_X, BRIDGE_CROSSING_Y)
+		
+		if cur_pos.distance_to(my_entrance) > 24.0:
+			target_dest = my_entrance
 		else:
-			if cur_pos.x > BRIDGE_EAST_X + 10.0:
-				target_dest = Vector2(BRIDGE_EAST_X, crossing_y)
-			else:
-				target_dest = Vector2(BRIDGE_WEST_X, crossing_y)
+			target_dest = other_entrance
 	else:
-		var dir_to_p: Vector2 = (p_pos - cur_pos).normalized()
-		target_dest = p_pos - dir_to_p * follow_distance_min
+		# Follow beside or behind player, never directly on player's head
+		var side_offset: Vector2 = Vector2(-44.0, 10.0)
+		if _player_target.scale.x < 0.0:
+			side_offset.x = 44.0
+		target_dest = p_pos + side_offset
 
 	var move_dist: float = cur_pos.distance_to(target_dest)
 
-	if move_dist > 8.0:
-		# Follow / Move mode
+	if move_dist > 10.0 and dist > follow_distance_min:
 		_idle_timer = 0.0
-		var step: float = move_speed * delta * (1.45 if dist > 140.0 else 1.0)
+		var step: float = move_speed * delta * (1.5 if dist > 140.0 else 1.0)
 		var next_pos: Vector2 = cur_pos.move_toward(target_dest, step)
 
-		# Strict River Barrier: Outside the wooden bridge corridor, x cannot be inside [635, 1085]
-		var is_in_bridge_corridor: bool = (next_pos.y >= 505.0 and next_pos.y <= 690.0)
-		if not is_in_bridge_corridor:
-			if next_pos.x >= RIVER_MIN_X and next_pos.x <= RIVER_MAX_X:
-				if cur_pos.x < 750.0:
-					next_pos.x = RIVER_MIN_X - 1.0
-				else:
-					next_pos.x = RIVER_MAX_X + 1.0
+		# STRICT RIVER BARRIER: Never step into water or sand!
+		if GridManager != null and GridManager.is_in_water_or_sand(next_pos):
+			# Head toward bridge entrance
+			var safe_entrance: Vector2 = Vector2(BRIDGE_WEST_X if is_poodle_west else BRIDGE_EAST_X, BRIDGE_CROSSING_Y)
+			next_pos = cur_pos.move_toward(safe_entrance, step)
+			if GridManager.is_in_water_or_sand(next_pos):
+				return # Completely halt rather than walk into river!
 
 		global_position = next_pos
 
-		# Procedural Walk Bounce & Squish (multiplied by _base_scale)
+		# Procedural Walk Bounce & Squish
 		_walk_phase += delta * 14.0
 		_sprite.position.y = -2.0 - absf(sin(_walk_phase)) * 4.2
-		_sprite.rotation = sin(_walk_phase * 0.5) * 0.07
+		_sprite.rotation = 0.0
 		_sprite.scale = _base_scale * Vector2(1.0 + sin(_walk_phase) * 0.06, 1.0 - sin(_walk_phase) * 0.06)
 		_shadow.scale = Vector2.ONE * (1.0 - absf(sin(_walk_phase)) * 0.12)
 
@@ -172,10 +157,12 @@ func _process(delta: float) -> void:
 		elif move_dir_x > 0.1:
 			_sprite.flip_h = false
 
-	elif not crossing_river and dist < follow_distance_min - 10.0:
-		# Step back politely so as not to crowd player
+	elif not crossing_river and dist < follow_distance_min - 12.0:
+		# Step back gently if master gets too close
 		var push_dir: Vector2 = (cur_pos - p_pos).normalized()
-		global_position += push_dir * (move_speed * 0.5 * delta)
+		var candidate_pos: Vector2 = cur_pos + push_dir * (move_speed * 0.5 * delta)
+		if GridManager == null or not GridManager.is_in_water_or_sand(candidate_pos):
+			global_position = candidate_pos
 	else:
 		# Idle & Roam near Master Mode
 		_walk_phase = 0.0
@@ -187,9 +174,8 @@ func _process(delta: float) -> void:
 		var breath: float = sin(Time.get_ticks_msec() * 0.005) * 0.045
 		_sprite.scale = _base_scale * Vector2(1.0 + breath, 1.0 - breath)
 
-		# Occasional tail wagging & happy bark
 		if int(_idle_timer) % 7 == 3:
-			_sprite.rotation = sin(Time.get_ticks_msec() * 0.02) * 0.12
+			_sprite.rotation = sin(Time.get_ticks_msec() * 0.02) * 0.08
 
 func feed_and_dig_treasure() -> void:
 	if _is_interacting:
@@ -198,7 +184,6 @@ func feed_and_dig_treasure() -> void:
 	var farm: Node = get_tree().current_scene
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 
-	# Cost: 1 Milk (Sữa bò) or 40 Gold
 	var has_milk: bool = StorageManager.has_item("milk", 1)
 	var has_gold: bool = StorageManager.has_gold(40)
 
@@ -219,25 +204,20 @@ func feed_and_dig_treasure() -> void:
 
 	AudioManager.play_sfx("level_up")
 
-	# Happy Jump & Spin Tween (Strictly respecting _base_scale)
+	# Happy Jump Tween (Strictly respecting _base_scale)
 	var orig_y: float = _sprite.position.y
 	var tw: Tween = create_tween().set_parallel(false)
-	tw.tween_property(_sprite, "position:y", orig_y - 24.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_sprite, "scale", _base_scale * Vector2(1.15, 0.88), 0.15)
-	tw.tween_property(_sprite, "position:y", orig_y, 0.22).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_sprite, "position:y", orig_y - 20.0, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_sprite, "scale", _base_scale * Vector2(1.12, 0.90), 0.15)
+	tw.tween_property(_sprite, "position:y", orig_y, 0.20).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_sprite, "scale", _base_scale, 0.15)
 
-	# Show Emote Heart & Notes
-	_emote_sprite.visible = true
-	_emote_sprite.scale = Vector2.ZERO
-	var tw_e: Tween = create_tween()
-	tw_e.tween_property(_emote_sprite, "scale", Vector2(1.4, 1.4), 0.2)
-	tw_e.tween_property(_emote_sprite, "position:y", -54.0, 0.8)
-	tw_e.tween_property(_emote_sprite, "modulate:a", 0.0, 0.3)
+	# Float a 28x28 heart sprite
+	_spawn_floating_heart()
 
 	_label_status.text = "❤️ Gâu Gâu! (Đào đất...)"
 
-	await get_tree().create_timer(0.65).timeout
+	await get_tree().create_timer(0.60).timeout
 
 	# Digging animation (quick shake)
 	var tw_dig: Tween = create_tween().set_loops(4)
@@ -262,7 +242,6 @@ func feed_and_dig_treasure() -> void:
 	SaveManager.save_game()
 
 	var bonus_text: String = ""
-	# 35% chance to dig up a Diamond or Puzzle Piece
 	var r: float = randf()
 	if r < 0.20:
 		SaveManager.add_puzzle_pieces(1)
@@ -278,8 +257,29 @@ func feed_and_dig_treasure() -> void:
 		hud.show_floating_notice("🐩 Poodle đào trúng kho báu! (+%d XP, +%d Vàng, +%d Xu%s)" % [xp_reward, gold_reward, coins_reward, bonus_text])
 
 	_label_status.text = "🐾 Poodle Thân Thiết (Lv.%d)" % (1 + SaveManager.poodle_affinity / 50)
-	_emote_sprite.visible = false
-	_emote_sprite.position = Vector2(0.0, -38.0)
-	_emote_sprite.modulate.a = 1.0
-
 	_is_interacting = false
+
+func _spawn_floating_heart() -> void:
+	var heart_sp: Sprite2D = Sprite2D.new()
+	heart_sp.centered = true
+	if SpriteAtlasManager.has_texture("icon_heart"):
+		heart_sp.texture = SpriteAtlasManager.get_texture("icon_heart")
+	
+	var tex_w: float = 256.0
+	var tex_h: float = 256.0
+	if heart_sp.texture != null:
+		tex_w = float(heart_sp.texture.get_width())
+		tex_h = float(heart_sp.texture.get_height())
+		
+	# Strictly normalized to 28x28 pixels
+	var heart_scale: Vector2 = Vector2(28.0 / tex_w, 28.0 / tex_h)
+	heart_sp.scale = heart_scale * 0.5
+	heart_sp.position = Vector2(0.0, -32.0)
+	heart_sp.z_index = 25
+	add_child(heart_sp)
+	
+	var tw: Tween = create_tween().set_parallel(true)
+	tw.tween_property(heart_sp, "scale", heart_scale, 0.20)
+	tw.tween_property(heart_sp, "position:y", -66.0, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(heart_sp, "modulate:a", 0.0, 0.30)
+	tw.chain().tween_callback(heart_sp.queue_free)

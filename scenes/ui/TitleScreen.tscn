@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://ctitlescreen001"]
+[gd_scene load_steps=17 format=3 uid="uid://ctitlescreen001"]
 
 [ext_resource type="Script" path="res://scenes/ui/TitleScreen.gd" id="1_titlescreen"]
 [ext_resource type="Texture2D" path="res://assets/sprites/chibi_meadow_backdrop.png" id="2_backdrop"]
@@ -8,6 +8,10 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/critter_bunny.png" id="6_rabbit"]
 [ext_resource type="Texture2D" path="res://assets/sprites/tree_apple_ripe.png" id="7_tree"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui_logo_chibifarmer.png" id="8_logo"]
+[ext_resource type="Texture2D" path="res://assets/sprites/building_barn.png" id="9_barn"]
+[ext_resource type="Texture2D" path="res://assets/sprites/building_silo.png" id="10_silo"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pet_poodle.png" id="11_poodle"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player_minh.png" id="12_minh"]
 [ext_resource type="PackedScene" path="res://scenes/ui/FarmAlmanacModal.tscn" id="14_almanac"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
@@ -54,7 +58,6 @@ corner_radius_bottom_left = 20
 shadow_color = Color(0.18, 0.1, 0.04, 0.5)
 shadow_size = 12
 
-
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -72,56 +75,81 @@ scale = Vector2(1.15, 1.15)
 texture = ExtResource("2_backdrop")
 
 [node name="HotAirBalloon" type="Sprite2D" parent="LivePanoramaBg"]
-position = Vector2(220, 140)
-scale = Vector2(0.85, 0.85)
+position = Vector2(185, 120)
+scale = Vector2(0.46, 0.46)
 texture = ExtResource("3_balloon")
 
-[node name="RiverWater" type="Node2D" parent="LivePanoramaBg"]
+[node name="LeftFarmstead" type="Node2D" parent="LivePanoramaBg"]
 
-[node name="SteamboatPreview" type="Sprite2D" parent="LivePanoramaBg/RiverWater"]
-position = Vector2(820, 390)
-scale = Vector2(0.8, 0.8)
+[node name="CozyBarn" type="Sprite2D" parent="LivePanoramaBg/LeftFarmstead"]
+position = Vector2(175, 410)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("9_barn")
+
+[node name="FarmerMinh" type="Sprite2D" parent="LivePanoramaBg/LeftFarmstead"]
+position = Vector2(275, 520)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("12_minh")
+hframes = 4
+vframes = 4
+frame = 0
+
+[node name="PoodlePet" type="Sprite2D" parent="LivePanoramaBg/LeftFarmstead"]
+position = Vector2(215, 532)
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("11_poodle")
+
+[node name="HoppingRabbits" type="Node2D" parent="LivePanoramaBg/LeftFarmstead"]
+position = Vector2(100, 538)
+
+[node name="Rabbit1" type="Sprite2D" parent="LivePanoramaBg/LeftFarmstead/HoppingRabbits"]
+position = Vector2(-15, 0)
+scale = Vector2(0.08, 0.08)
+texture = ExtResource("6_rabbit")
+
+[node name="Rabbit2" type="Sprite2D" parent="LivePanoramaBg/LeftFarmstead/HoppingRabbits"]
+position = Vector2(25, 4)
+scale = Vector2(0.075, 0.075)
+texture = ExtResource("6_rabbit")
+
+[node name="SwayingAppleTrees" type="Node2D" parent="LivePanoramaBg"]
+
+[node name="AppleTree1" type="Sprite2D" parent="LivePanoramaBg/SwayingAppleTrees"]
+position = Vector2(95, 435)
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("7_tree")
+
+[node name="AppleTree2" type="Sprite2D" parent="LivePanoramaBg/SwayingAppleTrees"]
+position = Vector2(850, 435)
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("7_tree")
+
+[node name="RightRiverbank" type="Node2D" parent="LivePanoramaBg"]
+
+[node name="CozySilo" type="Sprite2D" parent="LivePanoramaBg/RightRiverbank"]
+position = Vector2(970, 405)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("10_silo")
+
+[node name="RiverWater" type="Node2D" parent="LivePanoramaBg/RightRiverbank"]
+
+[node name="SteamboatPreview" type="Sprite2D" parent="LivePanoramaBg/RightRiverbank/RiverWater"]
+position = Vector2(1040, 505)
+scale = Vector2(0.72, 0.72)
 texture = ExtResource("4_steamboat")
 
-[node name="SwimmingDucks" type="Node2D" parent="LivePanoramaBg/RiverWater"]
-position = Vector2(900, 460)
+[node name="SwimmingDucks" type="Node2D" parent="LivePanoramaBg/RightRiverbank/RiverWater"]
+position = Vector2(955, 540)
 
-[node name="Duck1" type="Sprite2D" parent="LivePanoramaBg/RiverWater/SwimmingDucks"]
-position = Vector2(-25, 0)
-scale = Vector2(0.55, 0.55)
+[node name="Duck1" type="Sprite2D" parent="LivePanoramaBg/RightRiverbank/RiverWater/SwimmingDucks"]
+position = Vector2(-18, 0)
+scale = Vector2(0.10, 0.10)
 texture = ExtResource("5_duck")
 
-[node name="Duck2" type="Sprite2D" parent="LivePanoramaBg/RiverWater/SwimmingDucks"]
-position = Vector2(25, 10)
-scale = Vector2(0.5, 0.5)
+[node name="Duck2" type="Sprite2D" parent="LivePanoramaBg/RightRiverbank/RiverWater/SwimmingDucks"]
+position = Vector2(18, 8)
+scale = Vector2(0.09, 0.09)
 texture = ExtResource("5_duck")
-
-[node name="MeadowForeground" type="Node2D" parent="LivePanoramaBg"]
-
-[node name="SwayingAppleTrees" type="Node2D" parent="LivePanoramaBg/MeadowForeground"]
-
-[node name="AppleTree1" type="Sprite2D" parent="LivePanoramaBg/MeadowForeground/SwayingAppleTrees"]
-position = Vector2(110, 490)
-scale = Vector2(0.75, 0.75)
-texture = ExtResource("7_tree")
-
-[node name="AppleTree2" type="Sprite2D" parent="LivePanoramaBg/MeadowForeground/SwayingAppleTrees"]
-position = Vector2(1040, 490)
-scale = Vector2(0.75, 0.75)
-texture = ExtResource("7_tree")
-
-[node name="HoppingRabbits" type="Node2D" parent="LivePanoramaBg/MeadowForeground"]
-position = Vector2(290, 530)
-
-[node name="Rabbit1" type="Sprite2D" parent="LivePanoramaBg/MeadowForeground/HoppingRabbits"]
-position = Vector2(-20, 0)
-scale = Vector2(0.7, 0.7)
-texture = ExtResource("6_rabbit")
-
-[node name="Rabbit2" type="Sprite2D" parent="LivePanoramaBg/MeadowForeground/HoppingRabbits"]
-position = Vector2(40, 5)
-scale = Vector2(0.65, 0.65)
-texture = ExtResource("6_rabbit")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 
@@ -130,9 +158,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -230.0
-offset_top = 22.0
+offset_top = 24.0
 offset_right = 230.0
-offset_bottom = 232.0
+offset_bottom = 186.0
 grow_horizontal = 2
 texture = ExtResource("8_logo")
 expand_mode = 1
@@ -145,9 +173,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -160.0
-offset_top = -40.0
+offset_top = -32.0
 offset_right = 160.0
-offset_bottom = 240.0
+offset_bottom = 248.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
@@ -201,21 +229,21 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "THOÁT GAME"
 
-[node name="VersionBadge" type="Label" parent="UILayer"]
+[node name="VersionLabel" type="Label" parent="UILayer"]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -280.0
-offset_top = -36.0
+offset_left = -220.0
+offset_top = -28.0
 offset_right = -16.0
-offset_bottom = -12.0
+offset_bottom = -8.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(0.3, 0.18, 0.08, 0.85)
-theme_override_font_sizes/font_size = 14
-text = "Hay Day Offline v1.1.0 • Sprint 1"
+theme_override_colors/font_color = Color(0.35, 0.22, 0.1, 0.65)
+theme_override_font_sizes/font_size = 12
+text = "Hay Day Offline v1.2.0 • Sprint 1-5"
 horizontal_alignment = 2
 
 [node name="SaveSlotModal" type="PanelContainer" parent="UILayer"]
@@ -225,38 +253,40 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -440.0
-offset_top = -220.0
-offset_right = 440.0
-offset_bottom = 220.0
+offset_left = -380.0
+offset_top = -210.0
+offset_right = 380.0
+offset_bottom = 210.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal_bg")
 
-[node name="ModalVBox" type="VBoxContainer" parent="UILayer/SaveSlotModal"]
+[node name="SlotModalVBox" type="VBoxContainer" parent="UILayer/SaveSlotModal"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TopBar" type="HBoxContainer" parent="UILayer/SaveSlotModal/ModalVBox"]
+[node name="ModalTitleLabel" type="Label" parent="UILayer/SaveSlotModal/SlotModalVBox"]
 layout_mode = 2
-
-[node name="Title" type="Label" parent="UILayer/SaveSlotModal/ModalVBox/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.35, 0.18, 0.08, 1)
+theme_override_colors/font_color = Color(0.32, 0.16, 0.06, 1)
 theme_override_font_sizes/font_size = 22
-text = "  🌾 CHỌN NÔNG TRẠI ĐỂ TIẾP TỤC"
+text = "CHỌN Ô LƯU NÔNG TRẠI (SAVE SLOTS)"
+horizontal_alignment = 1
 
-[node name="BtnCloseSlots" type="Button" parent="UILayer/SaveSlotModal/ModalVBox/TopBar"]
-custom_minimum_size = Vector2(40, 36)
+[node name="SlotCardsHBox" type="HBoxContainer" parent="UILayer/SaveSlotModal/SlotModalVBox"]
 layout_mode = 2
-text = "✕"
-
-[node name="SlotCardsHBox" type="HBoxContainer" parent="UILayer/SaveSlotModal/ModalVBox"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 24
+size_flags_vertical = 3
+theme_override_constants/separation = 16
 alignment = 1
+
+[node name="BtnCloseSlots" type="Button" parent="UILayer/SaveSlotModal/SlotModalVBox"]
+custom_minimum_size = Vector2(180, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "QUAY LẠI"
 
 [node name="SettingsModal" type="PanelContainer" parent="UILayer"]
 visible = false
@@ -266,35 +296,50 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -220.0
-offset_top = -160.0
+offset_top = -140.0
 offset_right = 220.0
-offset_bottom = 160.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal_bg")
 
 [node name="SettingsVBox" type="VBoxContainer" parent="UILayer/SettingsModal"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="UILayer/SettingsModal/SettingsVBox"]
+[node name="SettingsTitle" type="Label" parent="UILayer/SettingsModal/SettingsVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.35, 0.18, 0.08, 1)
+theme_override_colors/font_color = Color(0.32, 0.16, 0.06, 1)
 theme_override_font_sizes/font_size = 20
-text = "⚙️ CÀI ĐẶT TRÒ CHƠI"
+text = "CÀI ĐẶT TRÒ CHƠI"
 horizontal_alignment = 1
 
 [node name="BtnToggleAudio" type="Button" parent="UILayer/SettingsModal/SettingsVBox"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(260, 44)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 text = "Âm Thanh: BẬT"
 
-[node name="BtnCloseSettings" type="Button" parent="UILayer/SettingsModal/SettingsVBox"]
-custom_minimum_size = Vector2(0, 40)
+[node name="BtnResetSandbox" type="Button" parent="UILayer/SettingsModal/SettingsVBox"]
+custom_minimum_size = Vector2(260, 44)
 layout_mode = 2
-text = "Đóng"
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "Nạp Sandbox Cấp 33"
 
-[node name="AudioStreamPlayerBGM" type="AudioStreamPlayer" parent="."]
-bus = &"Master"
+[node name="BtnCloseSettings" type="Button" parent="UILayer/SettingsModal/SettingsVBox"]
+custom_minimum_size = Vector2(160, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.32, 0.16, 0.06, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "ĐÓNG"
 
 [node name="FarmAlmanacModal" parent="UILayer" instance=ExtResource("14_almanac")]
+visible = false

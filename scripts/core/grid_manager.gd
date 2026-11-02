@@ -53,11 +53,15 @@ func _init_astar() -> void:
 	astar_grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	astar_grid.update()
 	
-	# Default weight on grass is higher; path tiles will have weight 1.0
+	# Default weight on grass is higher; river is solid; path tiles will have weight 1.0
 	for x: int in range(GRID_WIDTH):
 		for y: int in range(GRID_HEIGHT):
 			var cell: Vector2i = Vector2i(x, y)
-			astar_grid.set_point_weight_scale(cell, 3.0)
+			var w_pos: Vector2 = grid_to_world(cell)
+			if is_in_water_or_sand(w_pos):
+				astar_grid.set_point_solid(cell, true)
+			else:
+				astar_grid.set_point_weight_scale(cell, 3.0)
 
 func _init_default_layout() -> void:
 	# Main east-west road from entrance (0, 20) across farm center, over the wooden bridge to East Bank (x = 0..42)
@@ -99,6 +103,21 @@ func grid_to_world(grid_pos: Vector2i) -> Vector2:
 
 func is_within_bounds(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < GRID_WIDTH and cell.y < GRID_HEIGHT
+
+func mark_footprint_solid(top_left: Vector2i, size: Vector2i, is_solid: bool = true, id: int = -1) -> void:
+	for x: int in range(top_left.x, top_left.x + size.x):
+		for y: int in range(top_left.y, top_left.y + size.y):
+			var cell: Vector2i = Vector2i(x, y)
+			if is_within_bounds(cell):
+				astar_grid.set_point_solid(cell, is_solid)
+				if is_solid:
+					occupied_cells[cell] = id
+				else:
+					occupied_cells.erase(cell)
+					if path_cells.get(cell, false):
+						astar_grid.set_point_weight_scale(cell, 1.0)
+					else:
+						astar_grid.set_point_weight_scale(cell, 3.0)
 
 # --- Building & Path Queries ---
 

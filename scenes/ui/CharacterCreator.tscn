@@ -85,91 +85,91 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 20.0
-offset_right = -24.0
-offset_bottom = -20.0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 18
 
 [node name="LeftStagePanel" type="PanelContainer" parent="MainSplitHBox"]
-custom_minimum_size = Vector2(430, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_stage_panel")
 
 [node name="StageVBox" type="VBoxContainer" parent="MainSplitHBox/LeftStagePanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Title" type="Label" parent="MainSplitHBox/LeftStagePanel/StageVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.18, 0.08, 1)
-theme_override_font_sizes/font_size = 20
-text = "GƯƠNG SOI CHIBI"
+theme_override_font_sizes/font_size = 19
+text = "GƯƠNG SOI NÔNG DÂN CHIBI"
 horizontal_alignment = 1
 
 [node name="PreviewViewportContainer" type="SubViewportContainer" parent="MainSplitHBox/LeftStagePanel/StageVBox"]
-custom_minimum_size = Vector2(380, 380)
+custom_minimum_size = Vector2(360, 360)
 layout_mode = 2
 size_flags_horizontal = 4
 
 [node name="SubViewport" type="SubViewport" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer"]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(380, 380)
+size = Vector2i(360, 360)
 render_target_update_mode = 4
 
 [node name="WoodenPedestal" type="Sprite2D" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport"]
-position = Vector2(190, 310)
-scale = Vector2(1.8, 1.0)
+position = Vector2(180, 295)
+scale = Vector2(1.7, 0.95)
 texture = ExtResource("4_pedestal")
 
 [node name="AvatarPreview" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport" instance=ExtResource("3_avatar")]
-position = Vector2(185, 230)
-scale = Vector2(1.8, 1.8)
+position = Vector2(175, 220)
+scale = Vector2(1.7, 1.7)
 
 [node name="PetPoodlePreview" type="Sprite2D" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport"]
-position = Vector2(295, 290)
-scale = Vector2(0.9, 0.9)
+position = Vector2(280, 280)
+scale = Vector2(0.85, 0.85)
 texture = ExtResource("5_poodle")
 
 [node name="AnimTestHBox" type="HBoxContainer" parent="MainSplitHBox/LeftStagePanel/StageVBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 1
 
 [node name="BtnPoseIdle" type="Button" parent="MainSplitHBox/LeftStagePanel/StageVBox/AnimTestHBox"]
-custom_minimum_size = Vector2(80, 36)
+custom_minimum_size = Vector2(76, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
 text = "Đứng Yên"
 
 [node name="BtnPoseWalk" type="Button" parent="MainSplitHBox/LeftStagePanel/StageVBox/AnimTestHBox"]
-custom_minimum_size = Vector2(80, 36)
+custom_minimum_size = Vector2(76, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
 text = "Bước Đi"
 
 [node name="BtnPoseHarvest" type="Button" parent="MainSplitHBox/LeftStagePanel/StageVBox/AnimTestHBox"]
-custom_minimum_size = Vector2(80, 36)
+custom_minimum_size = Vector2(76, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
 text = "Gặt Lúa"
 
 [node name="BtnPoseFish" type="Button" parent="MainSplitHBox/LeftStagePanel/StageVBox/AnimTestHBox"]
-custom_minimum_size = Vector2(80, 36)
+custom_minimum_size = Vector2(76, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
 text = "Câu Cá"
 
 [node name="BtnRandomize" type="Button" parent="MainSplitHBox/LeftStagePanel/StageVBox"]
-custom_minimum_size = Vector2(340, 40)
+custom_minimum_size = Vector2(320, 36)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
@@ -183,7 +183,75 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_custom_panel")
 
 [node name="RightVBox" type="VBoxContainer" parent="MainSplitHBox/RightCustomizationPanel"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
+
+[node name="PresetHBox" type="HBoxContainer" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnPresetBoy" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/PresetHBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.12, 0.04, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "👨 Nông Dân Nam (Minh)"
+
+[node name="BtnPresetGirl" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/PresetHBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.12, 0.04, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "👩 Nông Dân Nữ (Mai)"
+
+[node name="QuickOutfitsLabel" type="Label" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.22, 0.1, 1)
+theme_override_font_sizes/font_size = 13
+text = "ĐỔI NHANH BỘ TRANG PHỤC ĐỒNG BỘ:"
+
+[node name="QuickOutfitsHBox" type="HBoxContainer" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnOutfitOveralls" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "🌾 Yếm Jean"
+
+[node name="BtnOutfitDress" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "🌸 Váy Hoa"
+
+[node name="BtnOutfitBaker" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "🥖 Đồ Làm Bánh"
+
+[node name="BtnOutfitCarpenter" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
+text = "🪵 Thợ Mộc"
 
 [node name="CategoryTabs" type="TabBar" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
 layout_mode = 2
@@ -202,44 +270,45 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
 columns = 4
 
 [node name="IdentityFormHBox" type="HBoxContainer" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
 [node name="InputPlayerName" type="LineEdit" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/IdentityFormHBox"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Tên Bạn (VD: Minh, Mai...)"
 
 [node name="InputFarmName" type="LineEdit" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/IdentityFormHBox"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Tên Nông Trại (VD: Thung Lũng Xanh...)"
 
 [node name="BottomActionsHBox" type="HBoxContainer" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
 [node name="BtnBackToTitle" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/BottomActionsHBox"]
-custom_minimum_size = Vector2(160, 48)
+custom_minimum_size = Vector2(150, 46)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.2, 0.1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
 text = "‹ QUAY LẠI"
 
 [node name="BtnStartFarm" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/BottomActionsHBox"]
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(230, 46)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 17
 theme_override_styles/normal = SubResource("StyleBoxFlat_start_btn")
 text = "BẮT ĐẦU NÔNG TRẠI MỚI ›"
 
 [node name="AudioSFXPlayer" type="AudioStreamPlayer" parent="."]
 bus = &"Master"
-

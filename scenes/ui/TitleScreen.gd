@@ -4,10 +4,13 @@ extends Control
 const CHAR_CREATOR_SCENE: String = "res://scenes/ui/CharacterCreator.tscn"
 const MAIN_FARM_SCENE: String = "res://scenes/main/MainFarm.tscn"
 
-@onready var balloon_sprite: Sprite2D = $LivePanoramaBg/HotAirBalloon
-@onready var steamboat_sprite: Sprite2D = $LivePanoramaBg/RiverWater/SteamboatPreview
-@onready var ducks_root: Node2D = $LivePanoramaBg/RiverWater/SwimmingDucks
-@onready var rabbits_root: Node2D = $LivePanoramaBg/MeadowForeground/HoppingRabbits
+@onready var balloon_sprite: Sprite2D = find_child("HotAirBalloon", true, false) as Sprite2D
+@onready var steamboat_sprite: Sprite2D = find_child("SteamboatPreview", true, false) as Sprite2D
+@onready var ducks_root: Node2D = find_child("SwimmingDucks", true, false) as Node2D
+@onready var rabbits_root: Node2D = find_child("HoppingRabbits", true, false) as Node2D
+@onready var trees_root: Node2D = find_child("SwayingAppleTrees", true, false) as Node2D
+@onready var farmer_minh: Sprite2D = find_child("FarmerMinh", true, false) as Sprite2D
+@onready var poodle_pet: Sprite2D = find_child("PoodlePet", true, false) as Sprite2D
 
 @onready var btn_continue: Button = $UILayer/MainButtonsVBox/BtnContinue
 @onready var btn_new_farm: Button = $UILayer/MainButtonsVBox/BtnNewFarm
@@ -22,11 +25,14 @@ const MAIN_FARM_SCENE: String = "res://scenes/main/MainFarm.tscn"
 @onready var btn_close_slots: Button = $UILayer/SaveSlotModal.find_child("BtnCloseSlots", true, false) as Button
 @onready var btn_close_settings: Button = $UILayer/SettingsModal.find_child("BtnCloseSettings", true, false) as Button
 @onready var btn_toggle_audio: Button = $UILayer/SettingsModal.find_child("BtnToggleAudio", true, false) as Button
+@onready var btn_reset_sandbox: Button = $UILayer/SettingsModal.find_child("BtnResetSandbox", true, false) as Button
 
 var _time: float = 0.0
 var _latest_slot: int = -1
-var _balloon_origin: Vector2 = Vector2(220.0, 140.0)
-var _steamboat_origin: Vector2 = Vector2(820.0, 390.0)
+var _balloon_origin: Vector2 = Vector2(185.0, 120.0)
+var _steamboat_origin: Vector2 = Vector2(1040.0, 505.0)
+
+var _base_scales: Dictionary = {} # Node -> Vector2
 
 func _ready() -> void:
 	save_slot_modal.visible = false
@@ -34,12 +40,45 @@ func _ready() -> void:
 	
 	if balloon_sprite != null:
 		_balloon_origin = balloon_sprite.position
+		_base_scales[balloon_sprite] = balloon_sprite.scale
 	if steamboat_sprite != null:
 		_steamboat_origin = steamboat_sprite.position
+		_base_scales[steamboat_sprite] = steamboat_sprite.scale
+	if farmer_minh != null:
+		_base_scales[farmer_minh] = farmer_minh.scale
+	if poodle_pet != null:
+		_base_scales[poodle_pet] = poodle_pet.scale
+		
+	if ducks_root != null:
+		for child: Node in ducks_root.get_children():
+			if child is Node2D:
+				_base_scales[child] = (child as Node2D).scale
+
+	if rabbits_root != null:
+		for child: Node in rabbits_root.get_children():
+			if child is Node2D:
+				var sp: Node2D = child as Node2D
+				# Enforce reasonable Chibi display size
+				if sp is Sprite2D and (sp as Sprite2D).texture != null:
+					var tw: float = float((sp as Sprite2D).texture.get_width())
+					if tw > 100.0:
+						sp.scale = Vector2(36.0 / tw, 36.0 / tw)
+				_base_scales[sp] = sp.scale
+
+	if trees_root != null:
+		for child: Node in trees_root.get_children():
+			if child is Node2D:
+				var sp: Node2D = child as Node2D
+				if sp is Sprite2D and (sp as Sprite2D).texture != null:
+					var tw: float = float((sp as Sprite2D).texture.get_width())
+					if tw > 200.0:
+						sp.scale = Vector2(96.0 / tw, 96.0 / tw)
+				_base_scales[sp] = sp.scale
 		
 	_refresh_continue_button()
 	_bind_ui_signals()
 	_populate_slot_cards()
+
 func _process(delta: float) -> void:
 	_time += delta
 	_animate_live_panorama()
@@ -47,15 +86,16 @@ func _process(delta: float) -> void:
 func _animate_live_panorama() -> void:
 	# 1. Khinh khí cầu lượn nhẹ trên bầu trời
 	if balloon_sprite != null:
-		balloon_sprite.position.x = _balloon_origin.x + sin(_time * 0.35) * 45.0
-		balloon_sprite.position.y = _balloon_origin.y + cos(_time * 0.7) * 14.0
-		balloon_sprite.rotation = sin(_time * 0.5) * 0.04
+		balloon_sprite.position.x = _balloon_origin.x + sin(_time * 0.35) * 35.0
+		balloon_sprite.position.y = _balloon_origin.y + cos(_time * 0.7) * 12.0
+		balloon_sprite.rotation = sin(_time * 0.5) * 0.035
 
-	# 2. Tàu hơi nước nhấp nhô trên sông
+	# 2. Tàu hơi nước nhấp nhô trên sông (Strictly preserving _base_scale)
 	if steamboat_sprite != null:
-		var bob: float = sin(_time * 2.2) * 3.5
+		var b_scale: Vector2 = _base_scales.get(steamboat_sprite, Vector2(0.72, 0.72))
+		var bob: float = sin(_time * 2.2) * 3.0
 		steamboat_sprite.position.y = _steamboat_origin.y + bob
-		steamboat_sprite.scale = Vector2(1.0 + bob * 0.004, 1.0 - bob * 0.004)
+		steamboat_sprite.scale = b_scale * Vector2(1.0 + bob * 0.005, 1.0 - bob * 0.005)
 
 	# 3. Đàn vịt bơi lướt sóng elip trên mặt hồ
 	if ducks_root != null:
@@ -63,21 +103,45 @@ func _animate_live_panorama() -> void:
 		for child: Node in ducks_root.get_children():
 			if child is Node2D:
 				var duck: Node2D = child as Node2D
+				var b_scale: Vector2 = _base_scales.get(duck, Vector2(0.10, 0.10))
 				var phase: float = _time * 1.4 + float(idx) * 1.6
-				duck.position = Vector2(cos(phase) * 36.0, sin(phase) * 14.0)
-				duck.scale.x = -1.0 if sin(phase) > 0.0 else 1.0
+				duck.position = Vector2(cos(phase) * 28.0, sin(phase) * 10.0)
+				duck.scale.x = (-b_scale.x) if sin(phase) > 0.0 else b_scale.x
 				idx += 1
 
-	# 4. Đàn thỏ nhảy parabol co giãn (hop arc squash & stretch)
+	# 4. Đàn thỏ nhảy parabol co giãn (hop arc squash & stretch - NEVER overwrite scale to 1.0)
 	if rabbits_root != null:
 		var r_idx: int = 0
 		for child: Node in rabbits_root.get_children():
 			if child is Node2D:
 				var rabbit: Node2D = child as Node2D
+				var b_scale: Vector2 = _base_scales.get(rabbit, Vector2(0.08, 0.08))
 				var hop_wave: float = abs(sin(_time * 4.5 + float(r_idx) * 2.1))
-				rabbit.position.y = -hop_wave * 18.0
-				rabbit.scale = Vector2(1.0 - hop_wave * 0.12, 1.0 + hop_wave * 0.15)
+				rabbit.position.y = -hop_wave * 14.0
+				rabbit.scale = b_scale * Vector2(1.0 - hop_wave * 0.12, 1.0 + hop_wave * 0.15)
 				r_idx += 1
+
+	# 5. Cây táo đung đưa theo gió
+	if trees_root != null:
+		var t_idx: int = 0
+		for child: Node in trees_root.get_children():
+			if child is Node2D:
+				var tree: Node2D = child as Node2D
+				var b_scale: Vector2 = _base_scales.get(tree, Vector2(0.12, 0.12))
+				tree.rotation = sin(_time * 1.6 + float(t_idx) * 1.5) * 0.03
+				var tree_sway: float = sin(_time * 2.0 + float(t_idx)) * 0.02
+				tree.scale = b_scale * Vector2(1.0 + tree_sway, 1.0 - tree_sway)
+				t_idx += 1
+
+	# 6. Farmer Minh & Poodle Pet Idle Breathing
+	if farmer_minh != null:
+		var b_scale: Vector2 = _base_scales.get(farmer_minh, Vector2(0.38, 0.38))
+		var f_breath: float = sin(_time * 2.8) * 0.025
+		farmer_minh.scale = b_scale * Vector2(1.0 + f_breath, 1.0 - f_breath)
+	if poodle_pet != null:
+		var b_scale: Vector2 = _base_scales.get(poodle_pet, Vector2(0.55, 0.55))
+		var p_breath: float = sin(_time * 3.5) * 0.035
+		poodle_pet.scale = b_scale * Vector2(1.0 + p_breath, 1.0 - p_breath)
 
 func _refresh_continue_button() -> void:
 	_latest_slot = SaveSlotService.get_latest_active_slot()
@@ -117,6 +181,14 @@ func _bind_ui_signals() -> void:
 			btn_toggle_audio.text = "Âm Thanh: %s" % ("TẮT" if AudioManager.is_muted else "BẬT")
 			AudioManager.play_sfx("ui_wood_click")
 		)
+	if btn_reset_sandbox != null:
+		btn_reset_sandbox.pressed.connect(func() -> void:
+			AudioManager.play_sfx("level_up")
+			SaveManager.set_sandbox_level_33()
+			settings_modal.visible = false
+			_refresh_continue_button()
+			_populate_slot_cards()
+		)
 
 func _get_target_farm_scene() -> String:
 	if FileAccess.file_exists(MAIN_FARM_SCENE):
@@ -138,100 +210,77 @@ func _on_new_farm_pressed() -> void:
 func _on_almanac_pressed() -> void:
 	AudioManager.play_sfx("ui_wood_click")
 	if farm_almanac_modal != null:
-		farm_almanac_modal.toggle_modal(true)
-	else:
-		_populate_slot_cards()
-		save_slot_modal.visible = true
-
-func _populate_slot_cards() -> void:
-	if slot_cards_hbox == null:
-		return
-	for child: Node in slot_cards_hbox.get_children():
-		child.queue_free()
-		
-	for slot_idx: int in range(1, SaveSlotService.MAX_SLOTS + 1):
-		var card: PanelContainer = _create_slot_card(slot_idx)
-		slot_cards_hbox.add_child(card)
-
-func _create_slot_card(slot_idx: int) -> PanelContainer:
-	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(240.0, 280.0)
-	
-	# Style cho card ô lưu
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.98, 0.94, 0.86, 0.96)
-	style.border_color = Color(0.55, 0.32, 0.16, 1.0)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(14)
-	style.shadow_color = Color(0.3, 0.18, 0.08, 0.25)
-	style.shadow_size = 6
-	panel.add_theme_stylebox_override("panel", style)
-	
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-	
-	var title_lbl: Label = Label.new()
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_color_override("font_color", Color(0.35, 0.18, 0.08, 1.0))
-	title_lbl.add_theme_font_size_override("font_size", 18)
-	title_lbl.text = "🌾 Ô LƯU SỐ %d" % slot_idx
-	vbox.add_child(title_lbl)
-	
-	var summary: Dictionary = SaveSlotService.read_slot_summary(slot_idx)
-	var action_btn: Button = Button.new()
-	action_btn.custom_minimum_size = Vector2(180, 42)
-	
-	if summary.is_empty():
-		var empty_lbl: Label = Label.new()
-		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.4, 0.3, 1.0))
-		empty_lbl.text = "[ Ô Đất Trống ]\nSẵn sàng khai hoang!"
-		vbox.add_child(empty_lbl)
-		
-		action_btn.text = "Tạo Nông Trại Mới"
-		action_btn.pressed.connect(func() -> void:
-			AudioManager.play_sfx("welcome_chime")
-			EventBus.save_slot_selected.emit(slot_idx, true)
-			if FileAccess.file_exists(CHAR_CREATOR_SCENE):
-				get_tree().change_scene_to_file(CHAR_CREATOR_SCENE)
-			else:
-				get_tree().change_scene_to_file(_get_target_farm_scene())
-		)
-		vbox.add_child(action_btn)
-	else:
-		var info_lbl: Label = Label.new()
-		info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		info_lbl.add_theme_color_override("font_color", Color(0.28, 0.16, 0.08, 1.0))
-		var f_name: String = str(summary.get("farm_name", "Nông Trại"))
-		var gold: int = int(summary.get("gold", 500))
-		var lvl: int = int(summary.get("level", 1))
-		info_lbl.text = "%s\nCấp độ: %d\nVàng: %d 🪙" % [f_name, lvl, gold]
-		vbox.add_child(info_lbl)
-		
-		action_btn.text = "Vào Nông Trại Này"
-		action_btn.pressed.connect(func() -> void:
-			AudioManager.play_sfx("welcome_chime")
-			EventBus.save_slot_selected.emit(slot_idx, false)
-			get_tree().change_scene_to_file(_get_target_farm_scene())
-		)
-		vbox.add_child(action_btn)
-		
-		var del_btn: Button = Button.new()
-		del_btn.custom_minimum_size = Vector2(120, 32)
-		del_btn.text = "Xóa Ô Lưu"
-		del_btn.pressed.connect(func() -> void:
-			AudioManager.play_sfx("ui_wood_click")
-			SaveSlotService.delete_slot(slot_idx)
-			EventBus.save_slot_deleted.emit(slot_idx)
-			_populate_slot_cards()
-			_refresh_continue_button()
-		)
-		vbox.add_child(del_btn)
-		
-	return panel
+		farm_almanac_modal.open_modal()
 
 func _on_exit_pressed() -> void:
 	AudioManager.play_sfx("ui_wood_click")
 	get_tree().quit()
+
+func _populate_slot_cards() -> void:
+	if slot_cards_hbox == null:
+		return
+		
+	for child: Node in slot_cards_hbox.get_children():
+		child.queue_free()
+		
+	for slot_idx: int in range(1, 4):
+		var card: PanelContainer = PanelContainer.new()
+		card.custom_minimum_size = Vector2(210.0, 230.0)
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		style.bg_color = Color(0.98, 0.94, 0.85, 1.0)
+		style.border_width_left = 3
+		style.border_width_top = 3
+		style.border_width_right = 3
+		style.border_width_bottom = 3
+		style.border_color = Color(0.55, 0.32, 0.16, 1.0)
+		style.corner_radius_top_left = 12
+		style.corner_radius_top_right = 12
+		style.corner_radius_bottom_right = 12
+		style.corner_radius_bottom_left = 12
+		card.add_theme_stylebox_override("panel", style)
+		
+		var vbox: VBoxContainer = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 8)
+		card.add_child(vbox)
+		
+		var title: Label = Label.new()
+		title.text = "Ô LƯU %d" % slot_idx
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.add_theme_font_size_override("font_size", 16)
+		title.add_theme_color_override("font_color", Color(0.35, 0.18, 0.08, 1.0))
+		vbox.add_child(title)
+		
+		var summary: Dictionary = SaveSlotService.read_slot_summary(slot_idx)
+		var is_empty: bool = bool(summary.get("is_empty", true))
+		
+		var info_lbl: Label = Label.new()
+		info_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+		info_lbl.add_theme_font_size_override("font_size", 13)
+		info_lbl.add_theme_color_override("font_color", Color(0.42, 0.24, 0.12, 1.0))
+		
+		if is_empty:
+			info_lbl.text = "\n[Ô Đất Trống]\nChưa có nông trại\nSẵn sàng khai hoang!"
+		else:
+			var farm_name: String = str(summary.get("farm_name", "Nông Trại"))
+			var player_name: String = str(summary.get("player_name", "Minh"))
+			var level: int = int(summary.get("level", 1))
+			var gold: int = int(summary.get("gold", 0))
+			info_lbl.text = "🌱 %s\n🧑 Chủ: %s\n⭐ Cấp độ: %d\n🪙 Vàng: %d" % [farm_name, player_name, level, gold]
+		vbox.add_child(info_lbl)
+		
+		var btn_action: Button = Button.new()
+		btn_action.custom_minimum_size = Vector2(0.0, 36.0)
+		btn_action.text = "CHỌN LẬP MỚI" if is_empty else "TIẾP TỤC"
+		btn_action.pressed.connect(func() -> void:
+			AudioManager.play_sfx("ui_wood_click")
+			if is_empty:
+				SaveManager.current_slot = slot_idx
+				get_tree().change_scene_to_file(CHAR_CREATOR_SCENE)
+			else:
+				SaveManager.current_slot = slot_idx
+				EventBus.save_slot_selected.emit(slot_idx, false)
+				get_tree().change_scene_to_file(_get_target_farm_scene())
+		)
+		vbox.add_child(btn_action)
+		slot_cards_hbox.add_child(card)

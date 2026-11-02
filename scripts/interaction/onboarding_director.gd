@@ -221,7 +221,7 @@ func _animate_hand_pointer() -> void:
 	elif get_viewport() != null:
 		screen_origin = get_viewport().get_canvas_transform() * _pointer_world_target
 		
-	var swipe_offset: Vector2 = Vector2(sin(_anim_time * 3.5) * 28.0, cos(_anim_time * 7.0) * 8.0)
+	var swipe_offset: Vector2 = Vector2(sin(_anim_time * 3.5) * 28.0, cos(_anim_time * 7.0) * 8.0) + Vector2(24.0, 28.0)
 	hand_pointer.position = screen_origin + swipe_offset
 	var pulse: float = 1.0 + sin(_anim_time * 6.0) * 0.08
 	hand_pointer.scale = Vector2(pulse, pulse)

@@ -1,6 +1,8 @@
 class_name ChibiSceneryBuilder
 extends RefCounted
 
+const InteractiveTreeClass = preload("res://scripts/entities/interactive_tree.gd")
+
 ## ChibiSceneryBuilder - 2.5D Cozy Chibi Storybook Scenery System
 ## Generates layered, non-intrusive landscape elements:
 ## - Layer 1: Background Horizon (Mountains, hills, floating clouds, z_index = -14..-10)
@@ -327,7 +329,13 @@ func _create_scenery_node(
 	if sp == null:
 		return null
 
-	var node: Node2D = Node2D.new()
+	var node: Node2D = null
+	if "tree" in sprite_id or "flower" in sprite_id or "sunflower" in sprite_id or "bench" in sprite_id or "rock" in sprite_id:
+		var tree_node: Node2D = InteractiveTreeClass.new()
+		tree_node.setup(sprite_id, pos, target_size)
+		node = tree_node
+	else:
+		node = Node2D.new()
 	node.name = "Scenery_" + sprite_id
 	node.position = pos
 	node.y_sort_enabled = true

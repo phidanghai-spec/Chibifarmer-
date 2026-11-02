@@ -49,6 +49,14 @@ func _ready() -> void:
 	z_index = 5
 	_setup_visuals()
 	_load_or_generate_crates()
+	if SaveManager.steamboat_next_arrival > TickManager.now():
+		state = BoatState.COOLDOWN
+		_cooldown_timer = float(SaveManager.steamboat_next_arrival - TickManager.now())
+		_boat_sprite.visible = false
+	else:
+		state = BoatState.DOCKED
+		_boat_sprite.visible = true
+		_boat_sprite.position = DOCK_BOAT_OFFSET
 	_update_status_pill()
 
 func _setup_visuals() -> void:

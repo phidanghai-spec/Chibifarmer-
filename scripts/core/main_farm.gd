@@ -1127,6 +1127,61 @@ func _spawn_scenic_valley_environment() -> void:
 	var builder: RefCounted = ChibiSceneryBuilderClass.new()
 	builder.call("build_scenery", _horizon_container, _scenery_container, _scenic_elements)
 	print("[MainFarm] Spawned Harmonious Hay Day Scenic Valley with ", _scenic_elements.size(), " elements!")
+	_relocate_overlapping_trees()
+
+func _relocate_overlapping_trees() -> void:
+	if field_plots.is_empty():
+		return
+	var plot_positions: Array[Vector2] = []
+	for p: FieldPlot in field_plots.values():
+		if is_instance_valid(p):
+			plot_positions.append(p.global_position)
+
+	var candidates: Array[Node2D] = []
+	if _scenery_container != null:
+		for child: Node in _scenery_container.get_children():
+			if child is Node2D:
+				candidates.append(child as Node2D)
+	for d: MovableDecor in _movable_decors:
+		if is_instance_valid(d):
+			candidates.append(d)
+
+	for tree_node: Node2D in candidates:
+		var t_pos: Vector2 = tree_node.global_position
+		var is_overlapping: bool = false
+		for p_pos: Vector2 in plot_positions:
+			if t_pos.distance_to(p_pos) < 52.0:
+				is_overlapping = true
+				break
+
+		if is_overlapping:
+			var tree_cell: Vector2i = GridManager.world_to_grid(t_pos)
+			var relocated: bool = false
+			for radius: int in range(2, 9):
+				for ox: int in range(-radius, radius + 1):
+					for oy: int in range(-radius, radius + 1):
+						if absi(ox) != radius and absi(oy) != radius:
+							continue
+						var test_cell: Vector2i = tree_cell + Vector2i(ox, oy)
+						if not GridManager.is_within_bounds(test_cell):
+							continue
+						var wpos: Vector2 = GridManager.grid_to_world(test_cell)
+						if GridManager.is_in_water_or_sand(wpos) or GridManager.is_cell_occupied(test_cell):
+							continue
+						var too_close: bool = false
+						for p_pos: Vector2 in plot_positions:
+							if wpos.distance_to(p_pos) < 64.0:
+								too_close = true
+								break
+						if not too_close:
+							tree_node.global_position = wpos
+							relocated = true
+							print("[MainFarm] Auto-relocated overlapping tree from ", t_pos, " to ", wpos)
+							break
+					if relocated:
+						break
+				if relocated:
+					break
 
 func _spawn_specialized_npcs() -> void:
 	if _specialized_npcs_container != null and is_instance_valid(_specialized_npcs_container):

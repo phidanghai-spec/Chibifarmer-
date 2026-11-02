@@ -14,6 +14,13 @@ const TAB_KEYS: Array[String] = ["body", "hair", "outfit", "poodle"]
 @onready var btn_pose_fish: Button = $MainSplitHBox/LeftStagePanel/StageVBox/AnimTestHBox/BtnPoseFish
 @onready var btn_randomize: Button = $MainSplitHBox/LeftStagePanel/StageVBox/BtnRandomize
 
+@onready var btn_preset_boy: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/PresetHBox/BtnPresetBoy
+@onready var btn_preset_girl: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/PresetHBox/BtnPresetGirl
+@onready var btn_outfit_overalls: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox/BtnOutfitOveralls
+@onready var btn_outfit_dress: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox/BtnOutfitDress
+@onready var btn_outfit_baker: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox/BtnOutfitBaker
+@onready var btn_outfit_carpenter: Button = $MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox/BtnOutfitCarpenter
+
 @onready var category_tabs: TabBar = $MainSplitHBox/RightCustomizationPanel/RightVBox/CategoryTabs
 @onready var options_grid: GridContainer = $MainSplitHBox/RightCustomizationPanel/RightVBox/OptionsGridScroll/OptionsGrid
 @onready var input_player_name: LineEdit = $MainSplitHBox/RightCustomizationPanel/RightVBox/IdentityFormHBox/InputPlayerName
@@ -23,6 +30,7 @@ const TAB_KEYS: Array[String] = ["body", "hair", "outfit", "poodle"]
 
 var active_slot_index: int = 1
 var _catalog: Dictionary = {}
+var _current_gender: String = "male"
 
 func _ready() -> void:
 	if SaveManager != null and SaveManager.has_method("get"):
@@ -34,6 +42,9 @@ func _ready() -> void:
 	_setup_tabs()
 	_bind_buttons()
 	_populate_category_options(0)
+	
+	# Default preset: Minh (Male)
+	_apply_preset("male")
 
 func _load_catalog_data() -> void:
 	if DataManager != null and DataManager.get("avatar_catalog") != null and not (DataManager.avatar_catalog as Dictionary).is_empty():
@@ -47,10 +58,10 @@ func _load_catalog_data() -> void:
 				{"id": "body_cocoa_warm", "name": "Da Nâu Ấm", "sub": "eyes_sky_bright"}
 			],
 			"hair": [
-				{"id": "hair_braid_chestnut", "name": "Tóc Bím + Mũ Rơm", "hat": "hat_straw_ribbon"},
-				{"id": "hair_short_sunny", "name": "Tóc Ngắn + Mũ Bưu Tá", "hat": "hat_postman_cap"},
-				{"id": "hair_bun_baker", "name": "Tóc Búi + Mũ Bếp", "hat": "hat_chef_toque"},
-				{"id": "hair_curly_berry", "name": "Tóc Xoăn Tự Nhiên", "hat": "hat_none"}
+				{"id": "hair_short_sunny", "name": "Tóc Ngắn Nắng + Mũ Rơm", "hat": "hat_straw_ribbon"},
+				{"id": "hair_braid_chestnut", "name": "Tóc Bím Hạt Dẻ + Mũ Rơm", "hat": "hat_straw_ribbon"},
+				{"id": "hair_bun_baker", "name": "Tóc Búi Bếp + Mũ Toque", "hat": "hat_chef_toque"},
+				{"id": "hair_curly_berry", "name": "Tóc Xoăn Tự Nhiên", "hat": "hat_postman_cap"}
 			],
 			"outfit": [
 				{"id": "outfit_denim_overalls", "name": "Yếm Jean Nông Dân"},
@@ -76,6 +87,28 @@ func _setup_tabs() -> void:
 	category_tabs.tab_changed.connect(_populate_category_options)
 
 func _bind_buttons() -> void:
+	btn_preset_boy.pressed.connect(func() -> void:
+		AudioManager.play_sfx("ui_wood_click")
+		_apply_preset("male")
+	)
+	btn_preset_girl.pressed.connect(func() -> void:
+		AudioManager.play_sfx("ui_wood_click")
+		_apply_preset("female")
+	)
+	
+	btn_outfit_overalls.pressed.connect(func() -> void:
+		_apply_quick_outfit("outfit_denim_overalls", "hat_straw_ribbon")
+	)
+	btn_outfit_dress.pressed.connect(func() -> void:
+		_apply_quick_outfit("outfit_floral_dress", "hat_none")
+	)
+	btn_outfit_baker.pressed.connect(func() -> void:
+		_apply_quick_outfit("outfit_baker_apron", "hat_chef_toque")
+	)
+	btn_outfit_carpenter.pressed.connect(func() -> void:
+		_apply_quick_outfit("outfit_carpenter_vest", "hat_postman_cap")
+	)
+
 	btn_pose_idle.pressed.connect(func() -> void:
 		AudioManager.play_sfx("ui_wood_click")
 		avatar_preview.set_preview_action(ModularChibiAvatar.PreviewMode.IDLE)
@@ -100,6 +133,41 @@ func _bind_buttons() -> void:
 	)
 	btn_start_farm.pressed.connect(_on_confirm_start_farm)
 
+func _apply_preset(gender: String) -> void:
+	_current_gender = gender
+	if avatar_preview == null:
+		return
+	if gender == "male":
+		avatar_preview.equip_part("body", "body_warm_ivory")
+		avatar_preview.equip_part("eyes", "eyes_sparkle_brown")
+		avatar_preview.equip_part("hair", "hair_short_sunny")
+		avatar_preview.equip_part("hat", "hat_straw_ribbon")
+		avatar_preview.equip_part("outfit", "outfit_denim_overalls")
+		avatar_preview.equip_part("tool", "tool_sickle_chibi")
+		if input_player_name.text.is_empty() or input_player_name.text == "Mai":
+			input_player_name.text = "Minh"
+		if input_farm_name.text.is_empty():
+			input_farm_name.text = "Nông Trại Nắng Ấm"
+	else:
+		avatar_preview.equip_part("body", "body_peach_sunny")
+		avatar_preview.equip_part("eyes", "eyes_emerald_gentle")
+		avatar_preview.equip_part("hair", "hair_braid_chestnut")
+		avatar_preview.equip_part("hat", "hat_straw_ribbon")
+		avatar_preview.equip_part("outfit", "outfit_floral_dress")
+		avatar_preview.equip_part("tool", "tool_sickle_chibi")
+		if input_player_name.text.is_empty() or input_player_name.text == "Minh":
+			input_player_name.text = "Mai"
+		if input_farm_name.text.is_empty():
+			input_farm_name.text = "Nông Trại Hương Hoa"
+
+func _apply_quick_outfit(outfit_id: String, hat_id: String) -> void:
+	AudioManager.play_sfx("cloth_rustle")
+	if avatar_preview == null:
+		return
+	avatar_preview.equip_part("outfit", outfit_id)
+	avatar_preview.equip_part("hat", hat_id)
+	EventBus.avatar_part_equipped.emit("outfit", outfit_id)
+
 func _populate_category_options(tab_idx: int) -> void:
 	if options_grid == null:
 		return
@@ -113,7 +181,7 @@ func _populate_category_options(tab_idx: int) -> void:
 		if typeof(item_var) == TYPE_DICTIONARY:
 			var item: Dictionary = item_var as Dictionary
 			var card_btn: Button = Button.new()
-			card_btn.custom_minimum_size = Vector2(150.0, 96.0)
+			card_btn.custom_minimum_size = Vector2(130.0, 80.0)
 			card_btn.text = str(item.get("name", "Tùy chọn"))
 			card_btn.pressed.connect(func() -> void: _on_option_selected(category_key, item))
 			options_grid.add_child(card_btn)
@@ -158,17 +226,19 @@ func _on_confirm_start_farm() -> void:
 	var p_name: String = input_player_name.text.strip_edges()
 	var f_name: String = input_farm_name.text.strip_edges()
 	if p_name.is_empty():
-		p_name = "Nông Dân Chibi"
+		p_name = "Minh" if _current_gender == "male" else "Mai"
 	if f_name.is_empty():
 		f_name = "Nông Trại Nắng Ấm"
 		
 	var saved_avatar_cfg: Dictionary = avatar_preview.current_config.duplicate()
 	saved_avatar_cfg["is_custom"] = true
+	saved_avatar_cfg["gender"] = _current_gender
 	
 	var initial_save_payload: Dictionary = {
 		"slot_index": active_slot_index,
 		"player_name": p_name,
 		"farm_name": f_name,
+		"gender": _current_gender,
 		"level": 1,
 		"gold": 500,
 		"xp": 0,
@@ -180,8 +250,9 @@ func _on_confirm_start_farm() -> void:
 	
 	if SaveManager != null:
 		SaveManager.player_name = p_name
+		SaveManager.selected_character = _current_gender
+		SaveManager.avatar_config = saved_avatar_cfg
 		SaveManager.save_game()
 		
 	EventBus.character_creation_confirmed.emit(active_slot_index, p_name, f_name, avatar_preview.current_config)
 	get_tree().change_scene_to_file(_get_target_farm_scene())
-

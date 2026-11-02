@@ -66,7 +66,7 @@ scale = Vector2(0.75, 0.75)
 texture = ExtResource("2_windmill_base")
 
 [node name="WindmillBlades" type="Sprite2D" parent="CenterStage"]
-position = Vector2(0, -36)
+position = Vector2(0, -42)
 scale = Vector2(0.75, 0.75)
 texture = ExtResource("3_blades")
 

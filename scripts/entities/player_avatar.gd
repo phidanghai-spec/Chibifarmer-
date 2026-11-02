@@ -185,25 +185,23 @@ func _process(delta: float) -> void:
 	var dir: Vector2 = (next_point - position).normalized()
 	position += dir * move_dist
 	
+	rotation = 0.0
+	var horiz_v: float = absf(dir.x * speed)
+	if horiz_v > 8.0:
+		if dir.x < -0.1:
+			if _sprite != null: _sprite.flip_h = true
+			if _modular_avatar != null: _modular_avatar.scale.x = -0.48
+		elif dir.x > 0.1:
+			if _sprite != null: _sprite.flip_h = false
+			if _modular_avatar != null: _modular_avatar.scale.x = 0.48
+
 	# Direction tracking (Row 0: South/Down, Row 1: North/Up, Row 2: East/Right)
 	if abs(dir.x) > abs(dir.y):
 		_facing_row = 2
-		if _sprite != null:
-			_sprite.flip_h = (dir.x < 0.0)
-		if _modular_avatar != null:
-			_modular_avatar.scale.x = -0.48 if dir.x < 0.0 else 0.48
 	elif dir.y > 0.0:
 		_facing_row = 0
-		if _sprite != null:
-			_sprite.flip_h = false
-		if _modular_avatar != null:
-			_modular_avatar.scale.x = 0.48
 	else:
 		_facing_row = 1
-		if _sprite != null:
-			_sprite.flip_h = false
-		if _modular_avatar != null:
-			_modular_avatar.scale.x = 0.48
 		
 	_walk_process(delta)
 	
@@ -212,12 +210,13 @@ func _process(delta: float) -> void:
 
 func _walk_process(delta: float) -> void:
 	_walk_time += delta
+	rotation = 0.0
 	if _sprite != null:
 		var frame_in_row: int = int(_walk_time / ANIM_FRAME_TIME) % 4
 		_sprite.frame = _facing_row * 4 + frame_in_row
 		var bob: float = abs(sin(_walk_time * 12.0)) * 2.5
 		_sprite.position.y = -26.0 - bob
-		_sprite.rotation_degrees = sin(_walk_time * 6.0) * 2.5
+		_sprite.rotation_degrees = 0.0
 	if _shadow_poly != null:
 		var shrink: float = abs(sin(_walk_time * 12.0)) * 0.12
 		_shadow_poly.scale = Vector2(1.0 - shrink, 1.0 - shrink)
