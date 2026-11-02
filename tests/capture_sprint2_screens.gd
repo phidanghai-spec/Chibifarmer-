@@ -51,3 +51,4 @@ func _ready() -> void:
 		
 	print("[Sprint2 Test] All Sprint 2 visual previews captured successfully!")
 	get_tree().quit(0)
+

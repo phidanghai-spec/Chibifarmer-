@@ -238,6 +238,62 @@ def gen_dice_roll() -> list[float]:
                 samples[idx] += val
     return samples
 
+
+def gen_steamboat_whistle() -> list[float]:
+    # Tiếng còi hơi tàu thủy vang vọng ấm áp (F#3 & C#4, 1.8s)
+    duration = 1.8
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = []
+    f1, f2, f3 = 185.0, 277.18, 369.99
+    import random
+    rng = random.Random(123)
+    for i in range(num_samples):
+        t = i / float(SAMPLE_RATE)
+        if t < 0.25:
+            env = math.sin((t / 0.25) * (math.pi / 2.0))
+        elif t < 1.25:
+            env = 1.0
+        else:
+            rel_t = (t - 1.25) / 0.55
+            env = math.cos(rel_t * (math.pi / 2.0))
+        steam_noise = rng.uniform(-0.15, 0.15) * (1.0 - math.exp(-15.0 * t))
+        flutter = 1.0 + 0.008 * math.sin(2.0 * math.pi * 5.5 * t)
+        w1 = math.sin(2.0 * math.pi * f1 * flutter * t) * 0.55
+        w2 = math.sin(2.0 * math.pi * f2 * flutter * t) * 0.35
+        w3 = math.sin(2.0 * math.pi * f3 * flutter * t) * 0.15
+        val = (w1 + w2 + w3 + steam_noise) * env * 0.65
+        samples.append(val)
+    return samples
+
+def gen_coins_jingle() -> list[float]:
+    # Chuỗi leng keng đồng tiền vàng rơi xao xuyến (6 nốt dồn dập C7-C8, 0.75s)
+    duration = 0.75
+    num_samples = int(SAMPLE_RATE * duration)
+    samples = [0.0] * num_samples
+    coin_strikes = [
+        (0.00, 2093.0, 0.50),
+        (0.08, 2349.3, 0.55),
+        (0.16, 2637.0, 0.60),
+        (0.25, 3135.9, 0.65),
+        (0.33, 3520.0, 0.70),
+        (0.42, 4186.0, 0.80),
+    ]
+    for start_t, freq, weight in coin_strikes:
+        start_idx = int(start_t * SAMPLE_RATE)
+        ring_samples = int(0.28 * SAMPLE_RATE)
+        for i in range(ring_samples):
+            idx = start_idx + i
+            if idx < num_samples:
+                t = i / float(SAMPLE_RATE)
+                env = math.exp(-16.0 * t) * (1.0 - math.exp(-250.0 * t))
+                val = (
+                    math.sin(2.0 * math.pi * freq * t) * 0.75 +
+                    math.sin(2.0 * math.pi * freq * 2.76 * t) * 0.18 +
+                    math.sin(2.0 * math.pi * freq * 5.40 * t) * 0.07
+                ) * env * weight
+                samples[idx] += val * 0.5
+    return samples
+
 def main():
     print("==================================================")
     print("  GENERATING COZY 2.5D CHIBI SFX (.WAV MONO 44.1kHz)")
@@ -252,6 +308,8 @@ def main():
     write_wav("sfx_welcome_chime.wav", gen_welcome_chime())
     write_wav("sfx_cloth_rustle.wav", gen_cloth_rustle())
     write_wav("sfx_dice_roll.wav", gen_dice_roll())
+    write_wav("sfx_steamboat_whistle.wav", gen_steamboat_whistle())
+    write_wav("sfx_coins_jingle.wav", gen_coins_jingle())
     print("[SFX] All audio files generated successfully!")
 
 if __name__ == "__main__":

@@ -65,3 +65,12 @@ signal offline_earnings_calculated(elapsed_seconds: int, summary_data: Dictionar
 signal avatar_part_equipped(category: String, part_id: String)
 signal avatar_config_randomized(full_config: Dictionary)
 signal character_creation_confirmed(slot_index: int, player_name: String, farm_name: String, avatar_config: Dictionary)
+# --- Intro Cutscene, 3-Step Tutorial & Offline Earnings (Sprint 3) ---
+signal intro_cutscene_started()
+signal intro_cutscene_finished()
+signal tutorial_step_changed(step_index: int, instruction_text: String, world_target_pos: Vector2)
+signal tutorial_completed()
+signal crop_harvested(crop_id: String, grid_pos: Vector2i)
+signal crop_planted(crop_id: String, grid_pos: Vector2i)
+signal decor_placed(decor_id: String, attraction_delta: int)
+signal offline_report_claimed(total_gold_added: int)

@@ -43,6 +43,8 @@ var zoo_data: Dictionary = {
 # Pet Poodle
 var poodle_affinity: int = 0
 var poodle_feed_count: int = 0
+var is_tutorial_completed: bool = false
+var last_save_timestamp: int = 0
 
 # Daily Newspaper
 var newspaper_data: Dictionary = {}
@@ -65,6 +67,24 @@ var vip_requests: Array = []
 var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
 var current_slot: int = 1
+
+func set_tutorial_completed(completed: bool) -> void:
+	is_tutorial_completed = completed
+	save_game()
+
+func get_current_slot_data() -> Dictionary:
+	var count: int = 0
+	for z_id: String in zoo_data:
+		var z_info: Dictionary = zoo_data[z_id] as Dictionary
+		if z_info.get("unlocked", false):
+			count += 1
+	return {
+		"is_tutorial_completed": is_tutorial_completed,
+		"last_timestamp": last_save_timestamp if last_save_timestamp > 0 else TickManager.now(),
+		"attraction_score": GridManager.total_attraction_score if GridManager != null else 10,
+		"zoo_animals_count": maxi(1, count),
+		"zoo_enclosures": zoo_data.duplicate()
+	}
 
 func get_active_save_path() -> String:
 	return SaveSlotService.get_slot_path(current_slot)
@@ -335,6 +355,8 @@ func load_game() -> bool:
 		return false
 	
 	var saved_ts: int = int(data.get("save_timestamp", 0))
+	last_save_timestamp = saved_ts
+	is_tutorial_completed = bool(data.get("is_tutorial_completed", false))
 	var raw_offline: int = maxi(0, TickManager.now() - saved_ts)
 	var offline_elapsed: int = mini(raw_offline, MAX_OFFLINE_SECONDS)
 	print("[SaveManager] Game loaded! Offline time elapsed: ", offline_elapsed, "s (clamped from ", raw_offline, "s).")

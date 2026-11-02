@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://ctutorialov01"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/npc_elder_portrait.png" id="1_elder"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui_hand_pointer_chibi.png" id="2_hand"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
+bg_color = Color(1, 0.976471, 0.929412, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 4
+border_color = Color(0.486275, 0.298039, 0.141176, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+shadow_color = Color(0, 0, 0, 0.2)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[node name="TutorialOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="GuideBannerPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -340.0
+offset_top = 68.0
+offset_right = 340.0
+offset_bottom = 160.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GuideBannerPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="ElderPortrait" type="TextureRect" parent="GuideBannerPanel/HBoxContainer"]
+custom_minimum_size = Vector2(74, 74)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("1_elder")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GuideBannerPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="StepProgressLabel" type="Label" parent="GuideBannerPanel/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.423529, 0.227451, 0.0980392, 1)
+theme_override_font_sizes/font_size = 15
+text = "Bước 1/3: Gặt Lúa & Gieo Hạt"
+
+[node name="GuideDialogueLabel" type="Label" parent="GuideBannerPanel/HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.243137, 0.152941, 0.0784314, 1)
+theme_override_font_sizes/font_size = 13
+text = "Hãy nhấn giữ và kéo-lướt chuột (Drag-and-Swipe) qua ô ruộng để gặt Lúa mì chín vàng và gieo hạt mới!"
+autowrap_mode = 2
+
+[node name="HandPointerSprite" type="Sprite2D" parent="."]
+z_index = 20
+texture = ExtResource("2_hand")

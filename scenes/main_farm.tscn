@@ -10,6 +10,9 @@
 [ext_resource type="Script" path="res://scripts/core/player_input.gd" id="8_pinput"]
 [ext_resource type="Script" path="res://scripts/systems/zoo_manager.gd" id="9_zoo"]
 [ext_resource type="Script" path="res://scripts/systems/quest_manager.gd" id="10_quest"]
+[ext_resource type="Script" path="res://scripts/interaction/onboarding_director.gd" id="11_onboard"]
+[ext_resource type="PackedScene" path="res://scenes/ui/TutorialOverlay.tscn" id="12_tut"]
+[ext_resource type="PackedScene" path="res://scenes/ui/OfflineReportModal.tscn" id="13_rep"]
 
 [node name="MainFarm" type="Node2D"]
 y_sort_enabled = true
@@ -74,3 +77,14 @@ script = ExtResource("2_cam")
 [node name="UIHud" parent="." node_paths=PackedStringArray("drag_action_manager") instance=ExtResource("5_hud")]
 drag_action_manager = NodePath("../DragActionManager")
 
+[node name="OnboardingDirector" type="Node" parent="." node_paths=PackedStringArray("player_avatar", "camera_node")]
+script = ExtResource("11_onboard")
+player_avatar = NodePath("../PlayerAvatar")
+camera_node = NodePath("../Camera2D")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 15
+
+[node name="TutorialOverlay" parent="UILayer" instance=ExtResource("12_tut")]
+
+[node name="OfflineReportModal" parent="UILayer" instance=ExtResource("13_rep")]

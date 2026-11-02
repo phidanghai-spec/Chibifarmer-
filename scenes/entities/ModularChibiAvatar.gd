@@ -133,3 +133,4 @@ func _update_procedural_motion(mode: PreviewMode) -> void:
 			visual_pivot.rotation = -maxf(0.0, pull) * 0.10
 			if tool_layer != null:
 				tool_layer.rotation = -0.25 + pull * 0.35
+

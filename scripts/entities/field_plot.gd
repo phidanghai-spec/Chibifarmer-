@@ -155,6 +155,7 @@ func plant(new_crop_id: String) -> bool:
 	_update_crop_visual()
 	
 	EventBus.field_planted.emit(instance_id, crop_id, finish_timestamp)
+	EventBus.crop_planted.emit(crop_id, grid_pos)
 	AudioManager.play_sfx("plant")
 	return true
 
@@ -179,6 +180,7 @@ func harvest() -> bool:
 	StorageManager.add_xp(xp_reward)
 	AudioManager.play_sfx("harvest")
 	EventBus.field_harvested.emit(instance_id, crop_id)
+	EventBus.crop_harvested.emit(crop_id, grid_pos)
 	EventBus.loot_collected.emit(crop_id, harvest_yield, global_position)
 	
 	state = PlotState.EMPTY

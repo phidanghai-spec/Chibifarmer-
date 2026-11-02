@@ -475,6 +475,9 @@ func _setup_aliases() -> void:
 	_alias("tool_dismantle", "tool_demolish")
 	if not has_texture("plot_block_empty"):
 		_load_standalone_texture("plot_block_empty", "res://assets/sprites/plot_block_empty.png")
+	_load_standalone_texture("npc_elder_portrait", "res://assets/sprites/npc_elder_portrait.png")
+	_load_standalone_texture("ui_hand_pointer_chibi", "res://assets/sprites/ui_hand_pointer_chibi.png")
+	_load_standalone_texture("ui_offline_chest_banner", "res://assets/sprites/ui_offline_chest_banner.png")
 	
 	# Environment aliases
 	# _alias("env_cherry_tree", "env_cherry_tree")

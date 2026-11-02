@@ -181,3 +181,4 @@ func _on_confirm_start_farm() -> void:
 		
 	EventBus.character_creation_confirmed.emit(active_slot_index, p_name, f_name, avatar_preview.current_config)
 	get_tree().change_scene_to_file(_get_target_farm_scene())
+
