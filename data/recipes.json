@@ -253,12 +253,79 @@
     },
     "produce_item_id": "sanctuary_feed",
     "produce_count": 2,
-    "craft_time_seconds": 12,
+    "craft_time_seconds": 1200,
     "xp_reward": 5,
     "base_price": 35,
     "unlock_level": 3,
     "storage_type": "barn",
     "description": "Bó cỏ tổng hợp bổ dưỡng từ lúa mì, ngô và cà rốt dành riêng cho thú Sở Thú."
+  },
+  "item_fish_pie": {
+    "id": "item_fish_pie",
+    "name": "Bánh Pie Cá Nướng",
+    "building_id": "bakery",
+    "ingredients": {
+      "fish_carp": 1,
+      "wheat": 2
+    },
+    "produce_item_id": "item_fish_pie",
+    "produce_count": 1,
+    "craft_time_seconds": 1200,
+    "xp_reward": 9,
+    "base_price": 55,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Bánh pie nướng giòn rụm với nhân cá tươi thơm ngon và rau thơm đồng quê."
+  },
+  "item_grilled_fish": {
+    "id": "item_grilled_fish",
+    "name": "Cá Nướng Xiên Que",
+    "building_id": "bakery",
+    "ingredients": {
+      "fish_carp": 1,
+      "corn": 1
+    },
+    "produce_item_id": "item_grilled_fish",
+    "produce_count": 1,
+    "craft_time_seconds": 900,
+    "xp_reward": 8,
+    "base_price": 52,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Xiên cá chép nướng thơm lừng ăn kèm ngô ngọt và chanh tươi thanh mát."
+  },
+  "item_herbal_tea": {
+    "id": "item_herbal_tea",
+    "name": "Trà Thảo Mộc Mật Ong",
+    "building_id": "juice_stand",
+    "ingredients": {
+      "rose": 1,
+      "honey": 1
+    },
+    "produce_item_id": "item_herbal_tea",
+    "produce_count": 1,
+    "craft_time_seconds": 1800,
+    "xp_reward": 18,
+    "base_price": 140,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Tách trà thảo mộc hoa hồng ngát hương kết hợp cùng mật ong hoa rừng ấm áp."
+  },
+  "item_bacon_eggs": {
+    "id": "item_bacon_eggs",
+    "name": "Trứng Chiên Thịt Xông Khói",
+    "building_id": "bakery",
+    "ingredients": {
+      "egg": 2,
+      "bacon": 1
+    },
+    "produce_item_id": "item_bacon_eggs",
+    "produce_count": 1,
+    "craft_time_seconds": 2400,
+    "xp_reward": 20,
+    "base_price": 150,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Bữa sáng thịnh soạn gồm hai quả trứng ốp la lòng đào và dải thịt xông khói vàng giòn."
   }
 }
-
