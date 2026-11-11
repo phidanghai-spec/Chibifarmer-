@@ -1,3 +1,4 @@
+# Private environment & keys
 .env
 *.zip
 
@@ -15,13 +16,26 @@ export_presets.cfg
 data_*/
 mono_crash.*.json
 
+# Temporary debug screenshots & previews
+debug_*.png
+debug_*.png.import
+preview_*.png
+preview_*.png.import
+
+# Python caches
+__pycache__/
+*.pyc
+
 # System / OS ignores
 .DS_Store
 Thumbs.db
 desktop.ini
 *.tmp
 
-# Asset cleanup backups & audit output
+# Builds, reports & audits
+build/
+reports/
 _sprite_backups/
 _asset_audit/
 scratch/
+Learn_RAG_From_Scratch/
