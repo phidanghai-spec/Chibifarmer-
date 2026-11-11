@@ -13,9 +13,10 @@ enum PreviewMode { IDLE, WALK, HARVEST, FISH }
 @onready var tool_layer: Sprite2D = $VisualPivot/ToolLayer
 
 var current_config: Dictionary = {
+	"gender": "male",
 	"body": "body_warm_ivory",
 	"eyes": "eyes_sparkle_brown",
-	"hair": "hair_braid_chestnut",
+	"hair": "hair_short_sunny",
 	"outfit": "outfit_denim_overalls",
 	"hat": "hat_straw_ribbon",
 	"poodle": "poodle_apricot_red"
@@ -24,11 +25,23 @@ var current_config: Dictionary = {
 var preview_mode: PreviewMode = PreviewMode.IDLE
 var _anim_time: float = 0.0
 var _base_shadow_scale: Vector2 = Vector2(1.0, 1.0)
+var _base_sprite_scale: Vector2 = Vector2(0.75, 0.75)
 
 func _ready() -> void:
 	if dynamic_shadow != null:
 		_base_shadow_scale = dynamic_shadow.scale
+	_hide_legacy_paperdoll_layers()
 	apply_full_config(current_config)
+
+func _hide_legacy_paperdoll_layers() -> void:
+	if eyes_layer != null:
+		eyes_layer.visible = false
+	if outfit_layer != null:
+		outfit_layer.visible = false
+	if hair_layer != null:
+		hair_layer.visible = false
+	if hat_layer != null:
+		hat_layer.visible = false
 
 func _process(delta: float) -> void:
 	_anim_time += delta
@@ -39,27 +52,64 @@ func _process(delta: float) -> void:
 func apply_full_config(new_config: Dictionary) -> void:
 	for key: String in new_config.keys():
 		current_config[key] = str(new_config[key])
-		equip_part(key, str(new_config[key]))
+	_refresh_authentic_avatar_sprite()
 
 func equip_part(category: String, part_id: String) -> void:
 	current_config[category] = part_id
-	match category:
-		"body":
-			_assign_atlas_texture(body_layer, part_id)
-		"eyes":
-			_assign_atlas_texture(eyes_layer, part_id)
-		"outfit":
-			_assign_atlas_texture(outfit_layer, part_id)
-		"hair":
-			_assign_atlas_texture(hair_layer, part_id)
-		"hat":
-			if part_id == "hat_none" or part_id.is_empty():
-				if hat_layer != null:
-					hat_layer.visible = false
-			else:
-				if hat_layer != null:
-					hat_layer.visible = true
-					_assign_atlas_texture(hat_layer, part_id)
+	_refresh_authentic_avatar_sprite()
+
+func _refresh_authentic_avatar_sprite() -> void:
+	_hide_legacy_paperdoll_layers()
+	if body_layer == null:
+		return
+
+	var outfit_id: String = str(current_config.get("outfit", "outfit_denim_overalls"))
+	var hair_id: String = str(current_config.get("hair", "hair_short_sunny"))
+	var hat_id: String = str(current_config.get("hat", "hat_straw_ribbon"))
+	var body_id: String = str(current_config.get("body", "body_warm_ivory"))
+	var gender: String = str(current_config.get("gender", "male"))
+	var is_female: bool = (gender == "female" or hair_id == "hair_braid_chestnut" or hair_id == "hair_curly_berry")
+	var sprite_id: String = "avatar_male_overalls"
+	if is_female:
+		match outfit_id:
+			"outfit_floral_dress":
+				sprite_id = "avatar_female_dress"
+			"outfit_baker_apron":
+				sprite_id = "avatar_female_baker"
+			"outfit_carpenter_vest":
+				sprite_id = "avatar_female_carpenter"
+			_:
+				sprite_id = "avatar_female_overalls"
+	else:
+		match outfit_id:
+			"outfit_floral_dress":
+				sprite_id = "avatar_male_floral"
+			"outfit_baker_apron":
+				sprite_id = "avatar_male_baker"
+			"outfit_carpenter_vest":
+				sprite_id = "avatar_male_carpenter"
+			_:
+				sprite_id = "avatar_male_overalls"
+	_assign_atlas_texture(body_layer, sprite_id)
+
+	# Normalize scale so every 2.5D character sprite fits cleanly on the stage (target height ~175px)
+	if body_layer.texture != null:
+		var tex_h: float = maxf(1.0, body_layer.texture.get_height())
+		var target_scale: float = 175.0 / tex_h
+		_base_sprite_scale = Vector2(target_scale, target_scale)
+		body_layer.scale = _base_sprite_scale
+		body_layer.position = Vector2(0.0, -82.0)
+
+	# Subtle warm skin/lighting tint so Tab 1 options give pleasant visual feedback
+	match body_id:
+		"body_peach_sunny":
+			body_layer.modulate = Color(1.02, 0.97, 0.95, 1.0)
+		"body_honey_tan":
+			body_layer.modulate = Color(0.98, 0.93, 0.86, 1.0)
+		"body_cocoa_warm":
+			body_layer.modulate = Color(0.92, 0.85, 0.78, 1.0)
+		_:
+			body_layer.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func set_preview_action(mode: PreviewMode) -> void:
 	preview_mode = mode
@@ -70,9 +120,15 @@ func set_preview_action(mode: PreviewMode) -> void:
 		PreviewMode.HARVEST:
 			tool_layer.visible = true
 			_assign_atlas_texture(tool_layer, "tool_sickle_chibi")
+			tool_layer.position = Vector2(-29.0, -70.0)
+			tool_layer.offset = Vector2(-15.0, -18.0)
+			tool_layer.scale = Vector2(0.55, 0.55)
 		PreviewMode.FISH:
 			tool_layer.visible = true
 			_assign_atlas_texture(tool_layer, "tool_fishing_rod_chibi")
+			tool_layer.position = Vector2(-29.0, -70.0)
+			tool_layer.offset = Vector2(-36.0, -32.0)
+			tool_layer.scale = Vector2(0.58, 0.58)
 		_:
 			tool_layer.visible = false
 			tool_layer.rotation = 0.0
@@ -88,12 +144,12 @@ func _assign_atlas_texture(target_sprite: Sprite2D, region_id: String) -> void:
 				tex = sam.call("get_region_texture", region_id) as Texture2D
 			if tex == null and sam.has_method("get_texture"):
 				tex = sam.call("get_texture", region_id) as Texture2D
-	
+
 	if tex == null:
 		var direct_path: String = "res://assets/sprites/" + region_id + ".png"
 		if FileAccess.file_exists(direct_path):
 			tex = load(direct_path) as Texture2D
-			
+
 	if tex != null:
 		target_sprite.texture = tex
 
@@ -102,35 +158,30 @@ func _update_procedural_motion(mode: PreviewMode) -> void:
 		return
 	match mode:
 		PreviewMode.IDLE:
-			# Idle Breathing: nhịp thở tự nhiên khi đứng
-			var breath: float = sin(_anim_time * 3.2) * 0.028
+			var breath: float = sin(_anim_time * 3.2) * 0.024
 			visual_pivot.position = Vector2.ZERO
 			visual_pivot.rotation = 0.0
-			visual_pivot.scale = Vector2(1.0 - breath * 0.45, 1.0 + breath)
+			visual_pivot.scale = Vector2(1.0 - breath * 0.4, 1.0 + breath)
 			if dynamic_shadow != null:
-				dynamic_shadow.scale = _base_shadow_scale * (1.0 + breath * 0.2)
+				dynamic_shadow.scale = _base_shadow_scale * (1.0 + breath * 0.18)
 		PreviewMode.WALK:
-			# Walk Bounce & Dynamic Shadow: nhún nhảy và bóng đổ co giãn theo nhịp chân
-			var wave: float = abs(sin(_anim_time * 11.0))
-			var tilt: float = sin(_anim_time * 5.5) * 0.06
-			visual_pivot.position.y = -wave * 7.5
+			var wave: float = abs(sin(_anim_time * 10.5))
+			var tilt: float = sin(_anim_time * 5.25) * 0.055
+			visual_pivot.position.y = -wave * 6.5
 			visual_pivot.rotation = tilt
-			visual_pivot.scale = Vector2(1.0 + (0.5 - wave) * 0.08, 1.0 - (0.5 - wave) * 0.08)
+			visual_pivot.scale = Vector2(1.0 + (0.5 - wave) * 0.06, 1.0 - (0.5 - wave) * 0.06)
 			if dynamic_shadow != null:
-				var shadow_factor: float = 1.0 - wave * 0.22
+				var shadow_factor: float = 1.0 - wave * 0.2
 				dynamic_shadow.scale = _base_shadow_scale * shadow_factor
 		PreviewMode.HARVEST:
-			# Hoạt ảnh vung liềm gặt lúa mượt mà
 			var swing: float = sin(_anim_time * 8.0)
 			visual_pivot.position.y = -abs(swing) * 3.0
-			visual_pivot.rotation = swing * 0.08
+			visual_pivot.rotation = swing * 0.07
 			if tool_layer != null:
-				tool_layer.rotation = swing * 0.65
+				tool_layer.rotation = swing * 0.6
 		PreviewMode.FISH:
-			# Hoạt ảnh giật cần câu cá bên cầu gỗ
 			var pull: float = sin(_anim_time * 4.5)
-			visual_pivot.position.y = -maxf(0.0, pull) * 5.0
-			visual_pivot.rotation = -maxf(0.0, pull) * 0.10
+			visual_pivot.position.y = -maxf(0.0, pull) * 4.5
+			visual_pivot.rotation = -maxf(0.0, pull) * 0.08
 			if tool_layer != null:
-				tool_layer.rotation = -0.25 + pull * 0.35
-
+				tool_layer.rotation = -0.22 + pull * 0.32

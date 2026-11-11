@@ -7,7 +7,11 @@
     "spawn_weight": 35,
     "spawn_cooldown_seconds": 60,
     "max_concurrent": 2,
-    "request_item_types": ["crops", "animal_products", "baked_goods"],
+    "request_item_types": [
+      "crops",
+      "animal_products",
+      "baked_goods"
+    ],
     "min_order_quantity": 1,
     "max_order_quantity": 5,
     "coin_multiplier": 1.15,
@@ -42,7 +46,37 @@
     "max_tip_coins": 30,
     "attraction_coin_scale": 0.5,
     "attraction_xp_scale": 0.2,
-    "emotes": ["heart", "camera", "sparkle", "clap"],
+    "emotes": [
+      "heart",
+      "camera",
+      "sparkle",
+      "clap"
+    ],
     "description": "Khách du lịch thích tản bộ trên các lối đi lát gạch, chiêm ngưỡng nông trại và hào phóng để lại tiền tip."
+  },
+  "visitor_photographer": {
+    "id": "visitor_photographer",
+    "sprite_id": "visitor_photographer",
+    "name": "Nhiếp Ảnh Gia Du Lịch",
+    "category": "tourist",
+    "move_speed": 48.0,
+    "spawn_weight": 35,
+    "spawn_cooldown_seconds": 50,
+    "max_concurrent": 3,
+    "max_poi_visits": 5,
+    "poi_stop_duration_seconds": 6.0,
+    "base_tip_coins": 18,
+    "base_tip_xp": 8,
+    "max_tip_coins": 50,
+    "tip_multiplier": 1.8,
+    "attraction_coin_scale": 0.8,
+    "attraction_xp_scale": 0.4,
+    "emotes": [
+      "camera",
+      "sparkle",
+      "heart",
+      "clap"
+    ],
+    "description": "Nhiếp ảnh gia du lịch đam mê săn ảnh đẹp, say mê các góc trang trí phong cảnh và hào phóng để lại tiền tip x1.8."
   }
 }

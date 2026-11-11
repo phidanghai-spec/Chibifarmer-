@@ -120,10 +120,36 @@ func spawn_random_visitor() -> VisitorNPC:
 		else:
 			target_pos = _get_sightseeing_position()
 	else:
-		# visitor_tourist sightseeing at diverse points around the farm
-		target_pos = _get_sightseeing_position()
+		# visitor_tourist sightseeing or experiencing farm tourism activities (Orchard / Picnic / Sightseeing)
+		var farm: Node = get_tree().current_scene
+		var roll: float = randf()
+		if roll < 0.35:
+			var orchard_pos: Vector2 = Vector2.ZERO
+			if farm != null and farm.get("_movable_decors") != null:
+				for d in farm.get("_movable_decors") as Array:
+					if d is Node2D and bool(d.get("is_fruit_tree")):
+						orchard_pos = (d as Node2D).position + Vector2(randf_range(-20.0, 20.0), 30.0)
+						break
+			if orchard_pos != Vector2.ZERO:
+				target_pos = orchard_pos
+				dest_type = "orchard"
+			else:
+				target_pos = _get_sightseeing_position()
+		elif roll < 0.65:
+			var bench_spots: Array[Vector2] = [
+				Vector2(160.0, 615.0),
+				Vector2(575.0, 615.0),
+				Vector2(1460.0, 84.0),
+				Vector2(1310.0, 635.0),
+				Vector2(1850.0, 650.0)
+			]
+			target_pos = bench_spots.pick_random()
+			dest_type = "picnic"
+		else:
+			target_pos = _get_sightseeing_position()
 	
 	available_npc.activate(v_type, start_pos, target_pos, dest_type, slot_idx)
+	EventBus.visitor_spawned.emit(available_npc.get_instance_id(), v_type)
 	print("[VisitorManager] Spawned ", v_type, " heading toward ", target_pos, " (queue: ", dest_type, ")")
 	return available_npc
 
@@ -144,6 +170,7 @@ func summon_zoo_visitors(count: int = 2) -> int:
 			var target_pos: Vector2 = zoo_spots.pick_random() + Vector2(randf_range(-14.0, 14.0), randf_range(-14.0, 14.0))
 			var v_type: String = VISITOR_TYPES.pick_random()
 			npc.activate(v_type, start_pos, target_pos, "zoo", -1)
+			EventBus.visitor_spawned.emit(npc.get_instance_id(), v_type)
 			spawned += 1
 			if spawned >= count:
 				break

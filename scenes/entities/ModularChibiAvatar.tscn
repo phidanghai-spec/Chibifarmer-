@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://cmodchibiavatar001"]
 
 [ext_resource type="Script" path="res://scenes/entities/ModularChibiAvatar.gd" id="1_avatar"]
-[ext_resource type="Texture2D" path="res://assets/sprites/body_warm_ivory.png" id="2_body"]
+[ext_resource type="Texture2D" path="res://assets/sprites/avatar_male_overalls.png" id="2_body"]
 [ext_resource type="Texture2D" path="res://assets/sprites/eyes_sparkle_brown.png" id="3_eyes"]
 [ext_resource type="Texture2D" path="res://assets/sprites/outfit_denim_overalls.png" id="4_outfit"]
 [ext_resource type="Texture2D" path="res://assets/sprites/hair_braid_chestnut.png" id="5_hair"]
@@ -11,8 +11,8 @@ colors = PackedColorArray(0.12, 0.08, 0.04, 0.45, 0.12, 0.08, 0.04, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
 gradient = SubResource("Gradient_shadow")
-width = 56
-height = 24
+width = 76
+height = 28
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(0.5, 0)
@@ -24,36 +24,40 @@ radius = 16.0
 script = ExtResource("1_avatar")
 
 [node name="DynamicShadow" type="Sprite2D" parent="."]
-position = Vector2(0, 52)
+position = Vector2(0, 2)
 texture = SubResource("GradientTexture2D_shadow")
 
 [node name="VisualPivot" type="Node2D" parent="."]
-position = Vector2(0, 0)
 
 [node name="BodyLayer" type="Sprite2D" parent="VisualPivot"]
-position = Vector2(0, -10)
+position = Vector2(0, -82)
+scale = Vector2(0.68, 0.68)
 texture = ExtResource("2_body")
 
 [node name="EyesLayer" type="Sprite2D" parent="VisualPivot"]
-position = Vector2(0, -10)
+visible = false
+position = Vector2(0, -50)
 texture = ExtResource("3_eyes")
 
 [node name="OutfitLayer" type="Sprite2D" parent="VisualPivot"]
-position = Vector2(0, -10)
+visible = false
+position = Vector2(0, -50)
 texture = ExtResource("4_outfit")
 
 [node name="HairLayer" type="Sprite2D" parent="VisualPivot"]
-position = Vector2(0, -10)
+visible = false
+position = Vector2(0, -50)
 texture = ExtResource("5_hair")
 
 [node name="HatLayer" type="Sprite2D" parent="VisualPivot"]
-position = Vector2(0, -10)
+visible = false
+position = Vector2(0, -50)
 
 [node name="ToolLayer" type="Sprite2D" parent="VisualPivot"]
 visible = false
-position = Vector2(0, -10)
+position = Vector2(42, -68)
+scale = Vector2(0.55, 0.55)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 36)
+position = Vector2(0, -4)
 shape = SubResource("CircleShape2D_col")
-

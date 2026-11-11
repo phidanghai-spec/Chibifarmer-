@@ -138,7 +138,7 @@ func _update_tree_visuals() -> void:
 				sprite.texture = SpriteAtlasManager.get_texture("tree_fruitless")
 				SpriteAtlasManager.set_sprite_pixel_size(sprite, decor_size)
 			if timer_label != null:
-				timer_label.text = "🌱 Cây Non: %ds" % maxi(1, int(stage_timer))
+				timer_label.text = "ðŸŒ± CÃ¢y Non: %ds" % maxi(1, int(stage_timer))
 				timer_label.visible = true
 				timer_label.add_theme_color_override("font_color", Color(0.7, 1.0, 0.6))
 		
@@ -150,7 +150,7 @@ func _update_tree_visuals() -> void:
 				sprite.texture = SpriteAtlasManager.get_texture("tree_fruitless")
 				SpriteAtlasManager.set_sprite_pixel_size(sprite, decor_size)
 			if timer_label != null:
-				timer_label.text = "🌼 Kết Trái: %ds" % maxi(1, int(stage_timer))
+				timer_label.text = "ðŸŒ¼ Káº¿t TrÃ¡i: %ds" % maxi(1, int(stage_timer))
 				timer_label.visible = true
 				timer_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
 		
@@ -177,10 +177,10 @@ func _update_tree_visuals() -> void:
 			if timer_label != null:
 				timer_label.visible = true
 				if not revived_once:
-					timer_label.text = "💧 Hồi Sinh Cây"
+					timer_label.text = "ðŸ’§ Há»“i Sinh CÃ¢y"
 					timer_label.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0))
 				else:
-					timer_label.text = "🪚 Đốn Cây Khô"
+					timer_label.text = "ðŸªš Äá»‘n CÃ¢y KhÃ´"
 					timer_label.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
 	queue_redraw()
 
@@ -334,7 +334,7 @@ func _process(delta: float) -> void:
 	var size_boost: float = 1.0 + float(3 - harvest_left) * 0.08
 	if growth_stage == TreeGrowthStage.STAGE_SAPLING:
 		if timer_label != null:
-			timer_label.text = "🌱 Cây Non: %ds" % maxi(1, int(stage_timer))
+			timer_label.text = "ðŸŒ± CÃ¢y Non: %ds" % maxi(1, int(stage_timer))
 		if stage_timer <= 0.0:
 			set_growth_stage(TreeGrowthStage.STAGE_GROWING)
 			var pop: Tween = create_tween()
@@ -342,7 +342,7 @@ func _process(delta: float) -> void:
 			pop.tween_property(self, "scale", Vector2(0.8, 0.8) * size_boost, 0.12)
 	elif growth_stage == TreeGrowthStage.STAGE_GROWING:
 		if timer_label != null:
-			timer_label.text = "🌼 Kết Trái: %ds" % maxi(1, int(stage_timer))
+			timer_label.text = "ðŸŒ¼ Káº¿t TrÃ¡i: %ds" % maxi(1, int(stage_timer))
 		if stage_timer <= 0.0:
 			set_growth_stage(TreeGrowthStage.STAGE_RIPE)
 			var pop: Tween = create_tween()
@@ -370,15 +370,15 @@ func try_harvest() -> bool:
 	
 	var fruit_id: String = "apple" if is_apple_tree else "mango"
 	if not StorageManager.can_store_item(fruit_id, 2):
-		print("[MovableDecor] Kho Silo đã đầy, không thể chứa thêm quả!")
+		print("[MovableDecor] Kho Silo Ä‘Ã£ Ä‘áº§y, khÃ´ng thá»ƒ chá»©a thÃªm quáº£!")
 		return false
 	
-	# Add fruit: +2 quả vào Silo
+	# Add fruit: +2 quáº£ vÃ o Silo
 	StorageManager.add_item(fruit_id, 2)
 	AudioManager.play_sfx("harvest")
 	EventBus.loot_collected.emit(fruit_id, 2, global_position)
 	
-	# Drop seed: rớt ngẫu nhiên +1 hạt giống (apple_seed hoặc mango_seed)
+	# Drop seed: rá»›t ngáº«u nhiÃªn +1 háº¡t giá»‘ng (apple_seed hoáº·c mango_seed)
 	var seed_drop: String = "apple_seed" if is_apple_tree else "mango_seed"
 	if StorageManager.can_store_item(seed_drop, 1):
 		StorageManager.add_item(seed_drop, 1)
@@ -430,7 +430,7 @@ func try_interact_withered() -> bool:
 		pop.tween_property(self, "scale", Vector2(1.15, 1.15), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		var grow_sc: Vector2 = Vector2(0.8, 0.8) * (1.0 + float(3 - harvest_left) * 0.08)
 		pop.tween_property(self, "scale", grow_sc, 0.12)
-		print("[MovableDecor] Cây đã được tưới nước hồi sinh (💧 Hồi sinh cây!), thêm 1 vụ quả bonus!")
+		print("[MovableDecor] CÃ¢y Ä‘Ã£ Ä‘Æ°á»£c tÆ°á»›i nÆ°á»›c há»“i sinh (ðŸ’§ Há»“i sinh cÃ¢y!), thÃªm 1 vá»¥ quáº£ bonus!")
 		return true
 	else:
 		var seed_reward: String = "apple_seed" if is_apple_tree else "mango_seed"
@@ -440,7 +440,7 @@ func try_interact_withered() -> bool:
 		StorageManager.add_xp(5)
 		EventBus.loot_collected.emit("xp", 5, global_position)
 		
-		print("[MovableDecor] Đã đốn cây khô (🪚), thưởng +1 ", seed_reward, " và +5 XP!")
+		print("[MovableDecor] ÄÃ£ Ä‘á»‘n cÃ¢y khÃ´ (ðŸªš), thÆ°á»Ÿng +1 ", seed_reward, " vÃ  +5 XP!")
 		if main_farm != null and main_farm.has_method("remove_movable_decor"):
 			main_farm.call("remove_movable_decor", self)
 		else:
@@ -449,6 +449,3 @@ func try_interact_withered() -> bool:
 
 func _harvest_apple() -> void:
 	try_harvest()
-
-func _draw() -> void:
-	pass

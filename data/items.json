@@ -399,5 +399,104 @@
     "xp_reward": 20,
     "unlock_level": 1,
     "description": "Hũ mật ong hoa rừng vàng óng thơm ngọt do đàn ong Chibi cần cù thu hoạch."
+  },
+  "item_fish_pie": {
+    "id": "item_fish_pie",
+    "name": "Bánh Pie Cá Nướng",
+    "base_price": 55,
+    "xp_reward": 9,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Bánh pie nướng giòn rụm với nhân cá tươi thơm ngon và rau thơm đồng quê."
+  },
+  "fish_pie": {
+    "id": "item_fish_pie",
+    "name": "Bánh Pie Cá Nướng",
+    "base_price": 55,
+    "xp_reward": 9,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Bánh pie nướng giòn rụm với nhân cá tươi thơm ngon và rau thơm đồng quê."
+  },
+  "item_grilled_fish": {
+    "id": "item_grilled_fish",
+    "name": "Cá Nướng Xiên Que",
+    "base_price": 52,
+    "xp_reward": 8,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Xiên cá chép nướng thơm lừng ăn kèm ngô ngọt và chanh tươi thanh mát."
+  },
+  "grilled_fish": {
+    "id": "item_grilled_fish",
+    "name": "Cá Nướng Xiên Que",
+    "base_price": 52,
+    "xp_reward": 8,
+    "unlock_level": 4,
+    "storage_type": "barn",
+    "description": "Xiên cá chép nướng thơm lừng ăn kèm ngô ngọt và chanh tươi thanh mát."
+  },
+  "item_herbal_tea": {
+    "id": "item_herbal_tea",
+    "name": "Trà Thảo Mộc Mật Ong",
+    "base_price": 140,
+    "xp_reward": 18,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Tách trà thảo mộc hoa hồng ngát hương kết hợp cùng mật ong hoa rừng ấm áp."
+  },
+  "herbal_tea": {
+    "id": "item_herbal_tea",
+    "name": "Trà Thảo Mộc Mật Ong",
+    "base_price": 140,
+    "xp_reward": 18,
+    "unlock_level": 6,
+    "storage_type": "barn",
+    "description": "Tách trà thảo mộc hoa hồng ngát hương kết hợp cùng mật ong hoa rừng ấm áp."
+  },
+  "item_bacon_eggs": {
+    "id": "item_bacon_eggs",
+    "name": "Trứng Chiên Thịt Xông Khói",
+    "base_price": 150,
+    "xp_reward": 20,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Bữa sáng thịnh soạn gồm hai quả trứng ốp la lòng đào và dải thịt xông khói vàng giòn."
+  },
+  "bacon_eggs": {
+    "id": "item_bacon_eggs",
+    "name": "Trứng Chiên Thịt Xông Khói",
+    "base_price": 150,
+    "xp_reward": 20,
+    "unlock_level": 10,
+    "storage_type": "barn",
+    "description": "Bữa sáng thịnh soạn gồm hai quả trứng ốp la lòng đào và dải thịt xông khói vàng giòn."
+  },
+  "mat_plank": {
+    "id": "mat_plank",
+    "name": "Ván Gỗ Thông",
+    "base_price": 80,
+    "xp_reward": 10,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Ván gỗ thông chắc chắn dùng để nâng cấp sức chứa kho nông sản và xây dựng công trình."
+  },
+  "mat_bolt": {
+    "id": "mat_bolt",
+    "name": "Đinh Tán Thép",
+    "base_price": 85,
+    "xp_reward": 10,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Đinh tán thép kiên cố dùng để gia cố và nâng cấp nhà kho Barn & Silo."
+  },
+  "mat_brick": {
+    "id": "mat_brick",
+    "name": "Gạch Nung Đỏ",
+    "base_price": 90,
+    "xp_reward": 12,
+    "unlock_level": 1,
+    "storage_type": "barn",
+    "description": "Gạch đất sét nung đỏ bền bỉ dùng xây dựng công trình và nâng cấp nhà kho."
   }
 }

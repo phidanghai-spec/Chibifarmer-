@@ -11,73 +11,82 @@ var story_quests: Array[Dictionary] = [
 	{
 		"id": "main_01",
 		"chapter": 1,
-		"chapter_title": "Chương 1: Khôi Phục Nông Trại",
-		"title": "Mùa Gặt Đầu Tiên",
-		"desc": "Thu hoạch 6 cây trồng bất kỳ trên đồng ruộng.",
+		"chapter_title": "Chương 1: Khởi Đầu Nông Trại (Cấp 1 → 2)",
+		"icon": "🌾",
+		"title": "Thu Hoạch 6 Lúa Mì",
+		"desc": "Gieo hạt và dùng Liềm thu hoạch 6 cây Lúa Mì trên đồng ruộng.",
 		"target": 6,
 		"type": "harvest",
 		"reward_gold": 150,
-		"reward_xp": 50,
+		"reward_xp": 30,
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
-		"nav_pos": Vector2(440, 560),
+		"reward_materials": {"mat_plank": 1},
+		"nav_pos": Vector2(190, 570),
 		"nav_name": "Khu Ruộng Trồng Trọt"
 	},
 	{
 		"id": "main_02",
 		"chapter": 1,
-		"chapter_title": "Chương 1: Khôi Phục Nông Trại",
-		"title": "Xay Cám Chăn Nuôi",
-		"desc": "Thu hoạch 3 sản phẩm từ chuồng trại gia súc hoặc xưởng sản xuất.",
-		"target": 3,
+		"chapter_title": "Chương 1: Khởi Đầu Nông Trại (Cấp 1 → 2)",
+		"icon": "🐔",
+		"title": "Cho Gà Ăn & Thu 2 Trứng Gà",
+		"desc": "Chăm sóc đàn gà và thu hoạch 2 rổ Trứng Gà tươi mới.",
+		"target": 2,
 		"type": "pen_or_production",
 		"reward_gold": 200,
-		"reward_xp": 80,
+		"reward_xp": 35,
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
-		"nav_pos": Vector2(300, 320),
-		"nav_name": "Khu Chuồng Trại Gia Súc"
+		"reward_materials": {"mat_bolt": 1},
+		"nav_pos": Vector2(340, 820),
+		"nav_name": "Chuồng Gà Chibi"
 	},
 	{
 		"id": "main_03",
 		"chapter": 1,
-		"chapter_title": "Chương 1: Khôi Phục Nông Trại",
-		"title": "Chào Đón Capybara",
-		"desc": "Cho Capybara ở Khu Bảo Tồn Sở Thú ăn 1 lần.",
+		"chapter_title": "Chương 1: Khởi Đầu Nông Trại (Cấp 1 → 2)",
+		"icon": "🚚",
+		"title": "Hoàn Thành 1 Đơn Xe Tải",
+		"desc": "Giao 1 chuyến hàng tại Bảng Đơn Xe Tải hoặc bán nông sản ở Sạp Hàng.",
 		"target": 1,
-		"type": "zoo_feed",
-		"reward_gold": 0,
-		"reward_xp": 100,
-		"reward_coins": 250,
+		"type": "delivery_or_shop",
+		"reward_gold": 220,
+		"reward_xp": 45,
+		"reward_coins": 100,
 		"reward_diamonds": 0,
-		"reward_pieces": 2,
-		"nav_pos": Vector2(1290, 195),
-		"nav_name": "Hồ Capybara Sở Thú"
+		"reward_pieces": 1,
+		"reward_materials": {"mat_plank": 1, "mat_brick": 1},
+		"nav_pos": Vector2(310, 650),
+		"nav_name": "Bảng Đơn Xe Tải"
 	},
 	{
 		"id": "main_04",
 		"chapter": 1,
-		"chapter_title": "Chương 1: Khôi Phục Nông Trại",
-		"title": "Đầu Bếp Bảo Tồn",
-		"desc": "Chế biến và thu hoạch 2 món tại các Nhà máy nông trại.",
+		"chapter_title": "Chương 1: Khởi Đầu Nông Trại (Cấp 1 → 2)",
+		"icon": "🏭",
+		"title": "Chế Biến Thức Ăn Chăn Nuôi",
+		"desc": "Xây dựng Máy Nghiền Cám ở Cấp 2 và chế biến 2 mẻ sản phẩm tại xưởng.",
 		"target": 2,
 		"type": "production",
 		"reward_gold": 300,
-		"reward_xp": 120,
+		"reward_xp": 80,
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 2,
-		"nav_pos": Vector2(570, 270),
-		"nav_name": "Xưởng Chế Biến Bánh Mì"
+		"reward_materials": {"mat_brick": 1, "mat_bolt": 1},
+		"nav_pos": Vector2(280, 420),
+		"nav_name": "Đại Lộ Xưởng Sản Xuất"
 	},
 
 	# --- CHƯƠNG 2: KHAI TRƯƠNG SỞ THÚ ---
 	{
 		"id": "main_05",
 		"chapter": 2,
-		"chapter_title": "Chương 2: Khai Trương Sở Thú",
+		"chapter_title": "Chương 2: Mở Rộng Nông Trại & Sở Thú",
+		"icon": "🦒",
 		"title": "Mở Khóa Bạn Mới",
 		"desc": "Mở khóa thêm 1 chuồng thú tại Khu Bảo Tồn Sở Thú bờ Đông.",
 		"target": 1,
@@ -87,13 +96,15 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 350,
 		"reward_diamonds": 0,
 		"reward_pieces": 2,
+		"reward_materials": {"mat_plank": 2},
 		"nav_pos": Vector2(1450, 195),
 		"nav_name": "Chuồng Thú Bờ Đông"
 	},
 	{
 		"id": "main_06",
 		"chapter": 2,
-		"chapter_title": "Chương 2: Khai Trương Sở Thú",
+		"chapter_title": "Chương 2: Mở Rộng Nông Trại & Sở Thú",
+		"icon": "🎣",
 		"title": "Ngư Thủ Bờ Sông",
 		"desc": "Câu thành công 2 con cá tại Đầm Câu Cá bờ sông.",
 		"target": 2,
@@ -103,13 +114,15 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 3,
+		"reward_materials": {"mat_bolt": 2},
 		"nav_pos": Vector2(780, 720),
 		"nav_name": "Đầm Câu Cá Tự Nhiên"
 	},
 	{
 		"id": "main_07",
 		"chapter": 2,
-		"chapter_title": "Chương 2: Khai Trương Sở Thú",
+		"chapter_title": "Chương 2: Mở Rộng Nông Trại & Sở Thú",
+		"icon": "🦫",
 		"title": "Chăm Sóc Khu Bảo Tồn",
 		"desc": "Cho các loài thú ở Sở Thú ăn tổng cộng 3 lần.",
 		"target": 3,
@@ -119,13 +132,15 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 450,
 		"reward_diamonds": 0,
 		"reward_pieces": 3,
+		"reward_materials": {"mat_brick": 2},
 		"nav_pos": Vector2(1290, 195),
 		"nav_name": "Khu Bảo Tồn Bờ Đông"
 	},
 	{
 		"id": "main_08",
 		"chapter": 2,
-		"chapter_title": "Chương 2: Khai Trương Sở Thú",
+		"chapter_title": "Chương 2: Mở Rộng Nông Trại & Sở Thú",
+		"icon": "🍎",
 		"title": "Vườn Quả Ngọt Lành",
 		"desc": "Thu hoạch 8 nông sản hoặc cây trái tích trữ kho Silo.",
 		"target": 8,
@@ -135,7 +150,8 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 3,
-		"nav_pos": Vector2(440, 560),
+		"reward_materials": {"mat_plank": 2, "mat_bolt": 1},
+		"nav_pos": Vector2(190, 570),
 		"nav_name": "Khu Ruộng & Vườn Quả"
 	},
 
@@ -144,6 +160,7 @@ var story_quests: Array[Dictionary] = [
 		"id": "main_09",
 		"chapter": 3,
 		"chapter_title": "Chương 3: Thiên Đường Du Lịch",
+		"icon": "📸",
 		"title": "Điểm Check-in Nổi Tiếng",
 		"desc": "Đón 4 lượt Du Khách ghé thăm, mua hàng hoặc rơi tiền Tip.",
 		"target": 4,
@@ -153,13 +170,15 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 600,
 		"reward_diamonds": 5,
 		"reward_pieces": 0,
-		"nav_pos": Vector2(192, 544),
+		"reward_materials": {"mat_brick": 2},
+		"nav_pos": Vector2(170, 740),
 		"nav_name": "Sạp Hàng Bên Đường"
 	},
 	{
 		"id": "main_10",
 		"chapter": 3,
 		"chapter_title": "Chương 3: Thiên Đường Du Lịch",
+		"icon": "🥖",
 		"title": "Thương Gia Nông Sản",
 		"desc": "Giao 3 đơn hàng xe tải, đơn sạp hàng hoặc khách VIP.",
 		"target": 3,
@@ -169,13 +188,15 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 5,
 		"reward_pieces": 0,
-		"nav_pos": Vector2(435, 660),
+		"reward_materials": {"mat_plank": 2, "mat_brick": 2},
+		"nav_pos": Vector2(310, 650),
 		"nav_name": "Bến Bãi Xe Tải Giao Hàng"
 	},
 	{
 		"id": "main_11",
 		"chapter": 3,
 		"chapter_title": "Chương 3: Thiên Đường Du Lịch",
+		"icon": "🐼",
 		"title": "Sở Thú Trọn Vẹn",
 		"desc": "Mở khóa toàn bộ 4 chuồng thú quý hiếm tại Sở Thú bờ Đông.",
 		"target": 4,
@@ -185,6 +206,7 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 1000,
 		"reward_diamonds": 10,
 		"reward_pieces": 5,
+		"reward_materials": {"mat_bolt": 3, "mat_brick": 3},
 		"nav_pos": Vector2(1370, 295),
 		"nav_name": "Quần Thể Sở Thú Bờ Đông"
 	},
@@ -192,6 +214,7 @@ var story_quests: Array[Dictionary] = [
 		"id": "main_12",
 		"chapter": 3,
 		"chapter_title": "Chương 3: Thiên Đường Du Lịch",
+		"icon": "🎈",
 		"title": "Thiên Đường Nông Trại",
 		"desc": "Đạt 350 Điểm Hấp Dẫn Nông Trại (Attraction Score).",
 		"target": 350,
@@ -201,6 +224,7 @@ var story_quests: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 15,
 		"reward_pieces": 0,
+		"reward_materials": {"mat_plank": 5, "mat_bolt": 5, "mat_brick": 5},
 		"nav_pos": Vector2(1185, 440),
 		"nav_name": "Cổng Khu Bảo Tồn Sở Thú"
 	}
@@ -210,6 +234,7 @@ var story_quests: Array[Dictionary] = [
 var daily_quest_pool: Array[Dictionary] = [
 	{
 		"id": "daily_harvest",
+		"icon": "🌾",
 		"title": "Nông Dân Chăm Chỉ",
 		"desc": "Thu hoạch 6 cây trồng bất kỳ trên ruộng đất.",
 		"target": 6,
@@ -219,11 +244,13 @@ var daily_quest_pool: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
-		"nav_pos": Vector2(440, 560),
+		"reward_materials": {"mat_plank": 1},
+		"nav_pos": Vector2(190, 570),
 		"nav_name": "Khu Ruộng Trồng Trọt"
 	},
 	{
 		"id": "daily_feed_pen",
+		"icon": "🐮",
 		"title": "Gia Súc No Nê",
 		"desc": "Cho gà, bò hoặc heo trong chuồng ăn 2 lần.",
 		"target": 2,
@@ -233,11 +260,13 @@ var daily_quest_pool: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
-		"nav_pos": Vector2(300, 320),
+		"reward_materials": {"mat_bolt": 1},
+		"nav_pos": Vector2(340, 820),
 		"nav_name": "Chuồng Gia Súc"
 	},
 	{
 		"id": "daily_feed_zoo",
+		"icon": "🐼",
 		"title": "Bảo Tồn Bờ Đông",
 		"desc": "Cho thú Sở Thú ăn cỏ dinh dưỡng hoặc món yêu thích 1 lần.",
 		"target": 1,
@@ -247,11 +276,13 @@ var daily_quest_pool: Array[Dictionary] = [
 		"reward_coins": 200,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
+		"reward_materials": {"mat_brick": 1},
 		"nav_pos": Vector2(1290, 195),
 		"nav_name": "Chuồng Thú Sở Thú"
 	},
 	{
 		"id": "daily_fish",
+		"icon": "🐟",
 		"title": "Vận May Đầm Cá",
 		"desc": "Câu thành công 1 con cá từ hồ câu tự nhiên.",
 		"target": 1,
@@ -261,6 +292,7 @@ var daily_quest_pool: Array[Dictionary] = [
 		"reward_coins": 0,
 		"reward_diamonds": 0,
 		"reward_pieces": 1,
+		"reward_materials": {"mat_plank": 1},
 		"nav_pos": Vector2(780, 720),
 		"nav_name": "Đầm Câu Cá"
 	}
@@ -419,6 +451,7 @@ func notify_animal_collected() -> void:
 
 func notify_animal_fed() -> void:
 	_add_progress_by_type("pen_feed", 1)
+	_add_progress_by_type("pen_or_production", 1)
 
 func notify_fish_caught() -> void:
 	_add_progress_by_type("fish", 1)
@@ -617,6 +650,7 @@ func _apply_rewards(q: Dictionary) -> void:
 	var coins: int = int(q.get("reward_coins", 0))
 	var dia: int = int(q.get("reward_diamonds", 0))
 	var pieces: int = int(q.get("reward_pieces", 0))
+	var mats: Dictionary = q.get("reward_materials", {}) as Dictionary
 	
 	if g > 0: StorageManager.add_gold(g)
 	if xp > 0: StorageManager.add_xp(xp)
@@ -628,6 +662,10 @@ func _apply_rewards(q: Dictionary) -> void:
 		EventBus.diamonds_changed.emit(StorageManager.diamonds, dia)
 	if pieces > 0:
 		SaveManager.add_puzzle_pieces(pieces)
+	for mat_id: String in mats:
+		var mat_cnt: int = int(mats[mat_id])
+		if mat_cnt > 0:
+			StorageManager.add_item(mat_id, mat_cnt)
 		
 	AudioManager.play_sfx("level_up")
 

@@ -76,24 +76,106 @@ func _ready() -> void:
 	_timer = Timer.new()
 	_timer.name = "AlertCheckTimer"
 	_timer.wait_time = 5.0
-	_timer.autostart = false
+	_timer.autostart = true
 	_timer.timeout.connect(_scan_stock_alerts)
 	add_child(_timer)
+	_timer.start(5.0)
+	call_deferred("_scan_stock_alerts")
 
 func register_npc(npc_key: String, npc_node: Node2D) -> void:
 	npcs[npc_key] = npc_node
 
+func _get_resource_target_pos(resource_id: String, fallback: Vector2) -> Vector2:
+	var farm: Node = main_farm if main_farm != null else get_tree().current_scene
+	if farm != null:
+		if resource_id == "wheat" or resource_id == "corn":
+			var plots_c: Node2D = farm.find_child("PlotsContainer", true, false) as Node2D
+			if plots_c != null and plots_c.get_child_count() > 0:
+				var first_p: Node2D = plots_c.get_child(0) as Node2D
+				if first_p != null:
+					return first_p.global_position
+		elif resource_id == "egg":
+			var pens: Array = farm.get("_animal_pens") as Array if farm.get("_animal_pens") != null else []
+			for p: Variant in pens:
+				var pen: Node2D = p as Node2D
+				if pen != null and String(pen.get("animal_id")) == "chicken":
+					return pen.global_position
+		elif resource_id == "milk":
+			var pens: Array = farm.get("_animal_pens") as Array if farm.get("_animal_pens") != null else []
+			for p: Variant in pens:
+				var pen: Node2D = p as Node2D
+				if pen != null and String(pen.get("animal_id")) == "cow":
+					return pen.global_position
+	
+	if resource_id == "egg" or resource_id == "milk":
+		return _get_npc_pos("rancher", fallback)
+	elif resource_id == "wheat":
+		return _get_npc_pos("baker", fallback)
+	return fallback
+
 func _scan_stock_alerts() -> void:
 	_active_alerts.clear()
-	_update_npc_bubble("baker", "🍞 Bánh Đã Sẵn!", false)
-	_update_npc_bubble("pastry", "🍰 Bánh Kem Xong!", false)
-	_update_npc_bubble("barista", "🧃 Nước Mát Lạnh!", false)
-	_update_npc_bubble("rancher", "🥛 Bầy Thú No Nê!", false)
+	
+	var wheat_count: int = StorageManager.get_item_count("wheat") if StorageManager != null else 10
+	var corn_count: int = StorageManager.get_item_count("corn") if StorageManager != null else 10
+	var egg_count: int = StorageManager.get_item_count("egg") if StorageManager != null else 10
+	var milk_count: int = StorageManager.get_item_count("milk") if StorageManager != null else 10
+	
+	var wheat_pos: Vector2 = _get_resource_target_pos("wheat", Vector2(400.0, 560.0))
+	var corn_pos: Vector2 = _get_resource_target_pos("corn", Vector2(460.0, 560.0))
+	var egg_pos: Vector2 = _get_resource_target_pos("egg", Vector2(240.0, 720.0))
+	var milk_pos: Vector2 = _get_resource_target_pos("milk", Vector2(300.0, 720.0))
+	
+	if wheat_count <= 4:
+		_active_alerts.append({
+			"item": "wheat",
+			"text": "🌾 Thiếu Lúa Mì (%d còn lại)! Bấm để gieo hạt" % wheat_count,
+			"pos": wheat_pos
+		})
+		_update_npc_bubble("baker", "⚠️ Thiếu Lúa Mì!", true)
+	else:
+		_update_npc_bubble("baker", "🍞 Bánh Đã Sẵn!", false)
+	
+	if corn_count <= 4:
+		_active_alerts.append({
+			"item": "corn",
+			"text": "🌽 Thiếu Ngô (%d còn lại)! Bấm để gieo trồng" % corn_count,
+			"pos": corn_pos
+		})
+		_update_npc_bubble("rancher", "⚠️ Cần Ngô xay cám!", true)
+	else:
+		_update_npc_bubble("rancher", "🥛 Bầy Thú No Nê!", false)
+	
+	if egg_count <= 2:
+		_active_alerts.append({
+			"item": "egg",
+			"text": "🥚 Thiếu Trứng Gà (%d còn lại)! Bấm để thăm chuồng" % egg_count,
+			"pos": egg_pos
+		})
+		_update_npc_bubble("pastry", "⚠️ Thiếu Trứng gà!", true)
+	else:
+		_update_npc_bubble("pastry", "🍰 Bánh Kem Xong!", false)
+	
+	if milk_count <= 2:
+		_active_alerts.append({
+			"item": "milk",
+			"text": "🥛 Thiếu Sữa Bò (%d còn lại)! Bấm để vắt sữa" % milk_count,
+			"pos": milk_pos
+		})
+		_update_npc_bubble("barista", "⚠️ Thiếu Sữa tươi!", true)
+	else:
+		_update_npc_bubble("barista", "🧃 Nước Mát Lạnh!", false)
+	
 	if npcs.has("keeper"):
 		_update_npc_bubble("keeper", "🌾 Kho Sẵn Sàng!", false)
 	if npcs.has("fisher"):
 		_update_npc_bubble("fisher", "🎣 Sẵn Sàng!", false)
-	_hide_banner()
+	
+	if not _active_alerts.is_empty():
+		_current_alert_idx = _current_alert_idx % _active_alerts.size()
+		_show_alert(_active_alerts[_current_alert_idx])
+	else:
+		_hide_banner()
 
 func _get_npc_pos(npc_key: String, fallback: Vector2) -> Vector2:
 	if npcs.has(npc_key):
@@ -127,8 +209,19 @@ func _on_banner_pressed() -> void:
 	var target_pos: Vector2 = cur.get("pos", Vector2.ZERO) as Vector2
 	if target_pos != Vector2.ZERO:
 		alert_clicked.emit(target_pos)
-		if main_farm != null and main_farm.get("camera_2d") != null:
-			var cam: CameraController = main_farm.get("camera_2d") as CameraController
-			if cam != null:
-				cam.pan_to_target(target_pos)
+		var farm: Node = main_farm if main_farm != null else get_tree().current_scene
+		if farm != null:
+			var cam_ctrl: CameraController = farm.get("camera_2d") as CameraController
+			if cam_ctrl != null:
+				cam_ctrl.pan_to_target(target_pos)
 				AudioManager.play_sfx("click")
+			else:
+				var cam: Camera2D = farm.find_child("Camera2D", true, false) as Camera2D
+				if cam != null:
+					var tw: Tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+					tw.tween_property(cam, "position", target_pos, 0.8)
+					AudioManager.play_sfx("click")
+	
+	if _active_alerts.size() > 1:
+		_current_alert_idx = (_current_alert_idx + 1) % _active_alerts.size()
+		_show_alert(_active_alerts[_current_alert_idx])

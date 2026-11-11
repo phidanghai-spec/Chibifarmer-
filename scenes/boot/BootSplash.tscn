@@ -1,34 +1,41 @@
-[gd_scene load_steps=6 format=3 uid="uid://bootsplash001"]
+[gd_scene load_steps=11 format=3 uid="uid://bootsplash001"]
 
 [ext_resource type="Script" path="res://scenes/boot/BootSplash.gd" id="1_bootsplash"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui_windmill_base.png" id="2_windmill_base"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui_windmill_blades.png" id="3_blades"]
-[ext_resource type="Texture2D" path="res://assets/sprites/wheat.png" id="4_wheat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/boot_splash_keyart.png" id="2_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/chibi_cloud_1.png" id="3_cloud1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/chibi_cloud_2.png" id="4_cloud2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/bird_dove.png" id="10_dove"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui_windmill_blades.png" id="12_blades"]
+[ext_resource type="Texture2D" path="res://assets/sprites/wheat.png" id="13_wheat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui_logo_chibifarmer.png" id="15_logo"]
+[ext_resource type="Texture2D" path="res://assets/sprites/plot_block_empty.png" id="16_plot"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
-bg_color = Color(0.266667, 0.160784, 0.0862745, 1)
+bg_color = Color(0.24, 0.14, 0.06, 0.95)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.533333, 0.321569, 0.168627, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0.18, 0.1, 0.05, 0.3)
-shadow_size = 4
+border_color = Color(0.55, 0.35, 0.18, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0.12, 0.06, 0.02, 0.5)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
-bg_color = Color(0.960784, 0.72549, 0.188235, 1)
+bg_color = Color(0.98, 0.76, 0.22, 1)
 border_width_left = 2
 border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.99, 0.88, 0.45, 1)
-corner_radius_top_left = 10
-corner_radius_bottom_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 11
+corner_radius_bottom_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
 
 [node name="BootSplash" type="Control"]
 layout_mode = 3
@@ -39,14 +46,61 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_bootsplash")
 
-[node name="WarmCreamBg" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0.972549, 0.905882, 1)
+[node name="Scenery" type="Node2D" parent="."]
+
+[node name="Backdrop" type="Sprite2D" parent="Scenery"]
+position = Vector2(576, 324)
+texture = ExtResource("2_backdrop")
+
+[node name="SoilPlotsRow" type="Node2D" parent="Scenery"]
+
+[node name="Plot01" type="Sprite2D" parent="Scenery/SoilPlotsRow"]
+position = Vector2(445, 456)
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("16_plot")
+
+[node name="Plot02" type="Sprite2D" parent="Scenery/SoilPlotsRow"]
+position = Vector2(530, 458)
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("16_plot")
+
+[node name="Plot03" type="Sprite2D" parent="Scenery/SoilPlotsRow"]
+position = Vector2(615, 458)
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("16_plot")
+
+[node name="Plot04" type="Sprite2D" parent="Scenery/SoilPlotsRow"]
+position = Vector2(700, 456)
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("16_plot")
+
+[node name="Clouds" type="Node2D" parent="Scenery"]
+
+[node name="Cloud1" type="Sprite2D" parent="Scenery/Clouds"]
+modulate = Color(1, 1, 1, 0.72)
+position = Vector2(180, 68)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("3_cloud1")
+
+[node name="Cloud2" type="Sprite2D" parent="Scenery/Clouds"]
+modulate = Color(1, 1, 1, 0.72)
+position = Vector2(760, 82)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("4_cloud2")
+
+[node name="Trees" type="Node2D" parent="Scenery"]
+
+[node name="Doves" type="Node2D" parent="Scenery"]
+
+[node name="Dove1" type="Sprite2D" parent="Scenery/Doves"]
+position = Vector2(460, 150)
+scale = Vector2(0.08, 0.08)
+texture = ExtResource("10_dove")
+
+[node name="Dove2" type="Sprite2D" parent="Scenery/Doves"]
+position = Vector2(530, 130)
+scale = Vector2(0.065, 0.065)
+texture = ExtResource("10_dove")
 
 [node name="CenterStage" type="Control" parent="."]
 layout_mode = 1
@@ -55,25 +109,71 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_top = -60.0
-offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="WindmillBase" type="Sprite2D" parent="CenterStage"]
-position = Vector2(0, 0)
-scale = Vector2(0.75, 0.75)
-texture = ExtResource("2_windmill_base")
-
 [node name="WindmillBlades" type="Sprite2D" parent="CenterStage"]
-position = Vector2(0, -42)
-scale = Vector2(0.75, 0.75)
-texture = ExtResource("3_blades")
-
-[node name="ChibiWheatIcon" type="Sprite2D" parent="CenterStage"]
-position = Vector2(65, 40)
+visible = false
+position = Vector2(328, -206)
 scale = Vector2(0.65, 0.65)
-texture = ExtResource("4_wheat")
+texture = ExtResource("12_blades")
+
+[node name="WheatField" type="Node2D" parent="Scenery"]
+
+[node name="Wheat01" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(425, 444)
+scale = Vector2(0.76, 0.76)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat02" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(468, 448)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat03" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(512, 445)
+scale = Vector2(0.78, 0.78)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat04" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(555, 450)
+scale = Vector2(0.82, 0.82)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat05" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(598, 446)
+scale = Vector2(0.78, 0.78)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat06" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(642, 450)
+scale = Vector2(0.82, 0.82)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat07" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(685, 446)
+scale = Vector2(0.78, 0.78)
+texture = ExtResource("13_wheat")
+
+[node name="Wheat08" type="Sprite2D" parent="Scenery/WheatField"]
+position = Vector2(722, 444)
+scale = Vector2(0.76, 0.76)
+texture = ExtResource("13_wheat")
+
+[node name="LogoBanner" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -175.0
+offset_top = 18.0
+offset_right = 175.0
+offset_bottom = 142.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("15_logo")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="LoadingBarContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -82,24 +182,25 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -260.0
-offset_top = -140.0
-offset_right = 260.0
-offset_bottom = -60.0
+offset_left = -270.0
+offset_top = -125.0
+offset_right = 270.0
+offset_bottom = -45.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="StatusLabel" type="Label" parent="LoadingBarContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.35, 0.2, 0.1, 1)
-theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_color = Color(1, 0.98, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.35, 0.18, 0.08, 1)
+theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 17
 text = "Đang đánh thức nông trại Chibi..."
 horizontal_alignment = 1
 
 [node name="WoodProgressBar" type="ProgressBar" parent="LoadingBarContainer"]
-custom_minimum_size = Vector2(520, 24)
+custom_minimum_size = Vector2(540, 26)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
@@ -116,4 +217,3 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.12, 0.08, 0.04, 1)
-

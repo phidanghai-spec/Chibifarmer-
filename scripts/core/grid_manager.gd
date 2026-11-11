@@ -22,19 +22,25 @@ var path_cells: Dictionary = {}
 var total_attraction_score: int = 10
 var _next_instance_id: int = 1
 
+var _path_queries_this_frame: int = 0
+var _last_path_frame: int = -1
+const MAX_PATH_QUERIES_PER_FRAME: int = 8
+var _path_cache: Dictionary = {}
+var _pending_path_queue: Array[Dictionary] = []
+
 func add_attraction_score(amount: int) -> void:
 	if amount <= 0:
 		return
 	total_attraction_score += amount
 	EventBus.attraction_score_changed.emit(total_attraction_score)
 
-static func get_river_center_x(y: float) -> float:
+func get_river_center_x(y: float) -> float:
 	var base_x: float = 920.0
 	var wave1: float = sin((y + 120.0) * 0.0030) * 60.0
 	var wave2: float = cos((y + 120.0) * 0.0065) * 22.0
 	return base_x + wave1 - wave2
 
-static func is_in_water_or_sand(pos: Vector2) -> bool:
+func is_in_water_or_sand(pos: Vector2) -> bool:
 	if pos.y >= 636.0 and pos.y <= 684.0 and pos.x >= 820.0 and pos.x <= 1080.0:
 		return false
 	var rx: float = get_river_center_x(pos.y)
@@ -43,6 +49,12 @@ static func is_in_water_or_sand(pos: Vector2) -> bool:
 func _ready() -> void:
 	_init_astar()
 	_init_default_layout()
+
+func _process(_delta: float) -> void:
+	var cur_frame: int = Engine.get_process_frames()
+	if cur_frame != _last_path_frame:
+		_last_path_frame = cur_frame
+		_path_queries_this_frame = 0
 
 func _init_astar() -> void:
 	astar_grid.region = Rect2i(0, 0, GRID_WIDTH, GRID_HEIGHT)
@@ -61,7 +73,7 @@ func _init_astar() -> void:
 			if is_in_water_or_sand(w_pos):
 				astar_grid.set_point_solid(cell, true)
 			else:
-				astar_grid.set_point_weight_scale(cell, 3.0)
+				astar_grid.set_point_weight_scale(cell, 35.0)
 
 func _init_default_layout() -> void:
 	# Main east-west road from entrance (0, 20) across farm center, over the wooden bridge to East Bank (x = 0..42)
@@ -105,6 +117,8 @@ func is_within_bounds(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < GRID_WIDTH and cell.y < GRID_HEIGHT
 
 func mark_footprint_solid(top_left: Vector2i, size: Vector2i, is_solid: bool = true, id: int = -1) -> void:
+	_path_cache.clear()
+	_pending_path_queue.clear()
 	for x: int in range(top_left.x, top_left.x + size.x):
 		for y: int in range(top_left.y, top_left.y + size.y):
 			var cell: Vector2i = Vector2i(x, y)
@@ -117,7 +131,7 @@ func mark_footprint_solid(top_left: Vector2i, size: Vector2i, is_solid: bool = t
 					if path_cells.get(cell, false):
 						astar_grid.set_point_weight_scale(cell, 1.0)
 					else:
-						astar_grid.set_point_weight_scale(cell, 3.0)
+						astar_grid.set_point_weight_scale(cell, 35.0)
 
 # --- Building & Path Queries ---
 
@@ -231,7 +245,7 @@ func remove_path(grid_pos: Vector2i) -> bool:
 		return false
 	
 	path_cells.erase(grid_pos)
-	astar_grid.set_point_weight_scale(grid_pos, 3.0)
+	astar_grid.set_point_weight_scale(grid_pos, 35.0)
 	
 	var path_info: Dictionary = DataManager.get_building("path_tile")
 	var attraction: int = int(path_info.get("attraction_score", 1))
@@ -261,7 +275,7 @@ func remove_building(instance_id: int) -> bool:
 				if path_cells.get(cell, false):
 					astar_grid.set_point_weight_scale(cell, 1.0)
 				else:
-					astar_grid.set_point_weight_scale(cell, 3.0)
+					astar_grid.set_point_weight_scale(cell, 35.0)
 	
 	placed_buildings.erase(instance_id)
 	total_attraction_score = maxi(0, total_attraction_score - attraction)
@@ -312,7 +326,7 @@ func move_building(instance_id: int, new_grid_pos: Vector2i) -> bool:
 			var cell: Vector2i = Vector2i(x, y)
 			if not is_walkable:
 				astar_grid.set_point_solid(cell, false)
-				astar_grid.set_point_weight_scale(cell, 1.0 if path_cells.get(cell, false) else 3.0)
+				astar_grid.set_point_weight_scale(cell, 1.0 if path_cells.get(cell, false) else 35.0)
 	
 	for x: int in range(new_grid_pos.x, new_grid_pos.x + size.x):
 		for y: int in range(new_grid_pos.y, new_grid_pos.y + size.y):
@@ -341,7 +355,21 @@ func get_tourist_path(start_pos: Vector2, target_pos: Vector2) -> PackedVector2A
 	if not is_cell_walkable(start_cell):
 		start_cell = get_closest_walkable_neighbor(start_cell)
 	
-	return astar_grid.get_point_path(start_cell, target_cell)
+	var cur_frame: int = Engine.get_process_frames()
+	if cur_frame != _last_path_frame:
+		_last_path_frame = cur_frame
+		_path_queries_this_frame = 0
+	
+	var cache_key: Vector4i = Vector4i(start_cell.x, start_cell.y, target_cell.x, target_cell.y)
+	if _path_cache.has(cache_key):
+		return _path_cache[cache_key] as PackedVector2Array
+	
+	_path_queries_this_frame += 1
+	var path: PackedVector2Array = astar_grid.get_point_path(start_cell, target_cell)
+	if _path_cache.size() >= 300:
+		_path_cache.clear()
+	_path_cache[cache_key] = path
+	return path
 
 func get_closest_walkable_neighbor(center: Vector2i) -> Vector2i:
 	var neighbors: Array[Vector2i] = [

@@ -164,6 +164,12 @@ func get_item_name(item_id: String) -> String:
 			return "Bánh Mì Ngô"
 		"wool":
 			return "Lông Cừu"
+		"mat_plank":
+			return "Ván Gỗ Thông"
+		"mat_bolt":
+			return "Đinh Tán Thép"
+		"mat_brick":
+			return "Gạch Nung Đỏ"
 
 	if crops.has(item_id):
 		return String((crops[item_id] as Dictionary).get("name", item_id))

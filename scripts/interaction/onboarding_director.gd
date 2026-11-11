@@ -17,7 +17,7 @@ enum Step {
 
 @export var steamboat_node: Node2D
 @export var poodle_node: Node2D
-@export var player_avatar: CharacterBody2D
+@export var player_avatar: Node2D
 @export var camera_node: Camera2D
 
 @export var first_field_plot_pos: Vector2 = Vector2(400.0, 560.0)

@@ -246,7 +246,72 @@ func _setup_zoo_sanctuary() -> void:
 			add_child(enc)
 			enclosures[a_id] = enc
 
+	call_deferred("_setup_zoo_grid_barriers_and_pathways")
 	call_deferred("_clear_overlapping_scenery")
+
+func _setup_zoo_grid_barriers_and_pathways() -> void:
+	if GridManager == null or GridManager.astar_grid == null:
+		return
+	
+	# 1. Pave Zoo Sand Avenues with Weight 1.0 (seamless navigation from Wooden Bridge)
+	# Horizontal Central Avenue: x: 1120..1730, y: 285..335
+	var min_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1120.0, 285.0))
+	var max_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1730.0, 335.0))
+	for cx: int in range(min_h_cell.x, max_h_cell.x + 1):
+		for cy: int in range(min_h_cell.y, max_h_cell.y + 1):
+			var c: Vector2i = Vector2i(cx, cy)
+			if GridManager.is_within_bounds(c):
+				GridManager.astar_grid.set_point_solid(c, false)
+				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+				GridManager.path_cells[c] = true
+	
+	# Vertical Central Avenue: x: 1450..1500, y: 140..480
+	var min_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1450.0, 140.0))
+	var max_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1500.0, 480.0))
+	for cx: int in range(min_v_cell.x, max_v_cell.x + 1):
+		for cy: int in range(min_v_cell.y, max_v_cell.y + 1):
+			var c: Vector2i = Vector2i(cx, cy)
+			if GridManager.is_within_bounds(c):
+				GridManager.astar_grid.set_point_solid(c, false)
+				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+				GridManager.path_cells[c] = true
+	
+	# Shop Entrance Promenade: x: 1136..1178, y: 310..455
+	var min_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1136.0, 310.0))
+	var max_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1178.0, 455.0))
+	for cx: int in range(min_s_cell.x, max_s_cell.x + 1):
+		for cy: int in range(min_s_cell.y, max_s_cell.y + 1):
+			var c: Vector2i = Vector2i(cx, cy)
+			if GridManager.is_within_bounds(c):
+				GridManager.astar_grid.set_point_solid(c, false)
+				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+				GridManager.path_cells[c] = true
+
+	# 2. Mark the 4 Enclosures as Solid Obstacles (192x128px footprint)
+	# Leaving the central sand avenues open
+	var enclosure_centers: Array[Vector2] = [
+		Vector2(1340.0, 210.0), # Capybara
+		Vector2(1610.0, 210.0), # Panda
+		Vector2(1340.0, 410.0), # Penguin
+		Vector2(1610.0, 410.0)  # Giraffe
+	]
+	
+	for center_pos: Vector2 in enclosure_centers:
+		var enc_rect: Rect2 = Rect2(center_pos.x - 96.0, center_pos.y - 64.0, 192.0, 128.0)
+		var min_c: Vector2i = GridManager.world_to_grid(enc_rect.position)
+		var max_c: Vector2i = GridManager.world_to_grid(enc_rect.position + enc_rect.size)
+		for cx: int in range(min_c.x, max_c.x + 1):
+			for cy: int in range(min_c.y, max_c.y + 1):
+				var c: Vector2i = Vector2i(cx, cy)
+				if not GridManager.is_within_bounds(c):
+					continue
+				var w_pos: Vector2 = GridManager.grid_to_world(c)
+				# Do not block the central sand avenues!
+				var in_h_avenue: bool = (w_pos.y >= 280.0 and w_pos.y <= 340.0)
+				var in_v_avenue: bool = (w_pos.x >= 1445.0 and w_pos.x <= 1505.0)
+				if not in_h_avenue and not in_v_avenue:
+					GridManager.astar_grid.set_point_solid(c, true)
+					GridManager.occupied_cells[c] = 950
 
 func _on_balloon_clicked() -> void:
 	AudioManager.play_sfx("click")

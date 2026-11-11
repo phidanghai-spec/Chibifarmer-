@@ -26,7 +26,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.is_pressed():
 		return
 		
-	if main_farm != null and main_farm._pending_build_id != "":
+	if main_farm != null and (main_farm._pending_build_id != "" or main_farm._relocating_node != null):
 		return
 
 	if player_avatar == null or walk_grid == null:

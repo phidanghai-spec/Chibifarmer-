@@ -1,49 +1,44 @@
 extends Node
 
-var coins: int = 1500
-var gold: int = 5450
-var diamonds: int = 45
-var xp: int = 1240
-var level: int = 32
+var coins: int = 100
+var gold: int = 500
+var diamonds: int = 15
+var xp: int = 0
+var level: int = 1
 
-var silo_capacity: int = 300
-var barn_capacity: int = 300
+var silo_capacity: int = 100
+var barn_capacity: int = 100
 
 var silo_items: Dictionary = {}
 var barn_items: Dictionary = {}
+
+const ITEM_NAMES: Dictionary = {
+	"mat_plank": "Ván Gỗ Thông",
+	"mat_bolt": "Đinh Tán Thép",
+	"mat_brick": "Gạch Nung Đỏ"
+}
+
+const CONSTRUCTION_MATERIALS: Array[String] = ["mat_plank", "mat_bolt", "mat_brick"]
 
 func _ready() -> void:
 	_init_starter_inventory()
 
 func _init_starter_inventory() -> void:
-	# Initial stock mirroring Hay Day interface with all crop seeds and goods
-	silo_items["wheat"] = 50
-	silo_items["corn"] = 35
-	silo_items["carrot"] = 15
-	silo_items["soybean"] = 15
-	silo_items["sugarcane"] = 10
-	silo_items["strawberry"] = 10
-	silo_items["tomato"] = 10
-	silo_items["pumpkin"] = 10
-	silo_items["sunflower"] = 10
-	silo_items["rose"] = 10
-	silo_items["lavender"] = 10
-	silo_items["apple"] = 5
-	silo_items["mango"] = 5
-	silo_items["apple_seed"] = 5
-	silo_items["mango_seed"] = 5
+	silo_items.clear()
+	silo_items["wheat"] = 10
+	silo_items["corn"] = 5
+	silo_items["carrot"] = 5
+	silo_items["apple_seed"] = 2
+	silo_items["mango_seed"] = 2
 	
-	barn_items["egg"] = 25
-	barn_items["milk"] = 20
-	barn_items["bacon"] = 15
-	barn_items["bread"] = 15
-	barn_items["chicken_feed"] = 15
-	barn_items["cow_feed"] = 15
-	barn_items["pig_feed"] = 10
-	barn_items["butter"] = 5
-	barn_items["cheese"] = 5
-	barn_items["cream"] = 5
-	barn_items["fish_carp"] = 5
+	barn_items.clear()
+	barn_items["chicken_feed"] = 5
+	barn_items["cow_feed"] = 5
+	barn_items["egg"] = 2
+	barn_items["milk"] = 2
+	barn_items["mat_plank"] = 1
+	barn_items["mat_bolt"] = 1
+	barn_items["mat_brick"] = 1
 	
 	_emit_storage_updated("silo")
 	_emit_storage_updated("barn")
@@ -164,6 +159,33 @@ func get_barn_used() -> int:
 	for key: Variant in barn_items:
 		total += int(barn_items[key])
 	return total
+
+func get_current_silo_usage() -> int:
+	return get_silo_used()
+
+func get_current_barn_usage() -> int:
+	return get_barn_used()
+
+func get_silo_capacity_left() -> int:
+	return maxi(0, silo_capacity - get_current_silo_usage())
+
+func get_barn_capacity_left() -> int:
+	return maxi(0, barn_capacity - get_current_barn_usage())
+
+func get_item_display_name(item_id: String) -> String:
+	if ITEM_NAMES.has(item_id):
+		return String(ITEM_NAMES[item_id])
+	return DataManager.get_item_name(item_id)
+
+func try_drop_bonus_material(_source_label: String = "") -> String:
+	if get_barn_capacity_left() <= 0:
+		return ""
+	if randf() > 0.25:
+		return ""
+	var mat_id: String = CONSTRUCTION_MATERIALS[randi() % CONSTRUCTION_MATERIALS.size()]
+	if add_item_to_storage("barn", mat_id, 1):
+		return mat_id
+	return ""
 
 func get_storage_used(storage_type: String) -> int:
 	if storage_type == "silo":

@@ -35,10 +35,20 @@ var _bubble_label: Label = null
 var _title_label: Label = null
 var _lock_overlay: Node2D = null
 var _anim_timer: float = 0.0
+var _screen_notifier: VisibleOnScreenNotifier2D = null
+var _is_on_screen: bool = true
 
 func _ready() -> void:
 	add_to_group("interactable")
 	y_sort_enabled = true
+	
+	# VisibleOnScreenNotifier2D for culling offscreen animal movement
+	_screen_notifier = VisibleOnScreenNotifier2D.new()
+	_screen_notifier.rect = Rect2(-130.0, -90.0, 260.0, 180.0)
+	_screen_notifier.screen_entered.connect(func() -> void: _is_on_screen = true)
+	_screen_notifier.screen_exited.connect(func() -> void: _is_on_screen = false)
+	add_child(_screen_notifier)
+	
 	_setup_visuals()
 	_update_state()
 	
@@ -207,6 +217,9 @@ func _setup_visuals() -> void:
 	_lock_overlay.add_child(lock_lbl)
 
 func _process(delta: float) -> void:
+	if not _is_on_screen:
+		return
+
 	_anim_timer += delta
 	
 	# Animals procedural motion (wander + idle breathing)
@@ -273,14 +286,14 @@ func _update_state() -> void:
 		if is_fed:
 			_bubble_label.text = "❤️"
 		else:
-			if favorite_foods.has("carrot"):
+			if animal_id == "zoo_penguin" or favorite_foods.has("fish_carp"):
+				_bubble_label.text = "🐟"
+			elif favorite_foods.has("carrot"):
 				_bubble_label.text = "🥕"
 			elif favorite_foods.has("apple"):
 				_bubble_label.text = "🍎"
 			elif favorite_foods.has("wheat"):
 				_bubble_label.text = "🌾"
-			elif favorite_foods.has("fish_carp"):
-				_bubble_label.text = "🐟"
 			else:
 				_bubble_label.text = "🥗"
 	queue_redraw()
@@ -326,10 +339,21 @@ func on_player_interact(_avatar: Node2D) -> void:
 		
 	# 3. If Hungry -> Feed with favorite food or sanctuary_feed
 	var chosen_food: String = ""
-	for f: String in favorite_foods:
-		if StorageManager.get_item_count(f) > 0:
-			chosen_food = f
-			break
+	var is_penguin_bonus: bool = false
+	
+	if animal_id == "zoo_penguin":
+		if StorageManager.get_item_count("fish_carp") > 0:
+			chosen_food = "fish_carp"
+			is_penguin_bonus = true
+		elif StorageManager.get_item_count("fish_bass") > 0:
+			chosen_food = "fish_bass"
+			is_penguin_bonus = true
+
+	if chosen_food == "":
+		for f: String in favorite_foods:
+			if StorageManager.get_item_count(f) > 0:
+				chosen_food = f
+				break
 			
 	if chosen_food == "" and StorageManager.get_item_count("sanctuary_feed") > 0:
 		chosen_food = "sanctuary_feed"
@@ -338,21 +362,33 @@ func on_player_interact(_avatar: Node2D) -> void:
 		StorageManager.remove_item(chosen_food, 1)
 		SaveManager.feed_animal(animal_id, 240) # Fed for 4 minutes
 		
-		# Rewards: +60 XP, +80 Gold, +25 Tour Coin (Xu)
-		StorageManager.add_xp(60)
-		StorageManager.add_gold(80)
-		StorageManager.coins += 25
-		EventBus.coins_changed.emit(StorageManager.coins, 25)
-		
-		AudioManager.play_sfx("sell")
-		_play_heart_burst()
-		_show_floating_text("❤️ Đã cho đàn %s ăn! (+60 XP, +80 Vàng, +25 Xu)" % animal_name)
+		if is_penguin_bonus:
+			# +50% Tour Coin (Xu) Tip Bonus: 25 * 1.5 = 37, +90 XP, +120 Gold
+			var bonus_coins: int = int(25 * 1.5)
+			StorageManager.add_xp(90)
+			StorageManager.add_gold(120)
+			StorageManager.coins += bonus_coins
+			EventBus.coins_changed.emit(StorageManager.coins, bonus_coins)
+			
+			AudioManager.play_sfx("sell")
+			_play_heart_burst()
+			_show_floating_text("🐧 Cánh cụt mê tít cá tươi! +50%% Tip! (+90 XP, +120 Vàng, +%d Xu)" % bonus_coins)
+		else:
+			# Rewards: +60 XP, +80 Gold, +25 Tour Coin (Xu)
+			StorageManager.add_xp(60)
+			StorageManager.add_gold(80)
+			StorageManager.coins += 25
+			EventBus.coins_changed.emit(StorageManager.coins, 25)
+			
+			AudioManager.play_sfx("sell")
+			_play_heart_burst()
+			_show_floating_text("❤️ Đã cho đàn %s ăn! (+60 XP, +80 Vàng, +25 Xu)" % animal_name)
 		
 		var qm: Node = get_tree().current_scene.find_child("QuestManager", true, false)
 		if qm != null and qm.has_method("notify_zoo_fed"):
 			qm.call("notify_zoo_fed", animal_id)
 	else:
-		var food_names: String = "Cỏ Dinh Dưỡng hoặc " + favorite_foods[0]
+		var food_names: String = "Cá Chép tươi hoặc Cỏ Dinh Dưỡng" if animal_id == "zoo_penguin" else ("Cỏ Dinh Dưỡng hoặc " + favorite_foods[0])
 		_show_floating_text("⚠️ Thiếu thức ăn! Cần %s" % food_names)
 		AudioManager.play_sfx("error")
 

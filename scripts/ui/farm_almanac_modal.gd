@@ -52,12 +52,22 @@ func _ready() -> void:
 		unlock_entry("visitors", visitor_type)
 	)
 
+func open_modal() -> void:
+	toggle_modal(true)
+
+func close_modal() -> void:
+	toggle_modal(false)
+
 func toggle_modal(open_state: bool) -> void:
 	visible = open_state
+	z_index = 100
 	if open_state:
 		AudioManager.play_sfx("page_flip")
 		scale = Vector2(0.9, 0.9)
-		pivot_offset = size * 0.5
+		var center_pivot: Vector2 = size * 0.5
+		if center_pivot.is_zero_approx():
+			center_pivot = custom_minimum_size * 0.5 if not custom_minimum_size.is_zero_approx() else Vector2(390.0, 260.0)
+		pivot_offset = center_pivot
 		var tween: Tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tween.tween_property(self, "scale", Vector2.ONE, 0.24)
 		_populate_tab(almanac_tabs.current_tab if almanac_tabs != null else 0)
@@ -125,6 +135,32 @@ func _setup_tabs() -> void:
 	almanac_tabs.add_tab("2. Thú Nuôi & Zoo (8)")
 	almanac_tabs.add_tab("3. Ẩm Thực (8)")
 	almanac_tabs.add_tab("4. Du Khách (6)")
+	var tab_sel: StyleBoxFlat = StyleBoxFlat.new()
+	tab_sel.bg_color = Color(0.96, 0.73, 0.19, 1.0)
+	tab_sel.border_color = Color(0.48, 0.26, 0.12, 1.0)
+	tab_sel.set_border_width_all(2)
+	tab_sel.corner_radius_top_left = 10
+	tab_sel.corner_radius_top_right = 10
+	tab_sel.content_margin_left = 14
+	tab_sel.content_margin_right = 14
+	tab_sel.content_margin_top = 6
+	tab_sel.content_margin_bottom = 6
+	var tab_unsel: StyleBoxFlat = StyleBoxFlat.new()
+	tab_unsel.bg_color = Color(0.93, 0.86, 0.74, 1.0)
+	tab_unsel.border_color = Color(0.62, 0.42, 0.24, 1.0)
+	tab_unsel.set_border_width_all(2)
+	tab_unsel.corner_radius_top_left = 10
+	tab_unsel.corner_radius_top_right = 10
+	tab_unsel.content_margin_left = 14
+	tab_unsel.content_margin_right = 14
+	tab_unsel.content_margin_top = 6
+	tab_unsel.content_margin_bottom = 6
+	almanac_tabs.add_theme_stylebox_override("tab_selected", tab_sel)
+	almanac_tabs.add_theme_stylebox_override("tab_unselected", tab_unsel)
+	almanac_tabs.add_theme_stylebox_override("tab_hovered", tab_sel)
+	almanac_tabs.add_theme_color_override("font_selected_color", Color(0.24, 0.11, 0.03, 1.0))
+	almanac_tabs.add_theme_color_override("font_unselected_color", Color(0.42, 0.25, 0.12, 1.0))
+	almanac_tabs.add_theme_color_override("font_hovered_color", Color(0.24, 0.11, 0.03, 1.0))
 	almanac_tabs.tab_changed.connect(_populate_tab)
 
 func _populate_tab(tab_idx: int) -> void:

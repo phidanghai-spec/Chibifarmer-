@@ -67,6 +67,14 @@ func _ready() -> void:
 		var s_modal: PanelContainer = hud.get("_zoo_feed_shop_modal") as PanelContainer
 		if s_modal != null:
 			s_modal.queue_free()
+		
+		hud.open_zoo_modal()
+		for i: int in range(15):
+			await get_tree().process_frame
+		var z_modal: PanelContainer = hud.get("_zoo_modal") as PanelContainer
+		if z_modal != null:
+			z_modal.queue_free()
+			print("[SCREENSHOT] Successfully opened and closed Zoo Modal!")
 
 	# 5. Capture Daily Newspaper Modal
 	if hud != null:

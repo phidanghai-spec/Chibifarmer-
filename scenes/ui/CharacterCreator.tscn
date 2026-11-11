@@ -1,9 +1,9 @@
 [gd_scene load_steps=10 format=3 uid="uid://ccharcreator001"]
 
 [ext_resource type="Script" path="res://scenes/ui/CharacterCreator.gd" id="1_creator"]
-[ext_resource type="Texture2D" path="res://assets/sprites/chibi_meadow_backdrop.png" id="2_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/boot_splash_keyart.png" id="2_backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/entities/ModularChibiAvatar.tscn" id="3_avatar"]
-[ext_resource type="Texture2D" path="res://assets/sprites/flowerbed_round.png" id="4_pedestal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/chibi_blob_shadow.png" id="4_pedestal"]
 [ext_resource type="Texture2D" path="res://assets/sprites/poodle_apricot_red.png" id="5_poodle"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stage_panel"]
@@ -122,17 +122,18 @@ size = Vector2i(360, 360)
 render_target_update_mode = 4
 
 [node name="WoodenPedestal" type="Sprite2D" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport"]
-position = Vector2(180, 295)
-scale = Vector2(1.7, 0.95)
+modulate = Color(0.42, 0.28, 0.16, 0.45)
+position = Vector2(175, 296)
+scale = Vector2(2.1, 0.9)
 texture = ExtResource("4_pedestal")
 
 [node name="AvatarPreview" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport" instance=ExtResource("3_avatar")]
-position = Vector2(175, 220)
-scale = Vector2(1.7, 1.7)
+position = Vector2(165, 290)
+scale = Vector2(1.32, 1.32)
 
 [node name="PetPoodlePreview" type="Sprite2D" parent="MainSplitHBox/LeftStagePanel/StageVBox/PreviewViewportContainer/SubViewport"]
-position = Vector2(280, 280)
-scale = Vector2(0.85, 0.85)
+position = Vector2(276, 266)
+scale = Vector2(0.76, 0.76)
 texture = ExtResource("5_poodle")
 
 [node name="AnimTestHBox" type="HBoxContainer" parent="MainSplitHBox/LeftStagePanel/StageVBox"]

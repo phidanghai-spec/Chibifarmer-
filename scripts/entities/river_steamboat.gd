@@ -77,7 +77,7 @@ func _setup_visuals() -> void:
 	_boat_sprite.name = "BoatSprite"
 	if SpriteAtlasManager.has_texture("steamboat_chibi"):
 		_boat_sprite.texture = SpriteAtlasManager.get_texture("steamboat_chibi")
-	SpriteAtlasManager.set_sprite_pixel_size(_boat_sprite, Vector2(84.0, 84.0))
+	SpriteAtlasManager.set_sprite_pixel_size(_boat_sprite, Vector2(108.0, 108.0))
 	_boat_base_scale = _boat_sprite.scale
 	_boat_sprite.position = DOCK_BOAT_OFFSET
 	add_child(_boat_sprite)

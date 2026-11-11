@@ -7,6 +7,8 @@ enum VisitorState {
 	BROWSING_SHOP,
 	SIGHTSEEING,
 	VISITING_ZOO,
+	VISITING_ORCHARD,
+	PICNIC_REST,
 	WALKING_OUT
 }
 
@@ -16,13 +18,21 @@ var move_speed: float = 40.0
 var queue_destination: String = "none" # "shop", "farmhouse", "sightseeing", "zoo"
 var queue_slot_index: int = -1
 var _visited_zoo: bool = false
+var _visited_orchard: bool = false
+var _visited_picnic: bool = false
 var _target_zoo_enclosure: Node2D = null
+var _target_orchard_tree: Node2D = null
+var _target_picnic_spot: Vector2 = Vector2.ZERO
+var _shadow_poly: Polygon2D = null
 
 var _path: PackedVector2Array = PackedVector2Array()
 var _path_index: int = 0
 var _wait_timer: float = 0.0
 var _walk_phase: float = 0.0
 var _base_sprite_scale: Vector2 = Vector2.ONE
+var _notifier: VisibleOnScreenNotifier2D = null
+var _is_on_screen: bool = true
+var _weather_speed_mult: float = 1.0
 
 var _body_sprite: Sprite2D
 var _emote_sprite: Sprite2D
@@ -44,6 +54,32 @@ var manager: VisitorManager
 
 func _ready() -> void:
 	z_index = 10
+
+	# 0. Warm 2-Layer Ellipse Ground Shadow
+	_shadow_poly = Polygon2D.new()
+	_shadow_poly.name = "GroundShadow"
+	_shadow_poly.color = Color(0.12, 0.16, 0.08, 0.45)
+	var s_pts: PackedVector2Array = PackedVector2Array()
+	var segs: int = 16
+	for i: int in range(segs):
+		var a: float = (float(i) / float(segs)) * TAU
+		s_pts.append(Vector2(cos(a) * 15.0, sin(a) * 6.5))
+	_shadow_poly.polygon = s_pts
+	_shadow_poly.position = Vector2(0.0, 18.0)
+	_shadow_poly.z_index = -1
+	
+	var in_shadow: Polygon2D = Polygon2D.new()
+	in_shadow.name = "ShadowCore"
+	var in_pts: PackedVector2Array = PackedVector2Array()
+	for i: int in range(segs):
+		var a: float = (float(i) / float(segs)) * TAU
+		in_pts.append(Vector2(cos(a) * 9.5, sin(a) * 4.0))
+	in_shadow.polygon = in_pts
+	in_shadow.color = Color(0.08, 0.12, 0.05, 0.35)
+	_shadow_poly.add_child(in_shadow)
+	
+	add_child(_shadow_poly)
+
 	# 1. Main NPC Body Sprite
 	_body_sprite = Sprite2D.new()
 	_body_sprite.scale = Vector2(0.24, 0.24)
@@ -108,6 +144,14 @@ func _ready() -> void:
 	_dialogue_timer.timeout.connect(_on_dialogue_timeout)
 	add_child(_dialogue_timer)
 
+	_notifier = VisibleOnScreenNotifier2D.new()
+	_notifier.rect = Rect2(-30.0, -50.0, 60.0, 60.0)
+	_notifier.screen_entered.connect(func() -> void: _is_on_screen = true)
+	_notifier.screen_exited.connect(func() -> void: _is_on_screen = false)
+	add_child(_notifier)
+
+	EventBus.weather_state_changed.connect(_on_weather_changed)
+
 func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_type: String = "sightseeing", slot_idx: int = -1) -> void:
 	var valid_types: Array[String] = [
 		"visitor_buyer", "visitor_shopper", "visitor_tourist",
@@ -124,13 +168,19 @@ func activate(type_id: String, start_pos: Vector2, target_pos: Vector2, dest_typ
 	queue_slot_index = slot_idx
 	position = start_pos
 	visible = true
+	if _shadow_poly != null:
+		_shadow_poly.visible = true
 	state = VisitorState.WALKING_IN
 	_wait_timer = 0.0
 	_walk_phase = randf_range(0.0, 10.0)
 	_emote_sprite.visible = false
 	_tip_sprite.visible = false
 	_visited_zoo = false
+	_visited_orchard = false
+	_visited_picnic = false
 	_target_zoo_enclosure = null
+	_target_orchard_tree = null
+	_target_picnic_spot = Vector2.ZERO
 	
 	if SpriteAtlasManager.has_texture(npc_type):
 		_body_sprite.texture = SpriteAtlasManager.get_texture(npc_type)
@@ -209,7 +259,7 @@ func handle_visitor_click() -> bool:
 		AudioManager.play_sfx("sell")
 		
 		var tw: Tween = create_tween()
-		self.scale = Vector2(1.15, 0.90)
+		self.scale = Vector2(1.10, 0.92)
 		tw.tween_property(self, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_body_sprite.scale = _base_sprite_scale
 		
@@ -281,6 +331,14 @@ func deactivate() -> void:
 	if _chat_label != null:
 		_chat_label.visible = false
 		_chat_label.modulate.a = 0.0
+	if _shadow_poly != null:
+		_shadow_poly.visible = false
+	_visited_zoo = false
+	_visited_orchard = false
+	_visited_picnic = false
+	_target_zoo_enclosure = null
+	_target_orchard_tree = null
+	_target_picnic_spot = Vector2.ZERO
 
 func _process(delta: float) -> void:
 	if state == VisitorState.INACTIVE:
@@ -291,42 +349,104 @@ func _process(delta: float) -> void:
 		if _demand_timer <= 0.0:
 			_assign_new_demand()
 	
-	_apply_separation_steering(delta)
+	if _is_on_screen:
+		_apply_separation_steering(delta)
 	
 	if state == VisitorState.WALKING_IN or state == VisitorState.WALKING_OUT:
-		_walk_phase += delta * 11.0
-		_body_sprite.position.y = -absf(sin(_walk_phase)) * 2.8
-		_body_sprite.rotation = sin(_walk_phase * 0.5) * 0.06
-		var step_squash: float = 1.0 + sin(_walk_phase) * 0.04
-		var step_stretch: float = 1.0 - sin(_walk_phase) * 0.03
-		_body_sprite.scale = Vector2(_base_sprite_scale.x * step_squash, _base_sprite_scale.y * step_stretch)
+		if _is_on_screen:
+			_walk_phase += delta * 11.0
+			_body_sprite.position.y = -absf(sin(_walk_phase)) * 2.8
+			_body_sprite.rotation = sin(_walk_phase * 0.5) * 0.06
+			var step_squash: float = 1.0 + sin(_walk_phase) * 0.04
+			var step_stretch: float = 1.0 - sin(_walk_phase) * 0.03
+			_body_sprite.scale = Vector2(_base_sprite_scale.x * step_squash, _base_sprite_scale.y * step_stretch)
+			if _shadow_poly != null:
+				var s_shrink: float = absf(sin(_walk_phase)) * 0.12
+				_shadow_poly.scale = Vector2.ONE * (1.0 - s_shrink)
 		_follow_path(delta)
-	elif state == VisitorState.BROWSING_SHOP or state == VisitorState.SIGHTSEEING or state == VisitorState.VISITING_ZOO:
-		var wave_time: float = Time.get_ticks_msec() * 0.007
-		_body_sprite.rotation = sin(wave_time) * 0.09
-		_body_sprite.position.y = 0.0
-		var breath_x: float = 1.0 + sin(wave_time * 0.7) * 0.035
-		var breath_y: float = 1.0 - sin(wave_time * 0.7) * 0.025
-		_body_sprite.scale = Vector2(_base_sprite_scale.x * breath_x, _base_sprite_scale.y * breath_y)
+	elif state == VisitorState.BROWSING_SHOP or state == VisitorState.SIGHTSEEING or state == VisitorState.VISITING_ZOO or state == VisitorState.VISITING_ORCHARD or state == VisitorState.PICNIC_REST:
+		if _is_on_screen:
+			var wave_time: float = Time.get_ticks_msec() * 0.007
+			_body_sprite.rotation = sin(wave_time) * 0.09
+			_body_sprite.position.y = 0.0
+			var breath_x: float = 1.0 + sin(wave_time * 0.7) * 0.035
+			var breath_y: float = 1.0 - sin(wave_time * 0.7) * 0.025
+			_body_sprite.scale = Vector2(_base_sprite_scale.x * breath_x, _base_sprite_scale.y * breath_y)
+			if _shadow_poly != null:
+				_shadow_poly.scale = Vector2.ONE * (1.0 + sin(wave_time * 0.7) * 0.035)
 		
 		_wait_timer -= delta
 		if _wait_timer <= 0.0:
 			_check_next_visitor_activity()
 
 func _check_next_visitor_activity() -> void:
-	# 50% chance to visit unlocked zoo sanctuary across the bridge if not visited yet
+	var farm: Node = get_tree().current_scene
+	
+	# 1. Trạm Tự Hái Quả (U-Pick Orchard): 45% cơ hội nếu có cây quả và chưa hái
+	if not _visited_orchard and randf() < 0.45:
+		var valid_trees: Array[Node2D] = []
+		if farm != null and farm.get("_movable_decors") != null:
+			for d in farm.get("_movable_decors") as Array:
+				if d is Node2D and bool(d.get("is_fruit_tree")):
+					valid_trees.append(d as Node2D)
+		
+		if not valid_trees.is_empty():
+			var picked_tree: Node2D = null
+			for t: Node2D in valid_trees:
+				if bool(t.get("is_ripe")):
+					picked_tree = t
+					break
+			if picked_tree == null:
+				picked_tree = valid_trees.pick_random()
+			
+			_visited_orchard = true
+			_target_orchard_tree = picked_tree
+			queue_destination = "orchard"
+			state = VisitorState.WALKING_IN
+			var stand_pos: Vector2 = picked_tree.position + Vector2(randf_range(-20.0, 20.0), 30.0)
+			_path = GridManager.get_tourist_path(position, stand_pos)
+			_path_index = 0
+			return
+
+	# 2. Nghỉ Chân Uống Trà Thảo Mộc Tại Bàn Picnic / Ghế Gỗ: 45% cơ hội nếu chưa nghỉ
+	if not _visited_picnic and randf() < 0.45:
+		var picnic_spots: Array[Vector2] = [
+			Vector2(160.0, 615.0),
+			Vector2(575.0, 615.0),
+			Vector2(1460.0, 84.0),
+			Vector2(1310.0, 635.0),
+			Vector2(1850.0, 650.0)
+		]
+		if farm != null and farm.get("_movable_decors") != null:
+			for d in farm.get("_movable_decors") as Array:
+				if d is Node2D:
+					var d_id: String = String(d.get("decor_id"))
+					if d_id == "wooden_bench" or d_id == "decor_wooden_bench" or d_id == "decor_picnic_table":
+						picnic_spots.append((d as Node2D).position + Vector2(0.0, 16.0))
+		
+		_visited_picnic = true
+		queue_destination = "picnic"
+		state = VisitorState.WALKING_IN
+		_target_picnic_spot = picnic_spots.pick_random()
+		_path = GridManager.get_tourist_path(position, _target_picnic_spot)
+		_path_index = 0
+		return
+
+	# 3. Thăm Chuồng Thú Sở Thú Bờ Đông (Đứng chính xác trên Đại lộ Cát y = 308.0)
 	if not _visited_zoo and randf() < 0.55:
 		_visited_zoo = true
-		var zoo_mgr: Node = get_tree().current_scene.find_child("ZooManager", true, false)
+		var zoo_mgr: Node = farm.find_child("ZooManager", true, false) if farm != null else null
 		if zoo_mgr != null and zoo_mgr.has_method("get_random_unlocked_enclosure"):
 			var enc: Node2D = zoo_mgr.call("get_random_unlocked_enclosure") as Node2D
 			if enc != null:
 				_target_zoo_enclosure = enc
 				state = VisitorState.WALKING_IN
 				queue_destination = "zoo"
-				_path = GridManager.get_tourist_path(position, enc.position + Vector2(randf_range(-15, 15), 45.0))
+				var view_pos: Vector2 = Vector2(enc.position.x + randf_range(-24.0, 24.0), 308.0)
+				_path = GridManager.get_tourist_path(position, view_pos)
 				_path_index = 0
 				return
+
 	_start_walking_to_exit()
 
 func _apply_separation_steering(delta: float) -> void:
@@ -355,7 +475,7 @@ func _follow_path(delta: float) -> void:
 	
 	var target_pt: Vector2 = _path[_path_index]
 	var dist: float = position.distance_to(target_pt)
-	var step: float = move_speed * delta
+	var step: float = (move_speed * _weather_speed_mult) * delta
 	
 	if dist <= step:
 		position = target_pt
@@ -387,7 +507,19 @@ func _on_reached_destination() -> void:
 			state = VisitorState.VISITING_ZOO
 			_wait_timer = randf_range(3.5, 5.0)
 			_show_camera_emote()
+			_trigger_photo_checkin()
 			_drop_zoo_tip()
+		elif queue_destination == "orchard":
+			state = VisitorState.VISITING_ORCHARD
+			_wait_timer = randf_range(3.5, 4.5)
+			_show_chat_dialogue("🍎 Tự hái quả tươi! Vé x1.5! 📸")
+			_show_emote()
+			_trigger_photo_checkin()
+			_drop_orchard_reward()
+		elif queue_destination == "picnic":
+			state = VisitorState.PICNIC_REST
+			_wait_timer = 4.0
+			_handle_picnic_tea_rest()
 		elif queue_destination == "farmhouse":
 			state = VisitorState.SIGHTSEEING
 			_wait_timer = randf_range(4.0, 6.0)
@@ -397,9 +529,45 @@ func _on_reached_destination() -> void:
 			state = VisitorState.SIGHTSEEING
 			_wait_timer = randf_range(3.5, 5.5)
 			_show_emote()
+			if npc_type == "visitor_tourist" and randf() < 0.65:
+				_trigger_photo_checkin()
 			_drop_tip()
 	elif state == VisitorState.WALKING_OUT:
 		deactivate()
+
+func _on_weather_changed(weather_id: String, _crop_mult: float, _fish_luck: float) -> void:
+	if weather_id.to_lower() == "cozy_rain":
+		_weather_speed_mult = 1.20
+	else:
+		_weather_speed_mult = 1.0
+
+func _trigger_photo_checkin() -> void:
+	var flash: Polygon2D = Polygon2D.new()
+	flash.polygon = PackedVector2Array([
+		Vector2(-40.0, -80.0),
+		Vector2(40.0, -80.0),
+		Vector2(40.0, 20.0),
+		Vector2(-40.0, 20.0)
+	])
+	flash.color = Color(1.0, 1.0, 1.0, 0.7)
+	add_child(flash)
+	var tw: Tween = create_tween()
+	tw.tween_property(flash, "color:a", 0.0, 0.25)
+	tw.tween_callback(flash.queue_free)
+	
+	AudioManager.play_sfx("camera_shutter")
+	
+	var tip_bonus: int = 15
+	StorageManager.add_gold(tip_bonus)
+	EventBus.gold_changed.emit(StorageManager.gold, tip_bonus)
+	
+	var v_id_str: String = str(get_instance_id())
+	var a_id: String = "zoo_capybara"
+	if _target_zoo_enclosure != null and _target_zoo_enclosure.has_method("get"):
+		a_id = String(_target_zoo_enclosure.get("animal_id"))
+	
+	EventBus.zoo_photo_checkin_completed.emit(v_id_str, a_id, tip_bonus)
+	EventBus.visitor_action_completed.emit(get_instance_id(), "tourist_visit", tip_bonus, 1)
 
 func _show_camera_emote() -> void:
 	_show_chat_dialogue("📸 Chụp ảnh thú cưng đẹp quá!")
@@ -507,9 +675,69 @@ func _start_walking_to_exit() -> void:
 	_path = GridManager.get_tourist_path(position, exit_pos)
 	_path_index = 0
 
+func _drop_orchard_reward() -> void:
+	_tip_sprite.visible = true
+	var reward_gold_orchard: int = 60
+	var reward_coins_orchard: int = 10
+	var reward_xp_orchard: int = 8
+	
+	StorageManager.add_gold(reward_gold_orchard)
+	StorageManager.coins += reward_coins_orchard
+	StorageManager.add_xp(reward_xp_orchard)
+	
+	EventBus.gold_changed.emit(StorageManager.gold, reward_gold_orchard)
+	EventBus.coins_changed.emit(StorageManager.coins, reward_coins_orchard)
+	AudioManager.play_sfx("coin")
+	EventBus.tourist_tipped.emit(reward_coins_orchard, reward_gold_orchard, reward_xp_orchard, position)
+	
+	if _target_orchard_tree != null and is_instance_valid(_target_orchard_tree):
+		if bool(_target_orchard_tree.get("is_ripe")):
+			var crop_name: String = "apple"
+			if bool(_target_orchard_tree.get("is_mango_tree")):
+				crop_name = "mango"
+			if StorageManager.get_barn_capacity_left() > 0:
+				StorageManager.add_item(crop_name, 1)
+	
+	var tw: Tween = create_tween()
+	tw.tween_property(_tip_sprite, "position:y", -42.0, 0.5)
+	tw.tween_interval(1.4)
+	tw.tween_property(_tip_sprite, "visible", false, 0.1)
+
+func _handle_picnic_tea_rest() -> void:
+	_show_chat_dialogue("🍵 Thưởng thức Trà Thảo Mộc ấm áp! ✨")
+	_show_emote()
+	_tip_sprite.visible = true
+	
+	var has_tea: bool = StorageManager.has_item("item_herbal_tea", 1) or StorageManager.has_item("herbal_tea", 1)
+	var earned_gold: int = 30
+	var earned_coins: int = 8
+	var earned_xp: int = 5
+	
+	if has_tea:
+		if StorageManager.has_item("item_herbal_tea", 1):
+			StorageManager.remove_item("item_herbal_tea", 1)
+		elif StorageManager.has_item("herbal_tea", 1):
+			StorageManager.remove_item("herbal_tea", 1)
+		
+		earned_gold = 210
+		earned_coins = 25
+		earned_xp = 18
+		AudioManager.play_sfx("level_up")
+	else:
+		AudioManager.play_sfx("coin")
+	
+	StorageManager.add_gold(earned_gold)
+	StorageManager.coins += earned_coins
+	StorageManager.add_xp(earned_xp)
+	
+	EventBus.gold_changed.emit(StorageManager.gold, earned_gold)
+	EventBus.coins_changed.emit(StorageManager.coins, earned_coins)
+	EventBus.tourist_tipped.emit(earned_coins, earned_gold, earned_xp, position)
+	
+	var tw: Tween = create_tween()
+	tw.tween_property(_tip_sprite, "position:y", -42.0, 0.5)
+	tw.tween_interval(1.4)
+	tw.tween_property(_tip_sprite, "visible", false, 0.1)
+
 func _draw() -> void:
-	if state != VisitorState.INACTIVE:
-		var shadow_col: Color = Color(0.0, 0.0, 0.0, 0.22)
-		draw_set_transform(Vector2(0, 16), 0.0, Vector2(1.0, 0.45))
-		draw_circle(Vector2.ZERO, 13.0, shadow_col)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	pass

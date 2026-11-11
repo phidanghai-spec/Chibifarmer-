@@ -21,14 +21,54 @@ static func is_cell_blocked(cell: Vector2i, blocked_dict: Dictionary = _blocked)
 static func is_cell_occupied(cell: Vector2i, occupied_dict: Dictionary = _occupied) -> bool:
 	return occupied_dict.has(cell)
 
+## Xây dựng hệ thống đại lộ lát đá sạch đẹp kết nối 5 phân khu không có nhánh thừa lộn xộn
+static func _build_paved_avenues() -> void:
+	if GridManager == null:
+		return
+	GridManager.path_cells.clear()
+	if GridManager.astar_grid != null:
+		for x: int in range(GridManager.GRID_WIDTH):
+			for y: int in range(GridManager.GRID_HEIGHT):
+				GridManager.astar_grid.set_point_weight_scale(Vector2i(x, y), 4.0)
+
+	var avenue_cells: Array[Vector2i] = []
+
+	# 1. Zone 4 - Đại lộ Ngang Chính (y = 20 -> y_px = 640..672): Cổng Tây -> Sạp Hàng / Xe Tải -> Cầu Gỗ -> Sở Thú Bờ Đông
+	for x: int in range(0, 36):
+		avenue_cells.append(Vector2i(x, 20))
+
+	# 2. Zone 1 - Đường Dạo Khu Nhà Chính & Kho Bãi (y = 9 -> y_px = 288..320)
+	for x: int in range(7, 21):
+		avenue_cells.append(Vector2i(x, 9))
+
+	# 3. Zone 2 - Đại lộ Xưởng Sản Xuất Thủ Công (y = 15 -> y_px = 480..512)
+	for x: int in range(7, 23):
+		avenue_cells.append(Vector2i(x, 15))
+
+	# 4. Hai trục đường dọc kết nối mượt từ Khu Nhà Chính -> Đại lộ Xưởng -> Đại lộ Chính -> Khu Đồng Cỏ Chăn Nuôi
+	for y: int in range(9, 24):
+		avenue_cells.append(Vector2i(7, y))
+		avenue_cells.append(Vector2i(16, y))
+
+	# 5. Zone 5 - Đường Dạo Đồng Cỏ Chăn Nuôi phía Nam (y = 23 -> y_px = 736..768)
+	for x: int in range(7, 25):
+		avenue_cells.append(Vector2i(x, 23))
+
+	for c: Vector2i in avenue_cells:
+		if GridManager.is_within_bounds(c):
+			GridManager.path_cells[c] = true
+			if GridManager.astar_grid != null:
+				GridManager.astar_grid.set_point_solid(c, false)
+				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+
 ## Khởi tạo danh sách các ô bị cấm (_blocked) bao gồm Sông, Đường gạch, Ruộng và HUD
 static func _init_blocked_and_occupied() -> void:
 	_blocked.clear()
 	_occupied.clear()
 
-	# 1. Khu vực HUD góc trên bên trái (X < 280, Y < 220)
-	var max_hud_col: int = int(ceil(280.0 / float(TILE_SIZE)))
-	var max_hud_row: int = int(ceil(220.0 / float(TILE_SIZE)))
+	# 1. Khu vực HUD góc trên bên trái (X < 220, Y < 190)
+	var max_hud_col: int = int(ceil(220.0 / float(TILE_SIZE)))
+	var max_hud_row: int = int(ceil(190.0 / float(TILE_SIZE)))
 	for x: int in range(max_hud_col):
 		for y: int in range(max_hud_row):
 			_blocked[Vector2i(x, y)] = "hud"
@@ -77,10 +117,13 @@ static func build_farm(farm: Node2D) -> void:
 		print("[MapBuilder] No layout data loaded, skipping build.")
 		return
 
+	# Xây dựng đại lộ lát đá sạch đẹp kết nối 5 phân khu
+	_build_paved_avenues()
+
 	# Khởi tạo bảng kiểm tra vùng cấm
 	_init_blocked_and_occupied()
 
-	# 1. Phân vùng 1: Khu Nhà & Xưởng Chế Biến (Footprint 3x3 ô = 96x96px)
+	# 1. Phân vùng 1 & 2 & 4: Khu Nhà Chính, Kho Bãi, Đại Lộ Chế Biến & Giao Thương
 	var buildings: Array = data.get("buildings", []) as Array
 	for b_val: Variant in buildings:
 		if b_val is Dictionary:
@@ -91,7 +134,6 @@ static func build_farm(farm: Node2D) -> void:
 			var t_arr: Array = b.get("tile_size", [3, 3]) as Array
 			var t_size: Vector2i = Vector2i(int(t_arr[0]), int(t_arr[1]))
 
-			# Đánh dấu các ô công trình chiếm dụng vào _occupied
 			for ox: int in range(t_size.x):
 				for oy: int in range(t_size.y):
 					_occupied[cell + Vector2i(ox, oy)] = String(b.get("id", "building"))
@@ -99,38 +141,40 @@ static func build_farm(farm: Node2D) -> void:
 
 			if b_type == "machine":
 				var m_id: String = String(b.get("machine_id", "bakery"))
-				farm._spawn_production_machine(m_id, cell)
+				var machine: Node2D = farm._spawn_production_machine(m_id, cell)
+				if b.has("pos") and machine != null:
+					var p_arr: Array = b["pos"] as Array
+					if p_arr.size() >= 2:
+						machine.position = Vector2(float(p_arr[0]), float(p_arr[1]))
 			else:
 				var sp_id: String = String(b.get("sprite_id", "farmhouse"))
 				var sz_arr: Array = b.get("max_size", [90, 90]) as Array
 				var m_size: Vector2 = Vector2(float(sz_arr[0]), float(sz_arr[1]))
-				farm._spawn_building_prop(sp_id, cell, t_size, m_size)
+				var sp_node: Sprite2D = farm._spawn_building_prop(sp_id, cell, t_size, m_size)
+				if b.has("pos") and sp_node != null and sp_node.get_parent() is Node2D:
+					var p_arr: Array = b["pos"] as Array
+					if p_arr.size() >= 2 and sp_id != "truck":
+						(sp_node.get_parent() as Node2D).position = Vector2(float(p_arr[0]), float(p_arr[1]))
 
-	# 2. Phân vùng 2: Khu Ruộng Tập Trung (Nhóm khối 4x2 ô với Sprite2D nền plot_block_empty trên PlotLayer)
-	var plot_layer: Node2D = farm.find_child("PlotLayer", true, false) as Node2D
-	if plot_layer == null:
-		plot_layer = farm
-	
+	# 2. Phân vùng 3: Khu Ruộng Tập Trung (Khối 3x2 = 6 ô ruộng khởi đầu tại x=130..250, y=540..600)
 	var blocks: Array = data.get("field_blocks", []) as Array
 	if blocks.is_empty():
-		# Fallback cho dữ liệu cũ nếu chưa có field_blocks
 		var legacy_plots: Array = data.get("field_plots", []) as Array
 		if not legacy_plots.is_empty():
 			blocks.append({
-				"cell": [12, 17],
-				"size": [4, 2],
+				"cell": [4, 17],
+				"size": [3, 2],
 				"plots": legacy_plots
 			})
 	
 	for b_val: Variant in blocks:
 		if b_val is Dictionary:
 			var b: Dictionary = b_val as Dictionary
-			var cell_arr: Array = b.get("cell", [12, 17]) as Array
+			var cell_arr: Array = b.get("cell", [4, 17]) as Array
 			var top_left: Vector2i = Vector2i(int(cell_arr[0]), int(cell_arr[1]))
-			var size_arr: Array = b.get("size", [4, 2]) as Array
+			var size_arr: Array = b.get("size", [3, 2]) as Array
 			var b_size: Vector2i = Vector2i(int(size_arr[0]), int(size_arr[1]))
 			
-			# Tạo từng ô FieldPlot con trong khối (mỗi ô là một FieldPlot độc lập để trồng/thu hoạch)
 			var sub_plots: Array = b.get("plots", []) as Array
 			var plot_idx: int = 0
 			for oy: int in range(b_size.y):
@@ -152,7 +196,7 @@ static func build_farm(farm: Node2D) -> void:
 								plot._show_ready_crop()
 					plot_idx += 1
 
-	# 3. Phân vùng 3: Khu Chuồng Trại (Chuồng Bò, Gà, Heo thẳng hàng tại Row 22)
+	# 3. Phân vùng 5: Khu Đồng Cỏ Chăn Nuôi (Gà, Bò, Heo, Cừu thẳng hàng tại y=820)
 	var pens: Array = data.get("animal_pens", []) as Array
 	for a_val: Variant in pens:
 		if a_val is Dictionary:
@@ -167,11 +211,15 @@ static func build_farm(farm: Node2D) -> void:
 					_occupied[cell + Vector2i(ox, oy)] = a_id
 			GridManager.mark_footprint_solid(cell, t_size, true, 2000)
 			var count: int = int(a.get("count", 2))
-			farm._spawn_animal_pen(a_id, cell, count)
+			var pen_node: Node2D = farm._spawn_animal_pen(a_id, cell, count)
+			if a.has("pos") and pen_node != null:
+				var p_arr: Array = a["pos"] as Array
+				if p_arr.size() >= 2:
+					pen_node.position = Vector2(float(p_arr[0]), float(p_arr[1]))
 
 	# 4. Nhà Câu Cá & Bến Nước Bờ Tây Cạnh Cầu Gỗ
 	var f_dict: Dictionary = data.get("fishing_spot", {}) as Dictionary
-	var f_cell_arr: Array = f_dict.get("cell", [23, 22]) as Array
+	var f_cell_arr: Array = f_dict.get("cell", [23, 21]) as Array
 	var f_cell: Vector2i = Vector2i(int(f_cell_arr[0]), int(f_cell_arr[1]))
 	_occupied[f_cell] = "fishing_spot"
 	_occupied[f_cell + Vector2i(1, 0)] = "fishing_spot"

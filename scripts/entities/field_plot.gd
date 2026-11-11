@@ -13,6 +13,7 @@ var state: PlotState = PlotState.EMPTY
 var crop_id: String = ""
 var plant_timestamp: int = 0
 var finish_timestamp: int = 0
+var time_left: float = 0.0
 var grid_pos: Vector2i = Vector2i.ZERO
 var instance_id: int = 0
 var is_selected: bool = false
@@ -21,6 +22,8 @@ var _soil_sprite: Sprite2D
 var _label_timer: Label
 var _collision_shape: CollisionShape2D
 var _crop_sprite: Sprite2D
+var _base_crop_scale: Vector2 = Vector2.ONE
+var _weather_growth_mult: float = 1.0
 
 func _ready() -> void:
 	y_sort_enabled = true
@@ -72,7 +75,16 @@ func _ready() -> void:
 	add_child(_label_timer)
 	
 	EventBus.second_ticked.connect(_on_second_ticked)
+	EventBus.weather_state_changed.connect(_on_weather_state_changed)
 	queue_redraw()
+
+func _on_weather_state_changed(weather_id: String, crop_speed_multiplier: float, _fish_luck_bonus: float) -> void:
+	if weather_id.to_upper() == "COZY_RAIN":
+		_weather_growth_mult = 1.25
+	elif crop_speed_multiplier > 0.0:
+		_weather_growth_mult = crop_speed_multiplier
+	else:
+		_weather_growth_mult = 1.0
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
@@ -106,26 +118,35 @@ func handle_direct_click() -> void:
 		is_selected = not is_selected
 		_label_timer.visible = is_selected
 		if is_selected:
-			var remaining: int = TickManager.get_time_remaining(finish_timestamp)
+			var remaining: int = int(ceil(time_left)) if time_left > 0.0 else TickManager.get_time_remaining(finish_timestamp)
 			_label_timer.text = TickManager.format_duration(remaining)
 		queue_redraw()
 
-func _process(_delta: float) -> void:
-	pass
-
 func _on_second_ticked(_current_unix: int) -> void:
 	if state == PlotState.GROWING:
-		if TickManager.is_finished(finish_timestamp):
+		var speed: float = 1.0 * TickManager.dev_speed_multiplier * _weather_growth_mult
+		time_left = maxf(0.0, time_left - speed)
+		
+		if time_left <= 0.0 or TickManager.is_finished(finish_timestamp):
 			state = PlotState.READY
+			time_left = 0.0
 			_label_timer.text = ""
 			_label_timer.visible = false
 			is_selected = false
 			_update_crop_visual()
+			_play_ready_pop_fx()
 		else:
 			if is_selected:
-				var remaining: int = TickManager.get_time_remaining(finish_timestamp)
+				var remaining: int = int(ceil(time_left)) if time_left > 0.0 else TickManager.get_time_remaining(finish_timestamp)
 				_label_timer.text = TickManager.format_duration(remaining)
 			_update_crop_visual()
+
+func _play_ready_pop_fx() -> void:
+	if _crop_sprite == null or not _crop_sprite.visible:
+		return
+	var tw: Tween = create_tween()
+	tw.tween_property(_crop_sprite, "scale", _base_crop_scale * 1.18, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_crop_sprite, "scale", _base_crop_scale, 0.10).set_trans(Tween.TRANS_SINE)
 
 func plant(new_crop_id: String) -> bool:
 	if state != PlotState.EMPTY:
@@ -148,11 +169,18 @@ func plant(new_crop_id: String) -> bool:
 	plant_timestamp = TickManager.now()
 	var growth_seconds: int = int(crop_data.get("growth_time_seconds", 10))
 	finish_timestamp = TickManager.calculate_finish_timestamp(growth_seconds)
+	time_left = float(growth_seconds)
 	state = PlotState.GROWING
 	is_selected = false
 	
 	_label_timer.visible = false
 	_update_crop_visual()
+	
+	# Elastic sprout animation
+	_crop_sprite.scale = Vector2(0.2, 0.2) * _base_crop_scale
+	var tw: Tween = create_tween()
+	tw.tween_property(_crop_sprite, "scale", _base_crop_scale * 1.22, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_crop_sprite, "scale", _base_crop_scale, 0.10)
 	
 	EventBus.field_planted.emit(instance_id, crop_id, finish_timestamp)
 	EventBus.crop_planted.emit(crop_id, grid_pos)
@@ -162,6 +190,7 @@ func plant(new_crop_id: String) -> bool:
 func _show_ready_crop() -> void:
 	_label_timer.visible = false
 	_update_crop_visual()
+	_play_ready_pop_fx()
 
 func harvest() -> bool:
 	if state != PlotState.READY:
@@ -187,6 +216,7 @@ func harvest() -> bool:
 	crop_id = ""
 	plant_timestamp = 0
 	finish_timestamp = 0
+	time_left = 0.0
 	is_selected = false
 	_label_timer.visible = false
 	_update_crop_visual()
@@ -214,7 +244,8 @@ func _update_crop_visual() -> void:
 		if SpriteAtlasManager.has_texture(sprout_key):
 			tex_key = sprout_key
 		else:
-			var ratio: float = TickManager.get_progress_ratio(plant_timestamp, finish_timestamp)
+			var total_time: float = maxf(1.0, float(DataManager.get_crop(crop_id).get("growth_time_seconds", 10)))
+			var ratio: float = 1.0 - (time_left / total_time) if time_left > 0.0 else TickManager.get_progress_ratio(plant_timestamp, finish_timestamp)
 			var stage_idx: int = 0 if ratio < 0.5 else 1
 			tex_key = "crop_%s_%d" % [crop_id, stage_idx]
 	elif state == PlotState.READY:
@@ -232,5 +263,5 @@ func _update_crop_visual() -> void:
 	if SpriteAtlasManager.has_texture(tex_key):
 		_crop_sprite.texture = SpriteAtlasManager.get_texture(tex_key)
 		SpriteAtlasManager.set_sprite_pixel_size(_crop_sprite, Vector2(26.0, 26.0))
+		_base_crop_scale = _crop_sprite.scale
 		_crop_sprite.position = Vector2(0.0, -6.0)
-

@@ -11,7 +11,8 @@ enum ToolType {
 	PLANT_APPLE_TREE,
 	PLANT_MANGO_TREE,
 	PLANT_CROP,
-	DISMANTLE
+	DISMANTLE,
+	DEMOLISH = 9
 }
 
 signal tool_changed(new_tool: ToolType)
@@ -26,6 +27,9 @@ var _last_drag_cell: Vector2i = Vector2i(-999, -999)
 
 # Hovering tool icon cursor
 var _cursor_sprite: Sprite2D
+var _base_cursor_scale: Vector2 = Vector2.ONE
+var _prev_mouse_pos: Vector2 = Vector2.ZERO
+var _target_cursor_rotation: float = 0.0
 
 # Reference to MainFarm to lookup field plot instances
 var main_farm: Node2D
@@ -41,9 +45,19 @@ func _ready() -> void:
 	
 	set_tool(ToolType.NONE)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _cursor_sprite != null and _cursor_sprite.visible:
-		_cursor_sprite.global_position = get_global_mouse_position() + Vector2(16, -16)
+		var target_pos: Vector2 = get_global_mouse_position() + Vector2(16, -16)
+		_cursor_sprite.global_position = target_pos
+		
+		if _is_dragging:
+			var mouse_delta: Vector2 = target_pos - _prev_mouse_pos
+			_target_cursor_rotation = clampf(mouse_delta.x * 0.035, -0.32, 0.32)
+			_cursor_sprite.rotation = lerpf(_cursor_sprite.rotation, _target_cursor_rotation, delta * 14.0)
+		else:
+			_cursor_sprite.rotation = lerpf(_cursor_sprite.rotation, 0.0, delta * 10.0)
+			
+		_prev_mouse_pos = target_pos
 
 func set_tool(new_tool: ToolType) -> void:
 	current_tool = new_tool
@@ -76,32 +90,39 @@ func _update_cursor_sprite() -> void:
 		return
 	
 	_cursor_sprite.modulate = Color.WHITE
+	_cursor_sprite.rotation = 0.0
 	
 	match current_tool:
 		ToolType.SICKLE:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("sickle")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(36, 36))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.PLANT_WHEAT:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("wheat")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.PLANT_CORN:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("corn")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.PLANT_CROP:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture(selected_crop_id)
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.PLANT_APPLE_TREE:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("apple_seed")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.PLANT_MANGO_TREE:
 			_cursor_sprite.texture = SpriteAtlasManager.get_texture("mango_seed")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(32, 32))
+			_base_cursor_scale = _cursor_sprite.scale
 		ToolType.DISMANTLE:
 			if SpriteAtlasManager.has_texture("tool_demolish"):
 				_cursor_sprite.texture = SpriteAtlasManager.get_texture("tool_demolish")
@@ -109,8 +130,16 @@ func _update_cursor_sprite() -> void:
 				_cursor_sprite.texture = SpriteAtlasManager.get_texture("sickle")
 			_cursor_sprite.visible = (_cursor_sprite.texture != null)
 			SpriteAtlasManager.set_sprite_pixel_size(_cursor_sprite, Vector2(36, 36))
+			_base_cursor_scale = _cursor_sprite.scale
 		_:
 			_cursor_sprite.visible = false
+
+func _bump_cursor_fx() -> void:
+	if _cursor_sprite == null or not _cursor_sprite.visible:
+		return
+	var tw: Tween = create_tween()
+	tw.tween_property(_cursor_sprite, "scale", _base_cursor_scale * 1.25, 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_cursor_sprite, "scale", _base_cursor_scale, 0.09).set_trans(Tween.TRANS_SINE)
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Quick Cancel Shortcuts: Right-click or ESC key
@@ -122,6 +151,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				if main_farm != null:
 					if main_farm.has_method("cancel_pending_build"):
 						main_farm.call("cancel_pending_build")
+					if main_farm.has_method("_cancel_relocating_structure"):
+						main_farm.call("_cancel_relocating_structure")
 					var hud: UIHud = main_farm.find_child("UIHud", true, false) as UIHud
 					if hud != null:
 						hud.cancel_all_active_tools()
@@ -134,6 +165,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				if main_farm != null:
 					if main_farm.has_method("cancel_pending_build"):
 						main_farm.call("cancel_pending_build")
+					if main_farm.has_method("_cancel_relocating_structure"):
+						main_farm.call("_cancel_relocating_structure")
 					var hud: UIHud = main_farm.find_child("UIHud", true, false) as UIHud
 					if hud != null:
 						hud.cancel_all_active_tools()
@@ -203,27 +236,35 @@ func apply_tool_to_plot(plot: FieldPlot) -> void:
 	if plot == null or _touched_plots.has(plot):
 		return
 	
+	var acted: bool = false
 	match current_tool:
 		ToolType.SICKLE:
 			if plot.state == FieldPlot.PlotState.READY:
 				if plot.harvest():
 					_touched_plots[plot] = true
+					acted = true
 					print("[DragActionManager] Harvested crop at cell: ", plot.grid_pos)
 		ToolType.PLANT_WHEAT:
 			if plot.state == FieldPlot.PlotState.EMPTY:
 				if plot.plant("wheat"):
 					_touched_plots[plot] = true
+					acted = true
 					print("[DragActionManager] Planted wheat at cell: ", plot.grid_pos)
 		ToolType.PLANT_CORN:
 			if plot.state == FieldPlot.PlotState.EMPTY:
 				if plot.plant("corn"):
 					_touched_plots[plot] = true
+					acted = true
 					print("[DragActionManager] Planted corn at cell: ", plot.grid_pos)
 		ToolType.PLANT_CROP:
 			if plot.state == FieldPlot.PlotState.EMPTY:
 				if plot.plant(selected_crop_id):
 					_touched_plots[plot] = true
+					acted = true
 					print("[DragActionManager] Planted ", selected_crop_id, " at cell: ", plot.grid_pos)
+
+	if acted:
+		_bump_cursor_fx()
 
 func _handle_sickle(cell: Vector2i) -> void:
 	var plot: FieldPlot = _get_field_plot_at(cell)
@@ -266,6 +307,7 @@ func _handle_build_field(cell: Vector2i) -> void:
 				main_farm.call("auto_clear_decor_at_cell", cell)
 			var inst_id: int = GridManager.place_building("field_plot", cell)
 			AudioManager.play_sfx("plant")
+			_bump_cursor_fx()
 			print("[DragActionManager] Built new field plot at cell: ", cell, " (inst_id: ", inst_id, ")")
 	else:
 		AudioManager.play_sfx("error")
@@ -290,6 +332,7 @@ func _handle_build_path(cell: Vector2i) -> void:
 				main_farm.call("auto_clear_decor_at_cell", cell)
 			GridManager.place_path(cell)
 			AudioManager.play_sfx("plant")
+			_bump_cursor_fx()
 			print("[DragActionManager] Built path tile at cell: ", cell)
 	else:
 		AudioManager.play_sfx("error")
@@ -299,11 +342,24 @@ func _handle_dismantle(cell: Vector2i) -> void:
 		return
 	_last_drag_cell = cell
 
+	var mpos: Vector2 = get_global_mouse_position()
+	var cell_pos: Vector2 = GridManager.grid_to_world(cell)
+
+	# 0. Check for Large Structures (ProductionMachine, AnimalPen, Barn, Silo, RoadsideShop) -> Relocate!
+	if main_farm != null and main_farm.has_method("try_relocate_structure_at_pos"):
+		if bool(main_farm.call("try_relocate_structure_at_pos", mpos)) or bool(main_farm.call("try_relocate_structure_at_pos", cell_pos)):
+			set_tool(ToolType.NONE)
+			var hud: UIHud = main_farm.find_child("UIHud", true, false) as UIHud
+			if hud != null:
+				hud.cancel_all_active_tools()
+			return
+
 	# 1. Path Tile
 	if GridManager.is_path_tile(cell):
 		if GridManager.remove_path(cell):
 			StorageManager.add_gold(5)
 			AudioManager.play_sfx("click")
+			_bump_cursor_fx()
 			print("[DragActionManager] Dismantled path at cell: ", cell)
 			return
 
@@ -320,19 +376,20 @@ func _handle_dismantle(cell: Vector2i) -> void:
 				main_farm.call("_on_building_removed", inst_id, cell)
 		StorageManager.add_gold(1)
 		AudioManager.play_sfx("click")
+		_bump_cursor_fx()
 		print("[DragActionManager] Dismantled empty field plot at cell: ", cell)
 		return
 
 	# 3. Movable Decor
 	if main_farm != null:
 		var decors: Array = main_farm.get("_movable_decors") as Array
-		var cell_pos: Vector2 = GridManager.grid_to_world(cell)
 		for d in decors:
 			if d is MovableDecor:
 				if d.global_position.distance_to(cell_pos) <= 35.0:
 					main_farm.call("remove_movable_decor", d)
 					StorageManager.add_gold(10)
 					AudioManager.play_sfx("click")
+					_bump_cursor_fx()
 					print("[DragActionManager] Dismantled decor at cell: ", cell)
 					return
 

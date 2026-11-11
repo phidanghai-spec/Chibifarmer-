@@ -36,7 +36,7 @@ static func get_latest_active_slot() -> int:
 	var latest_timestamp: int = 0
 	for i: int in range(1, MAX_SLOTS + 1):
 		var meta: Dictionary = read_slot_summary(i)
-		if not meta.is_empty():
+		if not meta.is_empty() and not bool(meta.get("is_empty", true)):
 			var ts: int = int(meta.get("last_timestamp", 0))
 			if ts >= latest_timestamp:
 				latest_timestamp = ts
@@ -47,23 +47,27 @@ static func read_slot_summary(slot_index: int) -> Dictionary:
 	ensure_save_directory()
 	var path: String = get_slot_path(slot_index)
 	if not FileAccess.file_exists(path):
-		return {}
+		return {"is_empty": true}
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return {}
+		return {"is_empty": true}
 	var raw_text: String = file.get_as_text()
 	file.close()
 	var parsed: Variant = JSON.parse_string(raw_text)
 	if typeof(parsed) == TYPE_DICTIONARY:
 		var d: Dictionary = parsed as Dictionary
-		# Trích xuất dữ liệu tóm tắt nếu save có cấu trúc lồng
-		if not d.has("level") and d.has("economy"):
+		d["is_empty"] = false
+		if d.has("economy"):
 			var econ: Dictionary = d.get("economy", {}) as Dictionary
-			d["level"] = econ.get("level", 1)
-			d["gold"] = econ.get("gold", 500)
-			d["farm_name"] = d.get("player", {}).get("player_name", "Nông Trại Chibi")
+			d["level"] = int(econ.get("level", d.get("level", 1)))
+			d["gold"] = int(econ.get("gold", d.get("gold", 500)))
+		var p_info: Dictionary = d.get("player", {}) as Dictionary
+		d["player_name"] = str(p_info.get("player_name", d.get("player_name", "Minh")))
+		d["farm_name"] = str(d.get("farm_name", p_info.get("farm_name", "Nông Trại Chibi")))
+		if d.has("save_timestamp") and not d.has("last_timestamp"):
+			d["last_timestamp"] = d["save_timestamp"]
 		return d
-	return {}
+	return {"is_empty": true}
 
 static func write_slot_data(slot_index: int, payload: Dictionary) -> bool:
 	ensure_save_directory()

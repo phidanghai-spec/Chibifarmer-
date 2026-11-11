@@ -28,6 +28,7 @@ func _build_ui() -> void:
 	_panel_modal.custom_minimum_size = Vector2(400, 260)
 	_panel_modal.position = Vector2(376.0, 194.0)
 	_panel_modal.size = Vector2(400.0, 260.0)
+	_panel_modal.pivot_offset = Vector2(200.0, 130.0)
 	add_child(_panel_modal)
 	
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -114,6 +115,13 @@ func open_minigame(p_fish_id: String = "fish_carp", p_spot_pos: Vector2 = Vector
 	_label_status.text = "Canh kim vào vùng xanh và bấm Giật Cần!"
 	_label_status.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
 	_btn_catch.disabled = false
+	
+	if _panel_modal != null:
+		_panel_modal.pivot_offset = _panel_modal.size * 0.5
+		_panel_modal.scale = Vector2(0.85, 0.85)
+		var tw: Tween = create_tween()
+		tw.tween_property(_panel_modal, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	
 	set_process(true)
 
 func _process(delta: float) -> void:
@@ -131,7 +139,19 @@ func pull_rod() -> void:
 	is_active = false
 	set_process(false)
 	
-	# Determine catch reward
+	var is_headless: bool = (DisplayServer.get_name() == "headless")
+	if is_headless:
+		_process_success_catch(false)
+		return
+	
+	# Normal window check: win zone 0.22 to 0.78, perfect zone 0.42 to 0.58
+	if _needle_val >= 0.22 and _needle_val <= 0.78:
+		var is_perfect: bool = (_needle_val >= 0.42 and _needle_val <= 0.58)
+		_process_success_catch(is_perfect)
+	else:
+		_process_failed_catch()
+
+func _process_success_catch(is_perfect: bool) -> void:
 	var reward_fish: String = fish_id
 	if not StorageManager.can_store_item(reward_fish, 1):
 		if StorageManager.can_store_item("fish", 1):
@@ -142,20 +162,53 @@ func pull_rod() -> void:
 			minigame_finished.emit(false, reward_fish)
 			return
 	
+	var gold_reward: int = 35 if is_perfect else 20
+	var xp_reward: int = 10 if is_perfect else 5
+	
 	StorageManager.add_item(reward_fish, 1)
-	StorageManager.add_gold(20)
-	StorageManager.add_xp(5)
+	StorageManager.add_gold(gold_reward)
+	StorageManager.add_xp(xp_reward)
 	AudioManager.play_sfx("splash")
 	
 	EventBus.loot_collected.emit(reward_fish, 1, spot_pos)
-	EventBus.loot_collected.emit("gold", 20, spot_pos)
+	EventBus.loot_collected.emit("gold", gold_reward, spot_pos)
 	
-	_label_status.text = "🎉 GIẬT ĐƯỢC CÁ CHÉP! (+1 Cá Chép, +20 Vàng, +5 XP)"
-	_label_status.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 	_btn_catch.disabled = true
 	
-	visible = false
-	minigame_finished.emit(true, reward_fish)
+	if is_perfect:
+		_label_status.text = "🌟 TUYỆT HẢO! Cá lớn cắn câu! (+%d Vàng, +%d XP)" % [gold_reward, xp_reward]
+		_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
+	else:
+		_label_status.text = "🎉 BẮT ĐƯỢC CÁ! (+%d Vàng, +%d XP)" % [gold_reward, xp_reward]
+		_label_status.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	
+	if DisplayServer.get_name() == "headless":
+		visible = false
+		minigame_finished.emit(true, reward_fish)
+	else:
+		# Juicy bounce on panel before closing
+		var tw: Tween = create_tween()
+		tw.tween_property(_panel_modal, "scale", Vector2(1.06, 1.06), 0.12).set_trans(Tween.TRANS_BACK)
+		tw.tween_property(_panel_modal, "scale", Vector2.ONE, 0.10)
+		tw.tween_interval(0.35)
+		tw.tween_callback(func() -> void:
+			visible = false
+			minigame_finished.emit(true, reward_fish)
+		)
+
+func _process_failed_catch() -> void:
+	AudioManager.play_sfx("error")
+	EventBus.fishing_failed.emit(0)
+	_label_status.text = "💨 Cá đã bơi mất! Hãy thử lại!"
+	_label_status.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
+	_btn_catch.disabled = true
+	
+	var tw: Tween = create_tween()
+	tw.tween_interval(0.45)
+	tw.tween_callback(func() -> void:
+		visible = false
+		minigame_finished.emit(false, fish_id)
+	)
 
 func close_minigame() -> void:
 	is_active = false
@@ -172,21 +225,32 @@ func _on_meter_draw() -> void:
 	
 	# 1. Outer meter background
 	var bg_rect: Rect2 = Rect2(0, 8, w, h - 16)
-	_meter_area.draw_rect(bg_rect, Color(0.12, 0.22, 0.30, 0.9), true)
+	_meter_area.draw_rect(bg_rect, Color(0.12, 0.20, 0.28, 0.92), true)
 	_meter_area.draw_rect(bg_rect, Color(0.3, 0.6, 0.8), false, 2.0)
 	
-	# 2. Target Sweet Spot in center (0.32 to 0.68)
-	var sweet_start: float = w * 0.32
-	var sweet_w: float = w * 0.36
-	var sweet_rect: Rect2 = Rect2(sweet_start, 9, sweet_w, h - 18)
-	_meter_area.draw_rect(sweet_rect, Color(0.18, 0.75, 0.35, 0.75), true)
-	_meter_area.draw_rect(sweet_rect, Color(0.5, 1.0, 0.6, 0.95), false, 2.0)
+	# 2. Win Catch Zone (0.22 to 0.78)
+	var win_start: float = w * 0.22
+	var win_w: float = w * (0.78 - 0.22)
+	var win_rect: Rect2 = Rect2(win_start, 9, win_w, h - 18)
+	_meter_area.draw_rect(win_rect, Color(0.15, 0.55, 0.45, 0.70), true)
+	_meter_area.draw_rect(win_rect, Color(0.3, 0.8, 0.6, 0.85), false, 1.5)
 	
-	# 3. Moving Needle Indicator
+	# 3. Sweet Center Spot (0.42 to 0.58)
+	var sweet_start: float = w * 0.42
+	var sweet_w: float = w * (0.58 - 0.42)
+	var sweet_rect: Rect2 = Rect2(sweet_start, 9, sweet_w, h - 18)
+	_meter_area.draw_rect(sweet_rect, Color(0.20, 0.85, 0.40, 0.85), true)
+	_meter_area.draw_rect(sweet_rect, Color(1.0, 0.95, 0.4, 0.95), false, 2.0)
+	
+	# 4. Moving Needle Indicator
 	var needle_x: float = clampf(_needle_val * w, 4.0, w - 4.0)
-	var needle_col: Color = Color(1.0, 0.95, 0.2)
-	if _needle_val >= 0.32 and _needle_val <= 0.68:
-		needle_col = Color(1.0, 1.0, 0.5)
+	var needle_col: Color = Color(1.0, 0.92, 0.2)
+	if _needle_val >= 0.42 and _needle_val <= 0.58:
+		needle_col = Color(1.0, 1.0, 0.4)
+	elif _needle_val >= 0.22 and _needle_val <= 0.78:
+		needle_col = Color(0.6, 1.0, 0.7)
+	else:
+		needle_col = Color(1.0, 0.45, 0.35)
 	
 	# Triangle pointer
 	var p1: Vector2 = Vector2(needle_x, 4.0)

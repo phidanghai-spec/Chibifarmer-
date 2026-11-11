@@ -2089,15 +2089,15 @@ func open_build_modal() -> void:
 	scroll.add_child(grid)
 	
 	var catalog: Array[Dictionary] = [
-		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 1, "level": 1, "icon": "item_wheat"},
-		{"id": "mini_zoo", "name": "Khu Sở Thú Thú Cưng", "desc": "Chuồng Ngựa & Lừa đi dạo", "cost": 200, "level": 8, "icon": "building_mini_zoo"},
-		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây", "cost": 120, "level": 5, "icon": "building_cake_oven"},
-		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép & sinh tố mát lạnh", "cost": 60, "level": 6, "icon": "building_juice_stand"},
-		{"id": "ice_cream", "name": "Quầy Kem Tươi", "desc": "Chế biến kem tươi ngọt béo", "cost": 180, "level": 7, "icon": "building_ice_cream"},
-		{"id": "bee_hive", "name": "Tổ Ong Mật", "desc": "Thu hoạch mật ong hoa thơm", "cost": 80, "level": 4, "icon": "building_bee_hive"},
-		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan trang trại", "cost": 25, "level": 2, "icon": "flowerbed_round"},
-		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân", "cost": 15, "level": 2, "icon": "wooden_bench"},
-		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "level": 5, "icon": "fountain"}
+		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 10, "level": 1, "icon": "wheat", "materials": {}},
+		{"id": "feed_mill", "name": "Máy Nghiền Cám", "desc": "Nghiền thức ăn cho Gà, Bò, Heo", "cost": 80, "level": 2, "icon": "feed_mill", "materials": {"mat_plank": 2, "mat_bolt": 1}},
+		{"id": "bakery", "name": "Lò Bánh Mì", "desc": "Nướng bánh mì nóng giòn thơm lừng", "cost": 120, "level": 3, "icon": "bakery", "materials": {"mat_brick": 2, "mat_plank": 2}},
+		{"id": "cow_pen", "name": "Chuồng Bò Sữa", "desc": "Nuôi bò lấy sữa tươi béo ngậy", "cost": 100, "level": 3, "icon": "cow", "materials": {"mat_plank": 3, "mat_bolt": 1}},
+		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "level": 5, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
+		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "level": 6, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
+		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân ngắm cảnh", "cost": 15, "level": 2, "icon": "wooden_bench", "materials": {}},
+		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan check-in", "cost": 25, "level": 2, "icon": "flowerbed_round", "materials": {}},
+		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "level": 5, "icon": "fountain", "materials": {"mat_brick": 3}}
 	]
 	
 	for item in catalog:
@@ -2143,21 +2143,44 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	
 	var cost: int = int(item.get("cost", 0))
 	var req_level: int = int(item.get("level", 1))
+	var req_mats: Dictionary = item.get("materials", {}) as Dictionary
+	var mat_str_parts: Array[String] = []
+	var has_all_mats: bool = true
+	var missing_mat_msg: String = ""
+	for m_id: String in req_mats:
+		var needed: int = int(req_mats[m_id])
+		var cur: int = StorageManager.get_item_count(m_id)
+		var m_name: String = StorageManager.get_item_display_name(m_id)
+		if m_id == "mat_plank": mat_str_parts.append("🪵%d" % needed)
+		elif m_id == "mat_bolt": mat_str_parts.append("🔩%d" % needed)
+		elif m_id == "mat_brick": mat_str_parts.append("🧱%d" % needed)
+		else: mat_str_parts.append("%s x%d" % [m_name, needed])
+		if cur < needed:
+			has_all_mats = false
+			if missing_mat_msg.is_empty():
+				missing_mat_msg = "Thiếu %s (%d/%d)" % [m_name, cur, needed]
+	
 	var lbl_info: Label = Label.new()
-	lbl_info.text = "Cấp %d | 💰 %d Vàng" % [req_level, cost]
+	var cost_text: String = "Cấp %d | 💰 %d" % [req_level, cost]
+	if not mat_str_parts.is_empty():
+		cost_text += " | " + " ".join(mat_str_parts)
+	lbl_info.text = cost_text
 	lbl_info.add_theme_font_size_override("font_size", 10)
 	lbl_info.add_theme_color_override("font_color", Color(0.8, 0.45, 0.1))
 	vbox.add_child(lbl_info)
 	
 	var btn_buy: Button = Button.new()
 	btn_buy.custom_minimum_size = Vector2(0, 24)
-	var can_afford: bool = StorageManager.gold >= cost
+	var can_afford_gold: bool = StorageManager.gold >= cost
 	var meets_level: bool = StorageManager.level >= req_level
 	if not meets_level:
 		btn_buy.text = "🔒 Cần Cấp %d" % req_level
 		btn_buy.disabled = true
-	elif not can_afford:
+	elif not can_afford_gold:
 		btn_buy.text = "Thiếu Vàng"
+		btn_buy.disabled = true
+	elif not has_all_mats:
+		btn_buy.text = missing_mat_msg
 		btn_buy.disabled = true
 	else:
 		btn_buy.text = "🔨 Xây Dựng"
@@ -2170,7 +2193,7 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 				return
 			var farm: Node = get_tree().current_scene
 			if farm != null and farm.has_method("start_building_placement"):
-				farm.call("start_building_placement", b_id, cost)
+				farm.call("start_building_placement", b_id, cost, req_mats)
 		)
 	vbox.add_child(btn_buy)
 	
@@ -2683,6 +2706,45 @@ func _render_quests_list(vbox_list: VBoxContainer) -> void:
 		return
 		
 	if _active_quest_tab == 0:
+		# Banner Lộ Trình Mở Khóa Cấp Độ
+		var roadmap_banner: PanelContainer = PanelContainer.new()
+		var rm_sb: StyleBoxFlat = StyleBoxFlat.new()
+		rm_sb.bg_color = Color(0.99, 0.94, 0.82, 0.98)
+		rm_sb.border_color = Color(0.85, 0.65, 0.35, 1.0)
+		rm_sb.set_border_width_all(2)
+		rm_sb.set_corner_radius_all(10)
+		rm_sb.content_margin_left = 12
+		rm_sb.content_margin_right = 12
+		rm_sb.content_margin_top = 8
+		rm_sb.content_margin_bottom = 8
+		roadmap_banner.add_theme_stylebox_override("panel", rm_sb)
+		var rm_vbox: VBoxContainer = VBoxContainer.new()
+		rm_vbox.add_theme_constant_override("separation", 3)
+		roadmap_banner.add_child(rm_vbox)
+		
+		var cur_lvl: int = StorageManager.level
+		var next_lvl: int = cur_lvl + 1
+		var rm_title: Label = Label.new()
+		rm_title.text = "🌟 LỘ TRÌNH MỞ KHÓA: CẤP %d ➔ CẤP %d" % [cur_lvl, next_lvl]
+		rm_title.add_theme_font_size_override("font_size", 12)
+		rm_title.add_theme_color_override("font_color", Color(0.68, 0.35, 0.05))
+		rm_vbox.add_child(rm_title)
+		
+		var unlock_preview: String = ""
+		match cur_lvl:
+			1: unlock_preview = "🌽 Cây Ngô (Bắp) | ⚙️ Máy Nghiền Cám | 🌾 Thêm Ô Ruộng (+3)"
+			2: unlock_preview = "🥕 Cà Rốt | 🥖 Lò Bánh Mì Nóng | 🐄 Chuồng Bò Sữa (+Sữa Tươi)"
+			3: unlock_preview = "🌱 Đậu Nành | 🚢 Bến Tàu Hơi Nước | 🎣 Đầm Câu Cá Tự Nhiên"
+			4: unlock_preview = "🎋 Mía Đường | 🧃 Quầy Nước Pha Chế | 🐖 Chuồng Heo | 🐝 Cây Tổ Ong"
+			5: unlock_preview = "🍓 Dâu Tây | 🎂 Tiệm Bánh Ngọt Kem | 🐑 Chuồng Cừu | 🐶 Nhà Cún Poodle"
+			_: unlock_preview = "🦁 Khu Bảo Tồn Sở Thú Bờ Đông | 🎈 Bến Khinh Khí Cầu | 🦩 Thú Quý Hiếm"
+		var rm_desc: Label = Label.new()
+		rm_desc.text = "Mở khóa tiếp theo: " + unlock_preview
+		rm_desc.add_theme_font_size_override("font_size", 10)
+		rm_desc.add_theme_color_override("font_color", Color(0.35, 0.22, 0.12))
+		rm_vbox.add_child(rm_desc)
+		vbox_list.add_child(roadmap_banner)
+		
 		# Tab 1: Story quests grouped by chapter
 		var last_chapter: int = -1
 		for q in qm.story_quests:
@@ -2912,6 +2974,12 @@ func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_lis
 	if xp > 0: rew_parts.append("+%d ⭐" % xp)
 	if dia > 0: rew_parts.append("+%d 💎" % dia)
 	if pieces > 0: rew_parts.append("+%d 🧩" % pieces)
+	var mats_rew: Dictionary = q.get("reward_materials", {}) as Dictionary
+	for m_id: String in mats_rew:
+		var cnt: int = int(mats_rew[m_id])
+		if cnt > 0:
+			var m_name: String = StorageManager.get_item_display_name(m_id)
+			rew_parts.append("+%d %s" % [cnt, m_name])
 	if is_daily: rew_parts.append("+25 ⚡")
 	
 	var lbl_rew: Label = Label.new()

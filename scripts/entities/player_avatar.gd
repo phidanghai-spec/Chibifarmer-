@@ -17,6 +17,7 @@ var _shadow_poly: Polygon2D = null
 # Animation tracking
 var _facing_row: int = 0 # 0: Down, 1: Up, 2: Right (flipped for Left)
 var _anim_timer: float = 0.0
+var _walk_time: float = 0.0
 var _anim_frame_idx: int = 0
 const ANIM_FRAME_TIME: float = 0.14
 
@@ -34,25 +35,39 @@ func _ready() -> void:
 		position = SaveManager.player_position
 
 func _setup_nodes() -> void:
-	# 1. Shadow beneath feet
+	# 1. Warm 2-Layer Ellipse Shadow beneath feet
 	_shadow_poly = Polygon2D.new()
+	_shadow_poly.name = "PlayerShadow"
 	var pts: PackedVector2Array = PackedVector2Array()
-	var segments: int = 14
-	var rx: float = 18.0
-	var ry: float = 7.0
-	for i in range(segments):
+	var segments: int = 18
+	var rx: float = 20.0
+	var ry: float = 8.5
+	for i: int in range(segments):
 		var angle: float = (float(i) / float(segments)) * TAU
 		pts.append(Vector2(cos(angle) * rx, sin(angle) * ry))
 	_shadow_poly.polygon = pts
-	_shadow_poly.color = Color(0.0, 0.0, 0.0, 0.28)
-	_shadow_poly.position = Vector2(0.0, 0.0)
+	_shadow_poly.color = Color(0.12, 0.16, 0.08, 0.45)
+	_shadow_poly.position = Vector2(0.0, -4.0)
+	_shadow_poly.z_index = -1
+	
+	# Inner core layer for soft grounding depth
+	var inner_shadow: Polygon2D = Polygon2D.new()
+	inner_shadow.name = "ShadowCore"
+	var inner_pts: PackedVector2Array = PackedVector2Array()
+	for i: int in range(segments):
+		var a: float = (float(i) / float(segments)) * TAU
+		inner_pts.append(Vector2(cos(a) * 12.0, sin(a) * 5.0))
+	inner_shadow.polygon = inner_pts
+	inner_shadow.color = Color(0.08, 0.12, 0.05, 0.35)
+	_shadow_poly.add_child(inner_shadow)
+	
 	add_child(_shadow_poly)
 	
 	# 2. Character Sprite
 	_sprite = Sprite2D.new()
 	_sprite.centered = true
-	# Ground-feet anchor: with 128px height, center is 64px up, so offset puts feet at (0, 0)
-	_sprite.position = Vector2(0.0, -26.0)
+	# Ground-feet anchor: aligned so character feet firmly contact shadow center at (0, -4)
+	_sprite.position = Vector2(0.0, -22.0)
 	_sprite.scale = Vector2(0.42, 0.42)
 	_sprite.hframes = 4
 	_sprite.vframes = 4
@@ -63,9 +78,11 @@ func _setup_nodes() -> void:
 	var mod_scene: PackedScene = load("res://scenes/entities/ModularChibiAvatar.tscn") as PackedScene
 	if mod_scene != null:
 		_modular_avatar = mod_scene.instantiate() as ModularChibiAvatar
-		_modular_avatar.position = Vector2(0.0, -26.0)
+		_modular_avatar.position = Vector2(0.0, -6.0)
 		_modular_avatar.scale = Vector2(0.48, 0.48)
 		_modular_avatar.visible = false
+		if _modular_avatar.dynamic_shadow != null:
+			_modular_avatar.dynamic_shadow.visible = false
 		add_child(_modular_avatar)
 	
 	# 3. Name Label above head
@@ -93,16 +110,16 @@ func _update_appearance() -> void:
 		_name_label.text = SaveManager.player_name
 	
 	var is_custom: bool = false
-	if SaveManager.avatar_config != null and bool(SaveManager.avatar_config.get("is_custom", false)):
-		is_custom = true
 	
 	if is_custom and _modular_avatar != null:
 		_modular_avatar.visible = true
 		_modular_avatar.apply_full_config(SaveManager.avatar_config)
+		if _modular_avatar.dynamic_shadow != null:
+			_modular_avatar.dynamic_shadow.visible = false
 		if _sprite != null:
 			_sprite.visible = false
 		if _shadow_poly != null:
-			_shadow_poly.visible = false
+			_shadow_poly.visible = true
 		return
 	
 	if _modular_avatar != null:
@@ -127,8 +144,6 @@ func _update_appearance() -> void:
 		_sprite.modulate = Color.WHITE
 		_sprite.frame = 0
 		_facing_row = 0
-
-var _walk_time: float = 0.0
 
 func go_to(path: Array[Vector2], target: Node = null) -> void:
 	current_path = path.duplicate()
@@ -160,7 +175,7 @@ func stop() -> void:
 	if _sprite != null:
 		_sprite.frame = 0
 		_sprite.rotation_degrees = 0.0
-		_sprite.position.y = -26.0
+		_sprite.position.y = -22.0
 	if _modular_avatar != null:
 		_modular_avatar.set_preview_action(ModularChibiAvatar.PreviewMode.IDLE)
 
@@ -215,7 +230,7 @@ func _walk_process(delta: float) -> void:
 		var frame_in_row: int = int(_walk_time / ANIM_FRAME_TIME) % 4
 		_sprite.frame = _facing_row * 4 + frame_in_row
 		var bob: float = abs(sin(_walk_time * 12.0)) * 2.5
-		_sprite.position.y = -26.0 - bob
+		_sprite.position.y = -22.0 - bob
 		_sprite.rotation_degrees = 0.0
 	if _shadow_poly != null:
 		var shrink: float = abs(sin(_walk_time * 12.0)) * 0.12
@@ -229,7 +244,7 @@ func _idle_process(_delta: float) -> void:
 		_sprite.flip_h = false
 		_sprite.rotation_degrees = 0.0
 		var breath: float = sin(Time.get_ticks_msec() * 0.003) * 0.5
-		_sprite.position.y = -26.0 + breath
+		_sprite.position.y = -22.0 + breath
 		_sprite.scale = Vector2(0.44, 0.44 * (1.0 + breath * 0.015))
 	if _shadow_poly != null:
 		_shadow_poly.scale = Vector2.ONE
@@ -244,7 +259,7 @@ func _on_destination_reached() -> void:
 	if _sprite != null:
 		_sprite.frame = 0
 		_sprite.rotation_degrees = 0.0
-		_sprite.position.y = -26.0
+		_sprite.position.y = -22.0
 	if _modular_avatar != null:
 		_modular_avatar.set_preview_action(ModularChibiAvatar.PreviewMode.IDLE)
 	if _shadow_poly != null:

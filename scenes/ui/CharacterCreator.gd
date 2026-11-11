@@ -33,8 +33,9 @@ var _catalog: Dictionary = {}
 var _current_gender: String = "male"
 
 func _ready() -> void:
-	if SaveManager != null and SaveManager.has_method("get"):
-		active_slot_index = int(SaveManager.get("current_slot"))
+	var sm: Node = get_node_or_null("/root/SaveManager")
+	if sm != null and sm.has_method("get"):
+		active_slot_index = int(sm.get("current_slot"))
 		if active_slot_index <= 0:
 			active_slot_index = 1
 			
@@ -47,8 +48,9 @@ func _ready() -> void:
 	_apply_preset("male")
 
 func _load_catalog_data() -> void:
-	if DataManager != null and DataManager.get("avatar_catalog") != null and not (DataManager.avatar_catalog as Dictionary).is_empty():
-		_catalog = DataManager.avatar_catalog
+	var dm: Node = get_node_or_null("/root/DataManager")
+	if dm != null and dm.get("avatar_catalog") != null and not (dm.get("avatar_catalog") as Dictionary).is_empty():
+		_catalog = dm.get("avatar_catalog") as Dictionary
 	else:
 		_catalog = {
 			"body": [
@@ -84,6 +86,45 @@ func _setup_tabs() -> void:
 	category_tabs.add_tab("2. Tóc & Mũ")
 	category_tabs.add_tab("3. Trang Phục")
 	category_tabs.add_tab("4. Chó Poodle")
+	var tab_sel: StyleBoxFlat = StyleBoxFlat.new()
+	tab_sel.bg_color = Color(0.96, 0.73, 0.19, 1.0)
+	tab_sel.border_color = Color(0.48, 0.26, 0.12, 1.0)
+	tab_sel.set_border_width_all(2)
+	tab_sel.corner_radius_top_left = 10
+	tab_sel.corner_radius_top_right = 10
+	tab_sel.content_margin_left = 14
+	tab_sel.content_margin_right = 14
+	tab_sel.content_margin_top = 6
+	tab_sel.content_margin_bottom = 6
+	var tab_unsel: StyleBoxFlat = StyleBoxFlat.new()
+	tab_unsel.bg_color = Color(0.93, 0.86, 0.74, 1.0)
+	tab_unsel.border_color = Color(0.62, 0.42, 0.24, 1.0)
+	tab_unsel.set_border_width_all(2)
+	tab_unsel.corner_radius_top_left = 10
+	tab_unsel.corner_radius_top_right = 10
+	tab_unsel.content_margin_left = 14
+	tab_unsel.content_margin_right = 14
+	tab_unsel.content_margin_top = 6
+	tab_unsel.content_margin_bottom = 6
+	category_tabs.add_theme_stylebox_override("tab_selected", tab_sel)
+	category_tabs.add_theme_stylebox_override("tab_unselected", tab_unsel)
+	category_tabs.add_theme_stylebox_override("tab_hovered", tab_sel)
+	category_tabs.add_theme_color_override("font_selected_color", Color(0.24, 0.11, 0.03, 1.0))
+	category_tabs.add_theme_color_override("font_unselected_color", Color(0.42, 0.25, 0.12, 1.0))
+	category_tabs.add_theme_color_override("font_hovered_color", Color(0.24, 0.11, 0.03, 1.0))
+	var input_sb: StyleBoxFlat = StyleBoxFlat.new()
+	input_sb.bg_color = Color(1.0, 0.98, 0.92, 1.0)
+	input_sb.border_color = Color(0.55, 0.34, 0.16, 1.0)
+	input_sb.set_border_width_all(2)
+	input_sb.set_corner_radius_all(10)
+	input_sb.content_margin_left = 12
+	input_sb.content_margin_right = 12
+	for le: LineEdit in [input_player_name, input_farm_name]:
+		if le != null:
+			le.add_theme_stylebox_override("normal", input_sb)
+			le.add_theme_stylebox_override("focus", input_sb)
+			le.add_theme_color_override("font_color", Color(0.25, 0.12, 0.04, 1.0))
+			le.add_theme_color_override("font_placeholder_color", Color(0.55, 0.40, 0.26, 0.8))
 	category_tabs.tab_changed.connect(_populate_category_options)
 
 func _bind_buttons() -> void:
@@ -138,6 +179,7 @@ func _apply_preset(gender: String) -> void:
 	if avatar_preview == null:
 		return
 	if gender == "male":
+		avatar_preview.equip_part("gender", "male")
 		avatar_preview.equip_part("body", "body_warm_ivory")
 		avatar_preview.equip_part("eyes", "eyes_sparkle_brown")
 		avatar_preview.equip_part("hair", "hair_short_sunny")
@@ -149,6 +191,7 @@ func _apply_preset(gender: String) -> void:
 		if input_farm_name.text.is_empty():
 			input_farm_name.text = "Nông Trại Nắng Ấm"
 	else:
+		avatar_preview.equip_part("gender", "female")
 		avatar_preview.equip_part("body", "body_peach_sunny")
 		avatar_preview.equip_part("eyes", "eyes_emerald_gentle")
 		avatar_preview.equip_part("hair", "hair_braid_chestnut")
@@ -177,12 +220,30 @@ func _populate_category_options(tab_idx: int) -> void:
 	var category_key: String = TAB_KEYS[clampi(tab_idx, 0, TAB_KEYS.size() - 1)]
 	var items: Array = _catalog.get(category_key, []) as Array
 	
+	var card_normal: StyleBoxFlat = StyleBoxFlat.new()
+	card_normal.bg_color = Color(0.99, 0.93, 0.78, 1.0)
+	card_normal.border_color = Color(0.55, 0.34, 0.16, 1.0)
+	card_normal.set_border_width_all(2)
+	card_normal.border_width_bottom = 4
+	card_normal.set_corner_radius_all(12)
+	card_normal.content_margin_left = 8
+	card_normal.content_margin_right = 8
+	var card_hover: StyleBoxFlat = card_normal.duplicate() as StyleBoxFlat
+	card_hover.bg_color = Color(1.0, 0.86, 0.45, 1.0)
+
 	for item_var: Variant in items:
 		if typeof(item_var) == TYPE_DICTIONARY:
 			var item: Dictionary = item_var as Dictionary
 			var card_btn: Button = Button.new()
-			card_btn.custom_minimum_size = Vector2(130.0, 80.0)
+			card_btn.custom_minimum_size = Vector2(148.0, 76.0)
+			card_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			card_btn.text = str(item.get("name", "Tùy chọn"))
+			card_btn.add_theme_stylebox_override("normal", card_normal)
+			card_btn.add_theme_stylebox_override("hover", card_hover)
+			card_btn.add_theme_stylebox_override("pressed", card_hover)
+			card_btn.add_theme_color_override("font_color", Color(0.28, 0.14, 0.05, 1.0))
+			card_btn.add_theme_color_override("font_hover_color", Color(0.20, 0.09, 0.02, 1.0))
+			card_btn.add_theme_font_size_override("font_size", 14)
 			card_btn.pressed.connect(func() -> void: _on_option_selected(category_key, item))
 			options_grid.add_child(card_btn)
 
@@ -234,24 +295,14 @@ func _on_confirm_start_farm() -> void:
 	saved_avatar_cfg["is_custom"] = true
 	saved_avatar_cfg["gender"] = _current_gender
 	
-	var initial_save_payload: Dictionary = {
-		"slot_index": active_slot_index,
-		"player_name": p_name,
-		"farm_name": f_name,
-		"gender": _current_gender,
-		"level": 1,
-		"gold": 500,
-		"xp": 0,
-		"avatar_config": saved_avatar_cfg,
-		"is_tutorial_completed": false
-	}
-	
-	SaveSlotService.write_slot_data(active_slot_index, initial_save_payload)
-	
 	if SaveManager != null:
+		SaveManager.current_slot = active_slot_index
+		SaveManager.reset_to_level_1()
 		SaveManager.player_name = p_name
+		SaveManager.farm_name = f_name
 		SaveManager.selected_character = _current_gender
 		SaveManager.avatar_config = saved_avatar_cfg
+		SaveManager.is_tutorial_completed = false
 		SaveManager.save_game()
 		
 	EventBus.character_creation_confirmed.emit(active_slot_index, p_name, f_name, avatar_preview.current_config)
