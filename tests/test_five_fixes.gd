@@ -5,7 +5,7 @@ func _ready() -> void:
 	print("[TEST] RUNNING VERIFICATION FOR 5 CRITICAL FIXES")
 	print("==================================================")
 	
-	var main_scene: PackedScene = load("res://scenes/main_farm.tscn")
+	var main_scene: PackedScene = load("res://scenes/main/MainFarm.tscn")
 	var farm: Node2D = main_scene.instantiate() as Node2D
 	add_child(farm)
 	

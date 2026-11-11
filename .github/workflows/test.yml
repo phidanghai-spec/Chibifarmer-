@@ -27,7 +27,7 @@ jobs:
       - name: Run gdUnit4 Tests & 200-Step Playtest Bot
         uses: MikeSchulze/gdUnit4-action@v1
         with:
-          godot-version: '4.3'
+          godot-version: '4.7.2'
           version: 'latest'
           paths: |
             res://tests/unit

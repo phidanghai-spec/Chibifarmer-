@@ -1,5 +1,6 @@
 extends Node
 
+const VERBOSE_LOG: bool = false
 const SAVE_PATH: String = "user://hayday_save.json"
 
 const SAVE_VERSION: int = 10
@@ -540,7 +541,8 @@ func save_game() -> void:
 					DirAccess.remove_absolute(global_temp)
 				else:
 					push_error("[SaveManager] Failed to atomic save: " + error_string(rename_err))
-			print("[SaveManager] Game state saved successfully to slot %d: %s" % [current_slot, target_path])
+			if VERBOSE_LOG:
+				print("[SaveManager] Game state saved successfully to slot %d: %s" % [current_slot, target_path])
 	else:
 		push_error("[SaveManager] Failed to write temp save file: " + str(FileAccess.get_open_error()))
 	
@@ -564,7 +566,8 @@ func load_game() -> bool:
 		if not (is_test_mode or _detect_test_mode()) and FileAccess.file_exists(SAVE_PATH):
 			target_path = SAVE_PATH
 		else:
-			print("[SaveManager] No save file found for slot %d, starting fresh game." % current_slot)
+			if VERBOSE_LOG:
+				print("[SaveManager] No save file found for slot %d, starting fresh game." % current_slot)
 			return false
 	
 	var file: FileAccess = FileAccess.open(target_path, FileAccess.READ)
@@ -592,7 +595,8 @@ func load_game() -> bool:
 	is_tutorial_completed = bool(data.get("is_tutorial_completed", false))
 	var raw_offline: int = maxi(0, TickManager.now() - saved_ts)
 	var offline_elapsed: int = mini(raw_offline, MAX_OFFLINE_SECONDS)
-	print("[SaveManager] Game loaded! Offline time elapsed: ", offline_elapsed, "s (clamped from ", raw_offline, "s).")
+	if VERBOSE_LOG:
+		print("[SaveManager] Game loaded! Offline time elapsed: ", offline_elapsed, "s (clamped from ", raw_offline, "s).")
 	
 	# Restore Economy
 	var econ: Dictionary = data.get("economy", {}) as Dictionary

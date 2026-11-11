@@ -32,7 +32,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	
 	# 2. Capture MainFarm with Modular Avatar & Poodle
-	var farm_scene: PackedScene = load("res://scenes/main_farm.tscn")
+	var farm_scene: PackedScene = load("res://scenes/main/MainFarm.tscn")
 	var farm: Node = farm_scene.instantiate()
 	add_child(farm)
 	

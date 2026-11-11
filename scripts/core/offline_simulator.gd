@@ -6,7 +6,7 @@ extends RefCounted
 ## 100% Static Typing GDScript 2.0.
 
 const MIN_OFFLINE_SECONDS: int = 60
-const MAX_OFFLINE_CAP_SECONDS: int = 86400 # Tối đa 24 giờ
+const MAX_OFFLINE_CAP_SECONDS: int = 28800 # Tối đa 8 giờ (đồng bộ với SaveManager.MAX_OFFLINE_SECONDS)
 const BASE_ZOO_TICKET_PER_MINUTE: int = 4
 
 static func evaluate_offline_progress(save_data: Dictionary) -> Dictionary:
@@ -27,7 +27,7 @@ static func evaluate_offline_progress(save_data: Dictionary) -> Dictionary:
 		if not enclosures.is_empty():
 			unlocked_zoo_animals = maxi(1, enclosures.size())
 	
-	# Tính doanh thu thụ động từ du khách mua vé Vườn Thú Bờ Tây
+	# Tính doanh thu thụ động từ du khách mua vé Vườn Thú Bờ Đông
 	var passive_zoo_gold: int = elapsed_minutes * BASE_ZOO_TICKET_PER_MINUTE * unlocked_zoo_animals
 	passive_zoo_gold += int(float(elapsed_minutes) * float(attraction_score) * 0.25)
 	

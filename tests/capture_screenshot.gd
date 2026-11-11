@@ -4,7 +4,7 @@ const RiverSteamboatClass = preload("res://scripts/entities/river_steamboat.gd")
 
 func _ready() -> void:
 	SaveManager.set_sandbox_level_33()
-	var farm_scene: PackedScene = load("res://scenes/main_farm.tscn")
+	var farm_scene: PackedScene = load("res://scenes/main/MainFarm.tscn")
 	var farm: Node = farm_scene.instantiate()
 	add_child(farm)
 	

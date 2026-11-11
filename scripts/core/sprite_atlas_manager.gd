@@ -2,6 +2,8 @@ extends Node
 # Autoload: SpriteAtlasManager
 # Loads and pixel-normalizes Chibi & Cartoon spritesheets with 8px inset to remove black L-shaped borders
 
+const VERBOSE_LOG: bool = false
+
 var textures: Dictionary = {}
 
 # 1. Primary Character & Animals Sheet (chibi_sheet_2_characters.png - 4x3)
@@ -74,43 +76,50 @@ func _ready() -> void:
 	load_all_atlases()
 	_setup_aliases()
 	_ensure_essential_icons()
+	print("SpriteAtlasManager: Loaded %d textures." % textures.size())
 
 func load_all_atlases() -> void:
 	# 1. Characters & Farm Animals (Chibi Sheet 2) - Inset 8px
 	var img_c2: Image = _load_image_from_candidates(CHIBI_SHEET2_PATHS)
 	if img_c2 != null:
 		_process_atlas_sheet(img_c2, CHIBI_SHEET2_MAP, 8)
-		print("[SpriteAtlasManager] Loaded 12 Chibi Characters, Animals & Icons.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Chibi Characters, Animals & Icons.")
 
 	# 2. Crops & Plots (Chibi Sheet 1) - Inset 8px
 	var img_c1: Image = _load_image_from_candidates(CHIBI_SHEET1_PATHS)
 	if img_c1 != null:
 		_process_atlas_sheet(img_c1, CHIBI_SHEET1_MAP, 8)
-		print("[SpriteAtlasManager] Loaded 12 Chibi Crops, Plots & Coops.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Chibi Crops, Plots & Coops.")
 
 	# 3. Chibi Buildings (Chibi Sheet 3) - Inset 8px
 	var img_c3: Image = _load_image_from_candidates(CHIBI_SHEET3_PATHS)
 	if img_c3 != null:
 		_process_atlas_sheet(img_c3, CHIBI_SHEET3_MAP, 8)
-		print("[SpriteAtlasManager] Loaded 12 Chibi Buildings & Machines.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Chibi Buildings & Machines.")
 
 	# 4. Standard Animals & Human Visitors (Row 0: Humans, Row 1: Animals, Row 2: Buildings) - Inset 8px
 	var img_av: Image = _load_image_from_candidates(SHEET_ANIMALS_VISITORS_PATHS)
 	if img_av != null:
 		_process_atlas_sheet(img_av, SHEET_ANIMALS_VISITORS_MAP, 8)
-		print("[SpriteAtlasManager] Loaded 12 Standard Animals, Visitors & Extra Buildings.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Standard Animals, Visitors & Extra Buildings.")
 
 	# 5. Buildings & Attractions - Inset 8px to completely remove black L-shaped borders
 	var img_bd: Image = _load_image_from_candidates(SHEET_BUILDINGS_DECOR_PATHS)
 	if img_bd != null:
 		_process_atlas_sheet(img_bd, SHEET_BUILDINGS_DECOR_MAP, 8)
-		print("[SpriteAtlasManager] Loaded 12 Attractions & Decors.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Attractions & Decors.")
 
 	# 6. Environment & Nature Spritesheet (Mountains, Trees, Rocks, Flowers, Ponds)
 	var img_env: Image = _load_image_from_candidates(SHEET_ENVIRONMENT_NATURE_PATHS)
 	if img_env != null:
 		_process_atlas_sheet(img_env, SHEET_ENVIRONMENT_NATURE_MAP, 6)
-		print("[SpriteAtlasManager] Loaded 12 Environment Nature Sprites.")
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded 12 Environment Nature Sprites.")
 	# 7. Dedicated Crisp Standalone Sprites (Wheat, Corn, Sickle, Harvest Basket, Field Plot)
 	_load_standalone_texture("wheat", "res://assets/sprites/crop_wheat.png")
 	_load_standalone_texture("corn", "res://assets/sprites/crop_corn.png")
@@ -455,7 +464,8 @@ func _load_standalone_texture(key: String, res_path: String) -> void:
 			if key == "plot_block_empty":
 				img.resize(128, 64, Image.INTERPOLATE_LANCZOS)
 			textures[key] = ImageTexture.create_from_image(img)
-			print("[SpriteAtlasManager] Loaded authentic standalone texture: " + key)
+			if VERBOSE_LOG:
+				print("[SpriteAtlasManager] Loaded authentic standalone texture: " + key)
 
 func _setup_aliases() -> void:
 	# Ensure backwards compatibility and easy access for game systems

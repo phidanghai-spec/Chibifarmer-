@@ -208,6 +208,8 @@ func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -
 			handle_fishing_click()
 
 func handle_fishing_click() -> bool:
+	if _minigame != null and _minigame.is_active:
+		return true
 	if state != SpotState.READY:
 		print("[FishingSpot] Bãi câu đang trong thời gian hồi!")
 		return false

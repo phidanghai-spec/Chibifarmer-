@@ -217,23 +217,29 @@ func _get_collect_text() -> String:
 		_:
 			return "✨ Thu hoạch"
 
+var _shadow_texture_cache: Dictionary = {}
+
 func _create_ellipse_shadow(size: Vector2) -> Sprite2D:
-	var img: Image = Image.create(int(size.x), int(size.y), false, Image.FORMAT_RGBA8)
-	var cx: float = float(img.get_width()) * 0.5
-	var cy: float = float(img.get_height()) * 0.5
+	var key: Vector2i = Vector2i(maxi(1, int(round(size.x))), maxi(1, int(round(size.y))))
+	var tex: ImageTexture = _shadow_texture_cache.get(key, null) as ImageTexture
+	if tex == null:
+		var img: Image = Image.create(key.x, key.y, false, Image.FORMAT_RGBA8)
+		var cx: float = float(img.get_width()) * 0.5
+		var cy: float = float(img.get_height()) * 0.5
 
-	for x: int in range(img.get_width()):
-		for y: int in range(img.get_height()):
-			var nx: float = (float(x) - cx) / cx
-			var ny: float = (float(y) - cy) / cy
-			var dist_sq: float = nx * nx + ny * ny
-			if dist_sq <= 1.0:
-				var alpha: float = (1.0 - dist_sq) * 0.22
-				img.set_pixel(x, y, Color(0.20, 0.15, 0.10, alpha))
-			else:
-				img.set_pixel(x, y, Color(0, 0, 0, 0))
+		for x: int in range(img.get_width()):
+			for y: int in range(img.get_height()):
+				var nx: float = (float(x) - cx) / cx
+				var ny: float = (float(y) - cy) / cy
+				var dist_sq: float = nx * nx + ny * ny
+				if dist_sq <= 1.0:
+					var alpha: float = (1.0 - dist_sq) * 0.22
+					img.set_pixel(x, y, Color(0.20, 0.15, 0.10, alpha))
+				else:
+					img.set_pixel(x, y, Color(0, 0, 0, 0))
 
-	var tex: ImageTexture = ImageTexture.create_from_image(img)
+		tex = ImageTexture.create_from_image(img)
+		_shadow_texture_cache[key] = tex
 	var sp: Sprite2D = Sprite2D.new()
 	sp.texture = tex
 	return sp

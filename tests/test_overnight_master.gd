@@ -5,9 +5,9 @@ func _ready() -> void:
 	print("[OVERNIGHT MASTER TEST] STARTING 5-PHASE COMPREHENSIVE VERIFICATION")
 	print("====================================================================")
 	
-	var main_scene: PackedScene = load("res://scenes/main_farm.tscn")
+	var main_scene: PackedScene = load("res://scenes/main/MainFarm.tscn")
 	if main_scene == null:
-		push_error("Cannot load res://scenes/main_farm.tscn")
+		push_error("Cannot load res://scenes/main/MainFarm.tscn")
 		get_tree().quit(1)
 		return
 		

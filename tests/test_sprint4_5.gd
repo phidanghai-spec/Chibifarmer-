@@ -14,8 +14,6 @@ func _ready() -> void:
 
 	# 1. Instance MainFarm scene
 	var farm_packed: PackedScene = load("res://scenes/main/MainFarm.tscn") as PackedScene
-	if farm_packed == null:
-		farm_packed = load("res://scenes/main_farm.tscn") as PackedScene
 	var main_farm: Node2D = farm_packed.instantiate() as Node2D
 	add_child(main_farm)
 

@@ -116,7 +116,7 @@ func open_minigame(p_fish_id: String = "fish_carp", p_spot_pos: Vector2 = Vector
 	_label_status.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
 	_btn_catch.disabled = false
 	
-	if _panel_modal != null:
+	if _panel_modal != null and DisplayServer.get_name() != "headless":
 		_panel_modal.pivot_offset = _panel_modal.size * 0.5
 		_panel_modal.scale = Vector2(0.85, 0.85)
 		var tw: Tween = create_tween()

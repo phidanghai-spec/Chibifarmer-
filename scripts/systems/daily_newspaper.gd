@@ -22,29 +22,29 @@ const NEIGHBORS: Array[Dictionary] = [
 
 const GOODS_CATALOG: Array[Dictionary] = [
 	# Nông sản Silo
-	{ "id": "wheat", "name": "Lúa mì", "type": "silo", "base_price": 4, "count_min": 6, "count_max": 12 },
-	{ "id": "corn", "name": "Bắp ngô", "type": "silo", "base_price": 6, "count_min": 5, "count_max": 10 },
+	{ "id": "wheat", "name": "Lúa mì", "type": "silo", "base_price": 3, "count_min": 6, "count_max": 12 },
+	{ "id": "corn", "name": "Bắp ngô", "type": "silo", "base_price": 7, "count_min": 5, "count_max": 10 },
 	{ "id": "carrot", "name": "Cà rốt", "type": "silo", "base_price": 8, "count_min": 4, "count_max": 8 },
-	{ "id": "tomato", "name": "Cà chua", "type": "silo", "base_price": 10, "count_min": 4, "count_max": 8 },
-	{ "id": "strawberry", "name": "Dâu tây", "type": "silo", "base_price": 14, "count_min": 3, "count_max": 6 },
-	{ "id": "apple", "name": "Táo đỏ", "type": "silo", "base_price": 16, "count_min": 3, "count_max": 6 },
+	{ "id": "tomato", "name": "Cà chua", "type": "silo", "base_price": 9, "count_min": 4, "count_max": 8 },
+	{ "id": "strawberry", "name": "Dâu tây", "type": "silo", "base_price": 12, "count_min": 3, "count_max": 6 },
+	{ "id": "apple", "name": "Táo đỏ", "type": "silo", "base_price": 15, "count_min": 3, "count_max": 6 },
 	
 	# Cám & Chăn nuôi Barn
-	{ "id": "chicken_feed", "name": "Cám Gà", "type": "barn", "base_price": 8, "count_min": 4, "count_max": 8 },
-	{ "id": "cow_feed", "name": "Cám Bò", "type": "barn", "base_price": 12, "count_min": 3, "count_max": 6 },
-	{ "id": "pig_feed", "name": "Cám Heo", "type": "barn", "base_price": 10, "count_min": 3, "count_max": 6 },
-	{ "id": "milk", "name": "Sữa bò tươi", "type": "barn", "base_price": 24, "count_min": 2, "count_max": 5 },
-	{ "id": "egg", "name": "Trứng gà", "type": "barn", "base_price": 16, "count_min": 3, "count_max": 6 },
+	{ "id": "chicken_feed", "name": "Cám Gà", "type": "barn", "base_price": 7, "count_min": 4, "count_max": 8 },
+	{ "id": "cow_feed", "name": "Cám Bò", "type": "barn", "base_price": 14, "count_min": 3, "count_max": 6 },
+	{ "id": "pig_feed", "name": "Cám Heo", "type": "barn", "base_price": 14, "count_min": 3, "count_max": 6 },
+	{ "id": "milk", "name": "Sữa bò tươi", "type": "barn", "base_price": 28, "count_min": 2, "count_max": 5 },
+	{ "id": "egg", "name": "Trứng gà", "type": "barn", "base_price": 12, "count_min": 3, "count_max": 6 },
 	
 	# Món ăn & Bánh ngọt Barn
-	{ "id": "bread", "name": "Bánh mì ổ", "type": "barn", "base_price": 28, "count_min": 2, "count_max": 4 },
-	{ "id": "cookie", "name": "Bánh quy bơ", "type": "barn", "base_price": 45, "count_min": 2, "count_max": 3 },
-	{ "id": "cream_cake", "name": "Bánh kem tươi", "type": "barn", "base_price": 80, "count_min": 1, "count_max": 2 },
-	{ "id": "fish_carp", "name": "Cá chép sông", "type": "barn", "base_price": 35, "count_min": 2, "count_max": 4 },
+	{ "id": "bread", "name": "Bánh mì ổ", "type": "barn", "base_price": 21, "count_min": 2, "count_max": 4 },
+	{ "id": "cookie", "name": "Bánh quy bơ", "type": "barn", "base_price": 150, "count_min": 2, "count_max": 3 },
+	{ "id": "cream_cake", "name": "Bánh kem tươi", "type": "barn", "base_price": 260, "count_min": 1, "count_max": 2 },
+	{ "id": "fish_carp", "name": "Cá chép sông", "type": "barn", "base_price": 25, "count_min": 2, "count_max": 4 },
 	
 	# Vật phẩm đặc biệt Sở Thú
-	{ "id": "sanctuary_feed", "name": "Bó Cỏ Dinh Dưỡng", "type": "barn", "base_price": 75, "count_min": 2, "count_max": 3 },
-	{ "id": "puzzle_piece", "name": "Mảnh Ghép Sở Thú", "type": "special", "base_price": 260, "count_min": 1, "count_max": 1 }
+	{ "id": "sanctuary_feed", "name": "Bó Cỏ Dinh Dưỡng", "type": "barn", "base_price": 35, "count_min": 2, "count_max": 3 },
+	{ "id": "puzzle_piece", "name": "Mảnh Ghép Sở Thú", "type": "special", "base_price": 100, "count_min": 1, "count_max": 1 }
 ]
 
 func _ready() -> void:
@@ -53,7 +53,7 @@ func _ready() -> void:
 	if SaveManager != null and SaveManager.newspaper_data != null and SaveManager.newspaper_data.has("slots") and not (SaveManager.newspaper_data["slots"] as Array).is_empty():
 		var saved_arr: Array = SaveManager.newspaper_data["slots"] as Array
 		slots.clear()
-		for s in saved_arr:
+		for s: Variant in saved_arr:
 			slots.append(s as Dictionary)
 		next_refresh_timestamp = SaveManager.newspaper_next_refresh
 	
@@ -71,7 +71,7 @@ func generate_new_issue(force: bool = false) -> void:
 	
 	var discount_tiers: Array[int] = [30, 35, 40, 45, 50]
 	
-	for i in range(TOTAL_SLOTS):
+	for i: int in range(TOTAL_SLOTS):
 		var n_idx: int = i % shuffled_neighbors.size()
 		var n_data: Dictionary = shuffled_neighbors[n_idx] as Dictionary
 		
@@ -81,8 +81,14 @@ func generate_new_issue(force: bool = false) -> void:
 		if i == 5 and randf() < 0.65:
 			goods = GOODS_CATALOG[GOODS_CATALOG.size() - (1 if randf() < 0.5 else 2)]
 			
+		var item_id: String = String(goods["id"])
+		var unit_price: int = int(goods["base_price"])
+		if DataManager != null:
+			var dm_price: int = DataManager.get_item_base_price(item_id)
+			if dm_price > 0:
+				unit_price = dm_price
 		var count: int = randi_range(int(goods["count_min"]), int(goods["count_max"]))
-		var base_p: int = int(goods["base_price"]) * count
+		var base_p: int = unit_price * count
 		var discount: int = discount_tiers.pick_random()
 		var sale_p: int = maxi(1, int(float(base_p) * (1.0 - float(discount) / 100.0)))
 		
@@ -91,7 +97,7 @@ func generate_new_issue(force: bool = false) -> void:
 			"neighbor_name": String(n_data["name"]),
 			"farm_name": String(n_data["farm"]),
 			"avatar": String(n_data["avatar"]),
-			"item_id": String(goods["id"]),
+			"item_id": item_id,
 			"item_name": String(goods["name"]),
 			"item_type": String(goods["type"]),
 			"count": count,

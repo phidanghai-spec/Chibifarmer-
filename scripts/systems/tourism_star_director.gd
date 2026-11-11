@@ -2,7 +2,7 @@ class_name TourismStarDirector
 extends Node
 
 ## TourismStarDirector
-## Tính toán Xếp hạng Du Lịch 1-5 Sao từ AttractionScore & các chuồng thú Vườn Thú Bờ Tây
+## Tính toán Xếp hạng Du Lịch 1-5 Sao từ AttractionScore & các chuồng thú Vườn Thú Bờ Đông
 ## Điều phối Quầy Check-in Du Lịch (ZooPhotoBooth) và chụp ảnh lưu niệm.
 ## 100% Static Typing GDScript 2.0.
 
