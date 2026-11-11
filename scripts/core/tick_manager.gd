@@ -1,7 +1,15 @@
 extends Node
 
 var _accum: float = 0.0
-var dev_speed_multiplier: float = 1.0
+var dev_speed_multiplier: float = 1.0:
+	set(value):
+		if _is_test_environment():
+			dev_speed_multiplier = maxf(value, 0.001)
+		else:
+			dev_speed_multiplier = 1.0
+
+func _is_test_environment() -> bool:
+	return SaveManager != null and (SaveManager.is_test_mode or SaveManager._detect_test_mode())
 
 func _process(delta: float) -> void:
 	_accum += delta
@@ -13,7 +21,10 @@ func now() -> int:
 	return int(Time.get_unix_time_from_system())
 
 func calculate_finish_timestamp(duration_seconds: int) -> int:
-	var adjusted: int = int(float(duration_seconds) / dev_speed_multiplier)
+	if not _is_test_environment():
+		dev_speed_multiplier = 1.0
+	var safe_mult: float = dev_speed_multiplier if dev_speed_multiplier > 0.0 else 1.0
+	var adjusted: int = int(float(duration_seconds) / safe_mult)
 	if adjusted < 1:
 		adjusted = 1
 	return now() + adjusted

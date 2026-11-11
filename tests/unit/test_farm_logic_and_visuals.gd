@@ -1,6 +1,9 @@
 class_name TestFarmLogicAndVisuals
 extends GdUnitTestSuite
 
+func after_test() -> void:
+	TickManager.dev_speed_multiplier = 1.0
+
 # ==============================================================================
 # 1. TEST LOGIC KINH TẾ & KHO BÃI (StorageManager)
 # ==============================================================================
@@ -57,7 +60,7 @@ func test_all_sprites_valid_and_corners_transparent() -> void:
 				assert_int(tex.get_height()).is_greater(0)
 				
 				# 3.2. Kiểm tra các sprite nhân vật/công trình/icon đã tách nền 4 góc chưa (miễn trừ ảnh nền và atlas sheet)
-				var is_exempt: bool = "bg" in file_name.to_lower() or "sky" in file_name.to_lower() or "backdrop" in file_name.to_lower() or "master" in file_name.to_lower() or "sheet" in file_name.to_lower() or "nature" in file_name.to_lower() or "sprites_" in file_name.to_lower()
+				var is_exempt: bool = "bg" in file_name.to_lower() or "sky" in file_name.to_lower() or "backdrop" in file_name.to_lower() or "master" in file_name.to_lower() or "sheet" in file_name.to_lower() or "nature" in file_name.to_lower() or "sprites_" in file_name.to_lower() or "keyart" in file_name.to_lower() or file_name == "boot_splash_keyart.png" or file_name == "title_screen_keyart.png"
 				if not is_exempt:
 					var img: Image = tex.get_image()
 					if img != null:
@@ -108,3 +111,70 @@ func test_sprite_atlas_item_icons_not_mismatched() -> void:
 		assert_bool(is_same_resource).override_failure_message(
 			"LỖI HÌNH ẢNH: Icon 'bread' đang bị trỏ trùng vùng ảnh với 'vinegar'!"
 		).is_false()
+
+# ==============================================================================
+# 5. TEST PHASE 1: NHỊP THỜI GIAN JSON, PRODUCE_COUNT & DEV_SPEED_MULTIPLIER 60X
+# ==============================================================================
+func test_phase1_timing_and_dev_speed_multiplier() -> void:
+	SaveManager.set_test_mode(true)
+	TickManager.dev_speed_multiplier = 1.0
+
+	# 5.1. Kiểm tra TickManager.calculate_finish_timestamp(1200) ở 1x và 60x
+	var now_1x: int = TickManager.now()
+	var finish_1x: int = TickManager.calculate_finish_timestamp(1200)
+	assert_int(finish_1x - now_1x).is_between(1199, 1201)
+
+	TickManager.dev_speed_multiplier = 60.0
+	var now_60x: int = TickManager.now()
+	var finish_60x: int = TickManager.calculate_finish_timestamp(1200)
+	assert_int(finish_60x - now_60x).is_between(19, 21)
+
+	# 5.2. Kiểm tra AnimalPen đọc produce_time_seconds từ animals.json (không còn hardcode 15s)
+	TickManager.dev_speed_multiplier = 1.0
+	var pen: AnimalPen = auto_free(AnimalPen.new()) as AnimalPen
+	pen.animal_id = "chicken"
+	StorageManager.silo_capacity = maxi(StorageManager.silo_capacity, StorageManager.get_silo_used() + 20)
+	StorageManager.barn_capacity = maxi(StorageManager.barn_capacity, StorageManager.get_barn_used() + 20)
+	StorageManager.add_item("chicken_feed", 2)
+
+	var fed_1x: bool = pen.feed()
+	assert_bool(fed_1x).is_true()
+	assert_int(int(pen.state)).is_equal(int(AnimalPen.PenState.PRODUCING))
+	assert_int(pen.finish_timestamp - TickManager.now()).is_between(1198, 1201)
+
+	# Kiểm tra AnimalPen với dev_speed_multiplier = 60.0 (1200s / 60 = 20s)
+	pen.state = AnimalPen.PenState.HUNGRY
+	TickManager.dev_speed_multiplier = 60.0
+	var fed_60x: bool = pen.feed()
+	assert_bool(fed_60x).is_true()
+	assert_int(pen.finish_timestamp - TickManager.now()).is_between(19, 21)
+
+	# 5.3. Kiểm tra ProductionMachine đọc craft_time_seconds từ recipes.json (bỏ cap 60s) & produce_count = 3
+	TickManager.dev_speed_multiplier = 1.0
+	var machine: ProductionMachine = auto_free(ProductionMachine.new()) as ProductionMachine
+	machine.machine_id = "feed_mill"
+	StorageManager.add_item("wheat", 2)
+	StorageManager.add_item("corn", 1)
+
+	var started: bool = machine.start_recipe("chicken_feed")
+	assert_bool(started).is_true()
+	assert_int(machine.queue.size()).is_equal(1)
+	var job_finish_ts: int = int(machine.queue[0].get("finish_timestamp", 0))
+	assert_int(job_finish_ts - TickManager.now()).is_between(298, 301)
+
+	# Giả lập hoàn thành công việc và kiểm tra produce_count = 3, xp_reward = 1
+	machine.queue[0]["finish_timestamp"] = TickManager.now() - 1
+	machine._on_second_ticked(TickManager.now())
+	assert_bool(machine.queue.is_empty()).is_true()
+	assert_int(machine.completed_items.size()).is_equal(3)
+
+	var feed_before: int = StorageManager.get_item_count("chicken_feed")
+	var xp_before: int = StorageManager.xp
+	var level_before: int = StorageManager.level
+	var collected: bool = machine.collect_all()
+	assert_bool(collected).is_true()
+	assert_int(StorageManager.get_item_count("chicken_feed")).is_equal(feed_before + 3)
+	if StorageManager.level == level_before:
+		assert_int(StorageManager.xp).is_equal(xp_before + 1)
+
+	TickManager.dev_speed_multiplier = 1.0

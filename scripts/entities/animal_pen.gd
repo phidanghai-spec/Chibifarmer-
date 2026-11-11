@@ -7,7 +7,7 @@ enum PenState {
 	READY_TO_COLLECT
 }
 
-@export var animal_id: String = "chicken" # "cow", "chicken", "pig"
+@export var animal_id: String = "chicken" # "cow", "chicken", "pig", "sheep"
 @export var pen_size: Vector2 = Vector2(120.0, 86.0) # Clean 4x3 tiles (128x96 px)
 @export var animal_count: int = 3
 
@@ -30,13 +30,24 @@ class AnimalAgent:
 	var target_size: Vector2 = Vector2(32, 32)
 
 var _agents: Array[AnimalAgent] = []
+var _status_panel: PanelContainer
 var _timer_label: Label
 var _coop_sprite: Sprite2D
 var _eggs_sprite: Sprite2D
+var _screen_notifier: VisibleOnScreenNotifier2D
+var _is_on_screen: bool = true
+var _btn_relocate: Button
 
 func _ready() -> void:
 	y_sort_enabled = true
 	add_to_group("interactable")
+
+	# Screen notifier for culling offscreen animations
+	_screen_notifier = VisibleOnScreenNotifier2D.new()
+	_screen_notifier.rect = Rect2(-pen_size * 0.75, pen_size * 1.5)
+	_screen_notifier.screen_entered.connect(func() -> void: _is_on_screen = true)
+	_screen_notifier.screen_exited.connect(func() -> void: _is_on_screen = false)
+	add_child(_screen_notifier)
 
 	# 1. Pen Barn / Coop Structure in top-left
 	if animal_id == "chicken" and SpriteAtlasManager.has_texture("chicken_coop"):
@@ -124,19 +135,58 @@ func _ready() -> void:
 		add_child(agent.root)
 		_agents.append(agent)
 
-	# 3. Floating Status / Timer Label
+	# 3. Floating Status / Timer Speech Bubble (Chibi rounded panel)
+	_status_panel = PanelContainer.new()
+	_status_panel.position = Vector2(-54, -68)
+	_status_panel.custom_minimum_size = Vector2(108, 26)
+	_status_panel.size = Vector2(108, 26)
+	_status_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_panel.z_index = 20
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.98, 0.93, 0.95)
+	sb.border_color = Color(0.55, 0.38, 0.22, 0.9)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(11)
+	sb.content_margin_left = 6.0
+	sb.content_margin_right = 6.0
+	sb.content_margin_top = 2.0
+	sb.content_margin_bottom = 2.0
+	_status_panel.add_theme_stylebox_override("panel", sb)
+	add_child(_status_panel)
+
 	_timer_label = Label.new()
-	_timer_label.text = "🥣 CHO BÒ ĂN" if animal_id == "cow" else "🥣 CHO ĂN"
+	_timer_label.text = _get_hungry_text()
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_timer_label.position = Vector2(-50, -65)
-	_timer_label.size = Vector2(100, 24)
-	_timer_label.z_index = 20
-	_timer_label.add_theme_font_size_override("font_size", 15)
-	_timer_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-	_timer_label.add_theme_color_override("font_outline_color", Color(0.15, 0.1, 0.05))
-	_timer_label.add_theme_constant_override("outline_size", 6)
-	add_child(_timer_label)
+	_timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_timer_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_timer_label.add_theme_font_size_override("font_size", 12)
+	_timer_label.add_theme_color_override("font_color", Color(0.32, 0.18, 0.08))
+	_timer_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.9))
+	_timer_label.add_theme_constant_override("outline_size", 2)
+	_status_panel.add_child(_timer_label)
+
+	# 3b. Relocate / Quy Hoạch button
+	_btn_relocate = Button.new()
+	_btn_relocate.text = "✥"
+	_btn_relocate.tooltip_text = "Di chuyển / Quy hoạch chuồng thú"
+	_btn_relocate.position = Vector2(58, -68)
+	_btn_relocate.size = Vector2(24, 24)
+	_btn_relocate.custom_minimum_size = Vector2(24, 24)
+	_btn_relocate.mouse_filter = Control.MOUSE_FILTER_STOP
+	_btn_relocate.z_index = 25
+	var sb_pen_reloc: StyleBoxFlat = StyleBoxFlat.new()
+	sb_pen_reloc.bg_color = Color(0.22, 0.16, 0.10, 0.85)
+	sb_pen_reloc.border_color = Color(0.95, 0.85, 0.55, 0.9)
+	sb_pen_reloc.set_border_width_all(1)
+	sb_pen_reloc.set_corner_radius_all(5)
+	_btn_relocate.add_theme_stylebox_override("normal", sb_pen_reloc)
+	_btn_relocate.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
+	_btn_relocate.add_theme_font_size_override("font_size", 11)
+	_btn_relocate.pressed.connect(_on_relocate_pressed)
+	add_child(_btn_relocate)
 
 	# Click area for feeding and harvesting
 	var area: Area2D = Area2D.new()
@@ -150,6 +200,22 @@ func _ready() -> void:
 
 	EventBus.second_ticked.connect(_on_second_ticked)
 	queue_redraw()
+
+func _get_hungry_text() -> String:
+	return "🌾 Cho ăn"
+
+func _get_collect_text() -> String:
+	match animal_id:
+		"cow":
+			return "🥛 Thu sữa"
+		"chicken":
+			return "🥚 Thu trứng"
+		"pig":
+			return "🥓 Thu thịt"
+		"sheep":
+			return "🧶 Thu lông"
+		_:
+			return "✨ Thu hoạch"
 
 func _create_ellipse_shadow(size: Vector2) -> Sprite2D:
 	var img: Image = Image.create(int(size.x), int(size.y), false, Image.FORMAT_RGBA8)
@@ -173,6 +239,9 @@ func _create_ellipse_shadow(size: Vector2) -> Sprite2D:
 	return sp
 
 func _process(delta: float) -> void:
+	if not _is_on_screen:
+		return
+
 	for agent: AnimalAgent in _agents:
 		if agent.is_walking:
 			var to_target: Vector2 = agent.target_pos - agent.current_pos
@@ -250,10 +319,23 @@ func _find_valid_wander_point(existing_agents: Array[AnimalAgent], min_dist: flo
 			
 	return best_pos if best_score > 0.0 else (Vector2(randf_range(20, 50), randf_range(-10, 25)) if animal_id == "cow" else Vector2(randf_range(-25, 25), randf_range(-15, 15)))
 
+func _on_relocate_pressed() -> void:
+	var farm: Node = get_tree().current_scene
+	if farm != null and farm.has_method("start_relocating_structure"):
+		farm.call("start_relocating_structure", self)
+
+func set_relocate_button_visible(v: bool) -> void:
+	if _btn_relocate != null:
+		_btn_relocate.visible = v
+
 func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
+			var farm_node: Node = get_tree().current_scene
+			var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
+			if drag_mgr != null and (drag_mgr.current_tool == DragActionManager.ToolType.DISMANTLE or int(drag_mgr.current_tool) == 9):
+				return
 			if not SaveManager.instant_interact:
 				var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
 				if p_input != null:
@@ -271,23 +353,16 @@ func _on_second_ticked(_current_unix: int) -> void:
 	if state == PenState.PRODUCING:
 		if TickManager.is_finished(finish_timestamp):
 			state = PenState.READY_TO_COLLECT
-			if animal_id == "cow":
-				_timer_label.text = "🥛 THU SỮA"
-			elif animal_id == "chicken":
-				_timer_label.text = "🥚 THU TRỨNG"
-			else:
-				_timer_label.text = "✨ THU HOẠCH"
-			_timer_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-			_timer_label.add_theme_color_override("font_outline_color", Color(0.15, 0.1, 0.05))
-			_timer_label.add_theme_constant_override("outline_size", 6)
+			if _timer_label != null:
+				_timer_label.text = _get_collect_text()
+				_timer_label.add_theme_color_override("font_color", Color(0.85, 0.42, 0.05))
 			if _eggs_sprite != null:
 				_eggs_sprite.visible = true
 		else:
 			var remaining: int = TickManager.get_time_remaining(finish_timestamp)
-			_timer_label.text = "⏳ " + TickManager.format_duration(remaining)
-			_timer_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-			_timer_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.1))
-			_timer_label.add_theme_constant_override("outline_size", 3)
+			if _timer_label != null:
+				_timer_label.text = "⏳ " + TickManager.format_duration(remaining)
+				_timer_label.add_theme_color_override("font_color", Color(0.38, 0.22, 0.12))
 
 func on_player_interact(_avatar: Node2D) -> void:
 	handle_pen_click()
@@ -296,6 +371,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
+			var farm_node: Node = get_tree().current_scene
+			var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
+			if drag_mgr != null and (drag_mgr.current_tool == DragActionManager.ToolType.DISMANTLE or int(drag_mgr.current_tool) == 9):
+				return
 			var mpos: Vector2 = get_global_mouse_position()
 			if mpos.distance_to(global_position) <= 95.0:
 				if not SaveManager.instant_interact:
@@ -336,16 +415,28 @@ func feed() -> bool:
 		# Miễn phí khẩn cấp để không bao giờ bị kẹt vòng lặp sản xuất
 		print("[AnimalPen] Cho ăn miễn phí khẩn cấp!")
 	
-	var duration: int = 15
+	var duration: int = int(a_data.get("produce_time_seconds", 1200))
 	finish_timestamp = TickManager.calculate_finish_timestamp(duration)
 	state = PenState.PRODUCING
 	
+	# Joyful squish-and-hop for animals
+	for agent: AnimalAgent in _agents:
+		if agent.sprite != null:
+			var base_sc: Vector2 = agent.sprite.scale
+			var tw: Tween = create_tween()
+			tw.tween_property(agent.sprite, "scale", base_sc * Vector2(1.22, 0.8), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.tween_property(agent.sprite, "scale", base_sc * Vector2(0.9, 1.22), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_property(agent.sprite, "scale", base_sc, 0.10).set_trans(Tween.TRANS_SINE)
+			
+			var hop_tw: Tween = create_tween()
+			hop_tw.tween_property(agent.sprite, "position:y", -10.0, 0.11).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			hop_tw.tween_property(agent.sprite, "position:y", 0.0, 0.13).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	
 	EventBus.animal_fed.emit(instance_id, animal_id, finish_timestamp)
 	AudioManager.play_sfx("plant")
-	_timer_label.text = "⏳ " + TickManager.format_duration(duration)
-	_timer_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-	_timer_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.1))
-	_timer_label.add_theme_constant_override("outline_size", 3)
+	if _timer_label != null:
+		_timer_label.text = "⏳ " + TickManager.format_duration(duration)
+		_timer_label.add_theme_color_override("font_color", Color(0.38, 0.22, 0.12))
 	if _eggs_sprite != null:
 		_eggs_sprite.visible = false
 	return true
@@ -372,10 +463,9 @@ func collect() -> bool:
 	
 	state = PenState.HUNGRY
 	finish_timestamp = 0
-	_timer_label.text = "🥣 CHO BÒ ĂN" if animal_id == "cow" else "🥣 CHO ĂN"
-	_timer_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25))
-	_timer_label.add_theme_color_override("font_outline_color", Color(0.15, 0.1, 0.05))
-	_timer_label.add_theme_constant_override("outline_size", 6)
+	if _timer_label != null:
+		_timer_label.text = _get_hungry_text()
+		_timer_label.add_theme_color_override("font_color", Color(0.32, 0.18, 0.08))
 	if _eggs_sprite != null:
 		_eggs_sprite.visible = false
 	return true
