@@ -150,34 +150,39 @@ func _process(delta: float) -> void:
 
 func handle_beehive_click() -> void:
 	AudioManager.play_sfx("click")
-	var farm: Node = get_tree().current_scene
+	var tree_root: SceneTree = get_tree()
+	var farm: Node = tree_root.current_scene if tree_root != null else null
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 
 	if state == HiveState.READY:
 		harvest_honey()
 	else:
-		# Gathering in progress
-		var rem_s: int = int(ceil(HONEY_CYCLE_SEC - _timer))
-		if StorageManager.has_gold(20):
-			# Option: Quick boost for 20 gold
-			StorageManager.spend_gold(20)
-			EventBus.gold_changed.emit(StorageManager.gold, -20)
-			AudioManager.play_sfx("sell")
-			if hud != null:
-				hud.show_floating_notice("⚡ Đã thúc đàn ong hoàn thành mật sớm! (-20 Vàng)")
-			state = HiveState.READY
-			_timer = HONEY_CYCLE_SEC
-			_pill_bubble.visible = true
-		else:
-			if hud != null:
-				hud.show_floating_notice("🐝 Đàn ong đang hút mật hoa (còn %ds)..." % rem_s)
+		# Gathering in progress: only show remaining time (prevent pay-20-get-90 gold loop exploit)
+		var rem_s: int = maxi(1, int(ceil(HONEY_CYCLE_SEC - _timer)))
+		if hud != null:
+			hud.show_floating_notice("🐝 Đàn ong đang hút mật hoa (còn %ds)..." % rem_s)
 
 func harvest_honey() -> void:
 	if state != HiveState.READY:
 		return
 
-	# Rewards
 	var honey_yield: int = 2
+	if StorageManager != null and not StorageManager.can_store_item("honey", honey_yield):
+		AudioManager.play_sfx("error")
+		var full_tree: SceneTree = get_tree()
+		var full_farm: Node = full_tree.current_scene if full_tree != null else null
+		var full_hud: UIHud = full_farm.find_child("UIHud", true, false) as UIHud if full_farm != null else null
+		if full_hud != null:
+			full_hud.show_floating_notice("⚠️ Kho Barn đã đầy, không thể thu Mật Ong!")
+		return
+
+	# Commit state reset atomically BEFORE granting rewards or emitting signals
+	state = HiveState.GATHERING
+	_timer = 0.0
+	if _pill_bubble != null:
+		_pill_bubble.visible = false
+
+	# Rewards
 	var gold_reward: int = 90
 	var xp_reward: int = 45
 	var coins_reward: int = 25
@@ -190,22 +195,20 @@ func harvest_honey() -> void:
 	AudioManager.play_sfx("harvest")
 
 	# Squash & Stretch Tree Bounce Tween
-	var tw: Tween = create_tween().set_parallel(false)
-	tw.tween_property(_tree_sprite, "scale", _tree_base_scale * Vector2(1.12, 0.90), 0.12)
-	tw.tween_property(_tree_sprite, "scale", _tree_base_scale, 0.16)
+	if _tree_sprite != null and is_inside_tree():
+		var tw: Tween = create_tween().set_parallel(false)
+		tw.tween_property(_tree_sprite, "scale", _tree_base_scale * Vector2(1.12, 0.90), 0.12)
+		tw.tween_property(_tree_sprite, "scale", _tree_base_scale, 0.16)
 
 	EventBus.loot_collected.emit("honey", honey_yield, global_position + Vector2(0, -20))
 	honey_harvested.emit(honey_yield)
+	beehive_state_changed.emit(state)
 
-	var farm: Node = get_tree().current_scene
+	var tree_root: SceneTree = get_tree()
+	var farm: Node = tree_root.current_scene if tree_root != null else null
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 	if hud != null:
 		hud.show_floating_notice("+2 🍯 Mật Ong Rừng (+%d Vàng, +%d XP, +%d Xu)!" % [gold_reward, xp_reward, coins_reward])
-
-	state = HiveState.GATHERING
-	_timer = 0.0
-	_pill_bubble.visible = false
-	beehive_state_changed.emit(state)
 
 func on_player_interact(_player: Node2D = null) -> void:
 	handle_beehive_click()

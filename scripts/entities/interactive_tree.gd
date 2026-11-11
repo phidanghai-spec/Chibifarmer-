@@ -15,12 +15,17 @@ var _mini_menu: PanelContainer = null
 var is_moving_mode: bool = false
 var _original_position: Vector2 = Vector2.ZERO
 var _current_grid_cell: Vector2i = Vector2i(-1, -1)
+var _is_chopped: bool = false
 
 func _ready() -> void:
 	add_to_group("interactable_trees")
 	y_sort_enabled = true
 	_setup_collision()
 	_update_grid_solid(true)
+
+func _exit_tree() -> void:
+	if not _is_chopped:
+		_update_grid_solid(false)
 
 func setup(p_sprite_id: String, p_pos: Vector2, p_size: Vector2) -> void:
 	sprite_id = p_sprite_id
@@ -58,6 +63,8 @@ func _update_grid_solid(is_solid: bool) -> void:
 		_current_grid_cell = Vector2i(-1, -1)
 
 func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if _is_chopped:
+		return
 	if not (event is InputEventMouseButton):
 		return
 	var mb: InputEventMouseButton = event as InputEventMouseButton
@@ -65,8 +72,10 @@ func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -
 		handle_tree_click()
 
 func handle_tree_click() -> void:
-	var farm: Node = get_tree().current_scene
-	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+	if _is_chopped:
+		return
+	var tree_root: SceneTree = get_tree()
+	var farm: Node = tree_root.current_scene if tree_root != null else null
 	var drag_mgr: DragActionManager = farm.find_child("DragActionManager", true, false) as DragActionManager if farm != null else null
 	
 	# If DISMANTLE tool is selected, chop immediately!
@@ -131,6 +140,8 @@ func _show_mini_menu() -> void:
 	add_child(_mini_menu)
 
 func _start_moving_mode() -> void:
+	if _is_chopped:
+		return
 	if _mini_menu != null and is_instance_valid(_mini_menu):
 		_mini_menu.queue_free()
 		_mini_menu = null
@@ -183,6 +194,15 @@ func _cancel_move() -> void:
 	AudioManager.play_sfx("ui_wood_click")
 
 func chop_tree() -> void:
+	if _is_chopped:
+		return
+	_is_chopped = true
+	is_moving_mode = false
+	if _area != null:
+		_area.input_pickable = false
+	if _mini_menu != null and is_instance_valid(_mini_menu):
+		_mini_menu.queue_free()
+		_mini_menu = null
 	AudioManager.play_sfx("harvest")
 	_update_grid_solid(false)
 	
@@ -192,12 +212,16 @@ func chop_tree() -> void:
 	StorageManager.add_gold(gold_reward)
 	EventBus.gold_changed.emit(StorageManager.gold, gold_reward)
 	
-	var farm: Node = get_tree().current_scene
+	var tree_root: SceneTree = get_tree()
+	var farm: Node = tree_root.current_scene if tree_root != null else null
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 	if hud != null:
 		hud.show_floating_notice("🪓 Đã chặt dọn cây (+%d Vàng, +%d XP)!" % [gold_reward, xp_reward])
 		
 	# Spawn falling leaf / wood burst particles then free
-	var tw: Tween = create_tween()
-	tw.tween_property(self, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	tw.tween_callback(queue_free)
+	if is_inside_tree():
+		var tw: Tween = create_tween()
+		tw.tween_property(self, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.tween_callback(queue_free)
+	else:
+		queue_free()

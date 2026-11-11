@@ -6,15 +6,19 @@ extends Node2D
 @export var follow_distance_min: float = 44.0
 @export var move_speed: float = 72.0
 
+const DIG_COOLDOWN_SECONDS: int = 120
+
 var _sprite: Sprite2D = null
 var _shadow: Polygon2D = null
 var _label_status: Label = null
+var _btn_tap: Button = null
 
 var _base_scale: Vector2 = Vector2.ONE
 var _player_target: Node2D = null
 var _walk_phase: float = 0.0
 var _idle_timer: float = 0.0
 var _is_interacting: bool = false
+var _next_dig_timestamp: int = 0
 
 # River & Bridge Waypoints (Visual bridge at y: 636..684, x: 820..1080)
 const BRIDGE_WEST_X: float = 790.0
@@ -29,9 +33,10 @@ func _ready() -> void:
 	call_deferred("_find_player_avatar")
 
 func _setup_visuals() -> void:
-	# 1. Soft Ellipse Ground Shadow
+	# 1. Soft Ellipse Ground Shadow (Warm 2-Layer & Clearly Grounded)
 	_shadow = Polygon2D.new()
-	_shadow.color = Color(0.12, 0.22, 0.10, 0.28)
+	_shadow.name = "PoodleShadow"
+	_shadow.color = Color(0.12, 0.16, 0.08, 0.45)
 	var pts: PackedVector2Array = PackedVector2Array()
 	var segs: int = 16
 	for i: int in range(segs):
@@ -40,6 +45,17 @@ func _setup_visuals() -> void:
 	_shadow.polygon = pts
 	_shadow.position = Vector2(0.0, 14.0)
 	_shadow.z_index = -1
+	
+	var inner_shadow: Polygon2D = Polygon2D.new()
+	inner_shadow.name = "ShadowCore"
+	var in_pts: PackedVector2Array = PackedVector2Array()
+	for i: int in range(segs):
+		var a: float = (float(i) / float(segs)) * TAU
+		in_pts.append(Vector2(cos(a) * 10.0, sin(a) * 4.5))
+	inner_shadow.polygon = in_pts
+	inner_shadow.color = Color(0.08, 0.12, 0.05, 0.35)
+	_shadow.add_child(inner_shadow)
+	
 	add_child(_shadow)
 
 	# 2. Chibi Poodle Sprite (strictly 40x40px display size)
@@ -72,12 +88,12 @@ func _setup_visuals() -> void:
 	add_child(_label_status)
 
 	# 4. Tap interaction button
-	var btn_tap: Button = Button.new()
-	btn_tap.flat = true
-	btn_tap.custom_minimum_size = Vector2(44.0, 48.0)
-	btn_tap.position = Vector2(-22.0, -24.0)
-	btn_tap.pressed.connect(feed_and_dig_treasure)
-	add_child(btn_tap)
+	_btn_tap = Button.new()
+	_btn_tap.flat = true
+	_btn_tap.custom_minimum_size = Vector2(44.0, 48.0)
+	_btn_tap.position = Vector2(-22.0, -24.0)
+	_btn_tap.pressed.connect(feed_and_dig_treasure)
+	add_child(_btn_tap)
 
 func _find_player_avatar() -> void:
 	var farm: Node = get_tree().current_scene
@@ -181,8 +197,17 @@ func feed_and_dig_treasure() -> void:
 	if _is_interacting:
 		return
 
-	var farm: Node = get_tree().current_scene
+	var tree_root: SceneTree = get_tree()
+	var farm: Node = tree_root.current_scene if tree_root != null else null
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+
+	var cooldown_until: int = maxi(_next_dig_timestamp, SaveManager.poodle_next_dig_timestamp if SaveManager != null else 0)
+	if cooldown_until > 0 and not TickManager.is_finished(cooldown_until):
+		var rem_s: int = TickManager.get_time_remaining(cooldown_until)
+		AudioManager.play_sfx("click")
+		if hud != null:
+			hud.show_floating_notice("🐾 Poodle đang nghỉ ngơi (còn %s)..." % TickManager.format_duration(rem_s))
+		return
 
 	var has_milk: bool = StorageManager.has_item("milk", 1)
 	var has_gold: bool = StorageManager.has_gold(40)
@@ -194,6 +219,9 @@ func feed_and_dig_treasure() -> void:
 		return
 
 	_is_interacting = true
+	if _btn_tap != null:
+		_btn_tap.disabled = true
+
 	var used_milk: bool = false
 	if has_milk:
 		StorageManager.remove_item("milk", 1)
@@ -202,30 +230,48 @@ func feed_and_dig_treasure() -> void:
 		StorageManager.spend_gold(40)
 		EventBus.gold_changed.emit(StorageManager.gold, -40)
 
+	# Lock cooldown timestamp atomically before animation/awaits to block rapid spam exploit
+	var next_ts: int = TickManager.calculate_finish_timestamp(DIG_COOLDOWN_SECONDS)
+	_next_dig_timestamp = next_ts
+	if SaveManager != null:
+		SaveManager.poodle_next_dig_timestamp = next_ts
+
 	AudioManager.play_sfx("level_up")
 
 	# Happy Jump Tween (Strictly respecting _base_scale)
-	var orig_y: float = _sprite.position.y
-	var tw: Tween = create_tween().set_parallel(false)
-	tw.tween_property(_sprite, "position:y", orig_y - 20.0, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_sprite, "scale", _base_scale * Vector2(1.12, 0.90), 0.15)
-	tw.tween_property(_sprite, "position:y", orig_y, 0.20).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_sprite, "scale", _base_scale, 0.15)
+	if _sprite != null and is_inside_tree():
+		var orig_y: float = _sprite.position.y
+		var tw: Tween = create_tween().set_parallel(false)
+		tw.tween_property(_sprite, "position:y", orig_y - 20.0, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_sprite, "scale", _base_scale * Vector2(1.12, 0.90), 0.15)
+		tw.tween_property(_sprite, "position:y", orig_y, 0.20).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_sprite, "scale", _base_scale, 0.15)
 
-	# Float a 28x28 heart sprite
-	_spawn_floating_heart()
+		# Float a 28x28 heart sprite
+		_spawn_floating_heart()
 
-	_label_status.text = "❤️ Gâu Gâu! (Đào đất...)"
+	if _label_status != null:
+		_label_status.text = "❤️ Gâu Gâu! (Đào đất...)"
 
-	await get_tree().create_timer(0.60).timeout
+	if is_inside_tree() and get_tree() != null:
+		await get_tree().create_timer(0.60).timeout
+	if not is_inside_tree() or not is_instance_valid(self):
+		_is_interacting = false
+		return
 
 	# Digging animation (quick shake)
-	var tw_dig: Tween = create_tween().set_loops(4)
-	tw_dig.tween_property(_sprite, "position:x", 3.0, 0.06)
-	tw_dig.tween_property(_sprite, "position:x", -3.0, 0.06)
-	await tw_dig.finished
-	_sprite.position.x = 0.0
-	_sprite.scale = _base_scale
+	if _sprite != null and is_inside_tree():
+		var tw_dig: Tween = create_tween().set_loops(4)
+		tw_dig.tween_property(_sprite, "position:x", 3.0, 0.06)
+		tw_dig.tween_property(_sprite, "position:x", -3.0, 0.06)
+		await tw_dig.finished
+	if not is_inside_tree() or not is_instance_valid(self):
+		_is_interacting = false
+		return
+
+	if _sprite != null:
+		_sprite.position.x = 0.0
+		_sprite.scale = _base_scale
 
 	# Grant Rewards
 	var xp_reward: int = 80
@@ -253,11 +299,14 @@ func feed_and_dig_treasure() -> void:
 
 	AudioManager.play_sfx("harvest")
 	if hud != null:
-		var cost_msg: String = "1 Sữa bò" if used_milk else "40 Vàng"
+		var _cost_msg: String = "1 Sữa bò" if used_milk else "40 Vàng"
 		hud.show_floating_notice("🐩 Poodle đào trúng kho báu! (+%d XP, +%d Vàng, +%d Xu%s)" % [xp_reward, gold_reward, coins_reward, bonus_text])
 
-	_label_status.text = "🐾 Poodle Thân Thiết (Lv.%d)" % (1 + SaveManager.poodle_affinity / 50)
+	if _label_status != null:
+		_label_status.text = "🐾 Poodle Thân Thiết (Lv.%d)" % (1 + SaveManager.poodle_affinity / 50)
 	_is_interacting = false
+	if _btn_tap != null:
+		_btn_tap.disabled = false
 
 func _spawn_floating_heart() -> void:
 	var heart_sp: Sprite2D = Sprite2D.new()
