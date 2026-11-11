@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bph562kp5anid"
+
+[deps]
+
+files=["res://docs/economy_report.id.translation", "res://docs/economy_report.name.translation", "res://docs/economy_report.source.translation", "res://docs/economy_report.unlock.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.yield.translation", "res://docs/economy_report.unit.translation", "res://docs/economy_report.unit.translation", "res://docs/economy_report.cost.translation", "res://docs/economy_report.cost.translation", "res://docs/economy_report.revenue.translation", "res://docs/economy_report.revenue.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.ingredients.translation", "res://docs/economy_report.missing.translation", "res://docs/economy_report.anomalies.translation"]
+
+source_file="res://docs/economy_report.csv"
+dest_files=["res://docs/economy_report.id.translation", "res://docs/economy_report.name.translation", "res://docs/economy_report.source.translation", "res://docs/economy_report.unlock.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.time.translation", "res://docs/economy_report.yield.translation", "res://docs/economy_report.unit.translation", "res://docs/economy_report.unit.translation", "res://docs/economy_report.cost.translation", "res://docs/economy_report.cost.translation", "res://docs/economy_report.revenue.translation", "res://docs/economy_report.revenue.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.profit.translation", "res://docs/economy_report.ingredients.translation", "res://docs/economy_report.missing.translation", "res://docs/economy_report.anomalies.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
