@@ -10,10 +10,54 @@ const InteractiveTreeClass = preload("res://scripts/entities/interactive_tree.gd
 ## - Layer 3: Garden & Riverside Details (Pathside florals, bridge accents, riverbank bushes)
 ## - Layer 4: Ground Shadows (Semi-transparent soft ellipse shadows anchoring objects)
 
-var enable_ambient_sway: bool = false
+var enable_ambient_sway: bool = true
 
 # Shadow color conforming to 2.5D cozy palette
-const SHADOW_COLOR: Color = Color(0.12, 0.22, 0.10, 0.28)
+const SHADOW_COLOR: Color = Color(0.12, 0.22, 0.10, 0.26)
+
+var _foliage_wind_shader: Shader = null
+var _cloud_drift_shader: Shader = null
+var _tree_wind_material: ShaderMaterial = null
+var _bush_wind_material: ShaderMaterial = null
+var _cloud_drift_material: ShaderMaterial = null
+
+func _get_foliage_wind_shader() -> Shader:
+	if _foliage_wind_shader == null:
+		_foliage_wind_shader = Shader.new()
+		_foliage_wind_shader.code = """
+shader_type canvas_item;
+
+uniform float sway_speed = 1.65;
+uniform float sway_strength = 3.2;
+
+void vertex() {
+	float canopy_mask = clamp(1.0 - UV.y, 0.0, 1.0);
+	float bend = canopy_mask * canopy_mask;
+	vec2 world_p = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
+	float auto_phase = world_p.x * 0.018 + world_p.y * 0.012;
+	VERTEX.x += sin(TIME * sway_speed + auto_phase) * sway_strength * bend;
+	VERTEX.y += cos(TIME * sway_speed * 1.35 + auto_phase) * (sway_strength * 0.16) * bend;
+}
+"""
+	return _foliage_wind_shader
+
+func _get_cloud_drift_shader() -> Shader:
+	if _cloud_drift_shader == null:
+		_cloud_drift_shader = Shader.new()
+		_cloud_drift_shader.code = """
+shader_type canvas_item;
+
+uniform float drift_speed = 0.32;
+uniform float drift_distance = 7.5;
+
+void vertex() {
+	vec2 world_p = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
+	float auto_phase = world_p.x * 0.012 + world_p.y * 0.02;
+	VERTEX.x += sin(TIME * drift_speed + auto_phase) * drift_distance;
+	VERTEX.y += cos(TIME * drift_speed * 1.5 + auto_phase) * 1.8;
+}
+"""
+	return _cloud_drift_shader
 
 ## Kiểm tra tọa độ an toàn tuyệt đối tránh đè lên công trình, đường gạch, ruộng, HUD và lòng sông
 static func is_position_safe_for_scenery(pos: Vector2) -> bool:
@@ -343,6 +387,8 @@ func _create_scenery_node(
 
 	# Y-Sort Anchor Point Standard: Chân gốc đặt tại (0, 0), sprite offset lên trên
 	sp.position = Vector2(0.0, -target_size.y * 0.42)
+	if enable_ambient_sway:
+		_apply_ambient_sway_shader(sp, sprite_id, pos)
 	node.add_child(sp)
 
 	# Nhóm 4 — Ground Shadows: Bóng đổ chân gốc elip mềm mại
@@ -355,3 +401,28 @@ func _create_scenery_node(
 		node.move_child(shadow, 0) # Đảm bảo bóng nằm dưới sprite
 
 	return node
+
+## Gán Shader đung đưa theo gió (Foliage Wind Sway) hoặc mây trôi (Cloud Drift) 60 FPS trên GPU
+## Dùng chung 3 ShaderMaterial toàn cục thay vì cấp phát riêng cho từng node để giữ Batching tốt
+func _apply_ambient_sway_shader(sp: Sprite2D, sprite_id: String, _pos: Vector2) -> void:
+	if "cloud" in sprite_id:
+		if _cloud_drift_material == null:
+			_cloud_drift_material = ShaderMaterial.new()
+			_cloud_drift_material.shader = _get_cloud_drift_shader()
+			_cloud_drift_material.set_shader_parameter("drift_speed", 0.32)
+			_cloud_drift_material.set_shader_parameter("drift_distance", 7.5)
+		sp.material = _cloud_drift_material
+	elif "tree" in sprite_id:
+		if _tree_wind_material == null:
+			_tree_wind_material = ShaderMaterial.new()
+			_tree_wind_material.shader = _get_foliage_wind_shader()
+			_tree_wind_material.set_shader_parameter("sway_speed", 1.55)
+			_tree_wind_material.set_shader_parameter("sway_strength", 3.2)
+		sp.material = _tree_wind_material
+	elif "bush" in sprite_id or "hedge" in sprite_id or "flower" in sprite_id or "floral" in sprite_id or "sunflower" in sprite_id:
+		if _bush_wind_material == null:
+			_bush_wind_material = ShaderMaterial.new()
+			_bush_wind_material.shader = _get_foliage_wind_shader()
+			_bush_wind_material.set_shader_parameter("sway_speed", 2.05)
+			_bush_wind_material.set_shader_parameter("sway_strength", 1.8)
+		sp.material = _bush_wind_material

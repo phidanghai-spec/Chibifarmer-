@@ -21,8 +21,10 @@ var _area_click: Area2D
 var _minigame: FishingMinigame
 var _hut_sprite: Sprite2D
 var _hut_shadow: Sprite2D
+var _rain_luck_bonus: float = 0.0
 
-# River ribbon segment quads (drawn statically once)
+# River ribbon polygons & static batched visuals (replacing 477-draw-call _draw())
+var _river_visuals_root: Node2D = null
 var _grass_border_quads: Array[PackedVector2Array] = []
 var _sand_quads: Array[PackedVector2Array] = []
 var _water_quads: Array[PackedVector2Array] = []
@@ -39,6 +41,7 @@ func _ready() -> void:
 	add_to_group("interactable")
 	set_process(false) # Tắt hoàn toàn _process để triệt tiêu redraw liên tục, chống giật lag
 	_generate_river_geometry()
+	_build_batched_river_and_bridge()
 
 	# 1. Fishing Hut (Nhà Câu Cá Mái Xanh có Thùng Gỗ)
 	# Đặt sát mép bờ Tây phía Nam cầu gỗ, quay mặt tiền hướng ra sông (flip_h = true)
@@ -93,6 +96,13 @@ func _ready() -> void:
 	add_child(_minigame)
 
 	EventBus.second_ticked.connect(_on_second_ticked)
+	EventBus.weather_state_changed.connect(_on_weather_state_changed)
+
+func _on_weather_state_changed(weather_id: String, _speed_mult: float, fish_luck_bonus: float) -> void:
+	if weather_id.to_upper() == "COZY_RAIN":
+		_rain_luck_bonus = 0.25
+	else:
+		_rain_luck_bonus = fish_luck_bonus
 
 func _create_ellipse_texture(size: Vector2) -> ImageTexture:
 	var img: Image = Image.create(int(size.x), int(size.y), false, Image.FORMAT_RGBA8)
@@ -202,19 +212,28 @@ func handle_fishing_click() -> bool:
 		print("[FishingSpot] Bãi câu đang trong thời gian hồi!")
 		return false
 
+	var target_fish: String = "fish_carp"
+	if _rain_luck_bonus > 0.15 and randf() < _rain_luck_bonus:
+		target_fish = "fish_bass" if SpriteAtlasManager.has_texture("fish_bass") else "fish_carp"
+
 	if _minigame != null:
-		_minigame.open_minigame("fish_carp", Vector2(768.0, 750.0))
+		_minigame.open_minigame(target_fish, Vector2(768.0, 750.0))
 		return true
 
 	_complete_catch()
 	return true
 
-func _on_minigame_finished(success: bool, _fish_id: String) -> void:
+func _on_minigame_finished(success: bool, p_fish_id: String) -> void:
 	if success:
+		var catch_id: String = p_fish_id if p_fish_id != "" else "fish_carp"
+		EventBus.fish_caught.emit(instance_id, catch_id, 1.5)
 		_start_cooldown()
 
 func _complete_catch() -> void:
 	var fish_item: String = "fish_carp"
+	if _rain_luck_bonus > 0.15 and randf() < _rain_luck_bonus:
+		fish_item = "fish_bass" if SpriteAtlasManager.has_texture("fish_bass") else "fish_carp"
+
 	if not StorageManager.can_store_item(fish_item, 1):
 		if not StorageManager.can_store_item("fish", 1):
 			print("[FishingSpot] Kho Barn đã đầy, không thể chứa thêm cá!")
@@ -226,6 +245,7 @@ func _complete_catch() -> void:
 	StorageManager.add_xp(5)
 	EventBus.loot_collected.emit(fish_item, 1, Vector2(768.0, 750.0))
 	EventBus.loot_collected.emit("gold", 20, Vector2(768.0, 750.0))
+	EventBus.fish_caught.emit(instance_id, fish_item, 1.5)
 	_start_cooldown()
 
 func _start_cooldown() -> void:
@@ -240,117 +260,194 @@ func _start_cooldown() -> void:
 		tw.tween_property(_hut_sprite, "scale", base_scale * Vector2(1.08, 0.92), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_hut_sprite, "scale", base_scale, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-func get_minigame() -> FishingMinigame:
-	return _minigame
+func _build_ribbon_polygon(half_width: float) -> PackedVector2Array:
+	var left_pts: Array[Vector2] = []
+	var right_pts: Array[Vector2] = []
+	var y_start: float = -120.0
+	var y_end: float = 1380.0
+	var step: float = 24.0
+	var y: float = y_start
+	while y <= y_end + step * 0.5:
+		var cx: float = get_river_center_x(y)
+		var dx: float = (get_river_center_x(y + 1.0) - get_river_center_x(y - 1.0)) * 0.5
+		var dy: float = 1.0
+		var length: float = sqrt(dx * dx + dy * dy)
+		var nx: float = -dy / length
+		var ny: float = dx / length
+		left_pts.append(Vector2(cx - nx * half_width, y - ny * half_width))
+		right_pts.append(Vector2(cx + nx * half_width, y + ny * half_width))
+		y += step
+	var poly: PackedVector2Array = PackedVector2Array()
+	for p: Vector2 in left_pts:
+		poly.append(p)
+	for i: int in range(right_pts.size() - 1, -1, -1):
+		poly.append(right_pts[i])
+	return poly
 
-func _draw() -> void:
-	# ====================================================================
-	# 1. DÒNG SÔNG VÀ BỜ CÁT VẼ TĨNH 1 LẦN (KHÔNG VẼ LẠI 60FPS)
-	# ====================================================================
-	# 0. Grass Edge Fringe Quads (drawn underneath sand)
-	var fringe_color: Color = Color(0.36, 0.58, 0.22)
-	for q: PackedVector2Array in _grass_border_quads:
-		draw_colored_polygon(q, fringe_color)
+func _build_batched_river_and_bridge() -> void:
+	if _river_visuals_root != null:
+		return
+	_river_visuals_root = Node2D.new()
+	_river_visuals_root.name = "RiverStaticBatched"
+	_river_visuals_root.z_index = 0
+	add_child(_river_visuals_root)
+	move_child(_river_visuals_root, 0)
 
-	# A. Sandy Riverbank Border (Color(0.84, 0.76, 0.56))
-	var sand_color: Color = Color(0.84, 0.76, 0.56)
-	for q: PackedVector2Array in _sand_quads:
-		draw_colored_polygon(q, sand_color)
+	# 1. 4 continuous Polygon2D river layers (4 draw calls instead of 248)
+	var layers: Array[Dictionary] = [
+		{"name": "RiverGrassBorder", "w": 116.0, "col": Color(0.36, 0.58, 0.22)},
+		{"name": "RiverSandBorder", "w": 105.0, "col": Color(0.84, 0.76, 0.56)},
+		{"name": "RiverShallowWater", "w": 88.0, "col": Color(0.28, 0.68, 0.86)},
+		{"name": "RiverDeepWater", "w": 52.0, "col": Color(0.18, 0.52, 0.78)}
+	]
+	for cfg: Dictionary in layers:
+		var poly_node: Polygon2D = Polygon2D.new()
+		poly_node.name = String(cfg["name"])
+		poly_node.polygon = _build_ribbon_polygon(float(cfg["w"]))
+		poly_node.color = cfg["col"] as Color
+		_river_visuals_root.add_child(poly_node)
 
-	# B. Shallow Turquoise River Water (Color(0.28, 0.68, 0.86))
-	var water_color: Color = Color(0.28, 0.68, 0.86)
-	for q: PackedVector2Array in _water_quads:
-		draw_colored_polygon(q, water_color)
-
-	# C. Deep Blue Center Current (Color(0.18, 0.52, 0.78))
-	var deep_color: Color = Color(0.18, 0.52, 0.78)
-	for q: PackedVector2Array in _deep_water_quads:
-		draw_colored_polygon(q, deep_color)
-
-	# D. Small river pebbles along sandy border
-	var pebble_base: Color = Color(0.74, 0.71, 0.62)
-	var pebble_light: Color = Color(0.88, 0.86, 0.78)
-	var p_step: float = 38.0
+	# 2. All riverbank pebbles batched into 1 MultiMeshInstance2D (1 draw call)
+	var pebble_img: Image = Image.create(10, 10, false, Image.FORMAT_RGBA8)
+	pebble_img.fill(Color(0, 0, 0, 0))
+	_paint_circle(pebble_img, Vector2(5.0, 5.0), 3.4, Color(0.74, 0.71, 0.62, 1.0))
+	_paint_circle(pebble_img, Vector2(4.2, 4.2), 1.6, Color(0.88, 0.86, 0.78, 1.0))
+	var pebble_tex: ImageTexture = ImageTexture.create_from_image(pebble_img)
+	var pebble_positions: Array[Vector2] = []
 	var p_y: float = -100.0
 	while p_y <= 1360.0:
 		var p_cx: float = get_river_center_x(p_y)
-		var p_left: Vector2 = Vector2(p_cx - 104.0, p_y)
-		var p_right: Vector2 = Vector2(p_cx + 104.0, p_y + 16.0)
-		draw_circle(p_left, 3.2, pebble_base)
-		draw_circle(p_left + Vector2(-0.8, -0.8), 1.5, pebble_light)
-		draw_circle(p_right, 3.5, pebble_base)
-		draw_circle(p_right + Vector2(-0.8, -0.8), 1.6, pebble_light)
-		p_y += p_step
+		pebble_positions.append(Vector2(p_cx - 104.0, p_y))
+		pebble_positions.append(Vector2(p_cx + 104.0, p_y + 16.0))
+		p_y += 38.0
+	var pebble_mm: MultiMeshInstance2D = _create_batched_multimesh("RiverPebblesMultiMesh", pebble_tex, Vector2(10.0, 10.0), pebble_positions)
+	_river_visuals_root.add_child(pebble_mm)
 
-	# E. Soft Translucent River Current Ripples (Replacing rigid radar dots)
-	var river_flow_ripples: Array[Vector2] = [
-		Vector2(950.0, 320.0), Vector2(980.0, 360.0), Vector2(810.0, 560.0),
-		Vector2(830.0, 810.0), Vector2(920.0, 1020.0), Vector2(940.0, 1060.0),
-		Vector2(890.0, 460.0), Vector2(930.0, 780.0)
-	]
+	# 3. All static water ripple arcs batched into 1 MultiMeshInstance2D (1 draw call)
+	var ripple_img: Image = Image.create(32, 24, false, Image.FORMAT_RGBA8)
+	ripple_img.fill(Color(0, 0, 0, 0))
 	var flow_soft: Color = Color(0.88, 0.96, 1.0, 0.38)
 	var flow_bright: Color = Color(1.0, 1.0, 1.0, 0.50)
-	for fp: Vector2 in river_flow_ripples:
-		draw_arc(fp, 9.0, -0.65, 0.65, 8, flow_soft, 1.3)
-		draw_arc(fp + Vector2(4.0, 2.0), 5.5, -0.5, 0.5, 6, flow_bright, 1.0)
-
-	# F. Soft Water Ripple Arcs (Delicate river flow)
+	_paint_arc(ripple_img, Vector2(12.0, 11.0), 9.0, -0.65, 0.65, 1.4, flow_soft)
+	_paint_arc(ripple_img, Vector2(16.0, 13.0), 5.5, -0.5, 0.5, 1.1, flow_bright)
+	var ripple_tex: ImageTexture = ImageTexture.create_from_image(ripple_img)
 	var ripple_positions: Array[Vector2] = [
+		Vector2(950.0, 320.0), Vector2(980.0, 360.0), Vector2(810.0, 560.0),
+		Vector2(830.0, 810.0), Vector2(920.0, 1020.0), Vector2(940.0, 1060.0),
+		Vector2(890.0, 460.0), Vector2(930.0, 780.0),
 		Vector2(910.0, 240.0), Vector2(960.0, 420.0), Vector2(870.0, 510.0),
 		Vector2(840.0, 750.0), Vector2(890.0, 910.0), Vector2(950.0, 1140.0)
 	]
-	var ripple_col: Color = Color(1.0, 1.0, 1.0, 0.32)
-	for rp: Vector2 in ripple_positions:
-		draw_arc(rp, 13.0, -0.6, 0.6, 8, ripple_col, 1.4)
-		draw_arc(rp + Vector2(10.0, 4.0), 8.5, -0.5, 0.5, 6, ripple_col, 1.1)
+	var ripple_mm: MultiMeshInstance2D = _create_batched_multimesh("RiverRipplesMultiMesh", ripple_tex, Vector2(32.0, 24.0), ripple_positions)
+	_river_visuals_root.add_child(ripple_mm)
 
-	# ====================================================================
-	# 2. WOODEN RIVER BRIDGE (CẦU GỖ BẮC QUA SÔNG) AT Y = 660
-	# Mặt cầu hoàn toàn sạch sẽ, không có chữ hay icon câu cá đè lên!
-	# ====================================================================
-	var br_x0: float = 820.0
-	var br_x1: float = 1080.0
-	var br_w: float = br_x1 - br_x0
-	var br_y0: float = 636.0
-	var br_y1: float = 684.0
-	var br_h: float = br_y1 - br_y0
+	# 4. Pre-baked Wooden River Bridge Sprite2D (1 draw call instead of 60+)
+	var bridge_sp: Sprite2D = Sprite2D.new()
+	bridge_sp.name = "RiverBridgeBackdrop"
+	bridge_sp.texture = _create_baked_bridge_texture()
+	bridge_sp.position = Vector2(950.0, 667.0)
+	_river_visuals_root.add_child(bridge_sp)
 
-	var wood_base: Color = Color(0.74, 0.54, 0.34)
-	var wood_dark: Color = Color(0.48, 0.32, 0.18)
-	var wood_light: Color = Color(0.84, 0.66, 0.44)
-	var wood_rail: Color = Color(0.52, 0.34, 0.18)
+func _create_batched_multimesh(node_name: String, tex: Texture2D, quad_size: Vector2, positions: Array[Vector2]) -> MultiMeshInstance2D:
+	var mm: MultiMesh = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_2D
+	var qmesh: QuadMesh = QuadMesh.new()
+	qmesh.size = quad_size
+	mm.mesh = qmesh
+	mm.instance_count = positions.size()
+	for i: int in range(positions.size()):
+		mm.set_instance_transform_2d(i, Transform2D(0.0, positions[i]))
+	var mmi: MultiMeshInstance2D = MultiMeshInstance2D.new()
+	mmi.name = node_name
+	mmi.multimesh = mm
+	mmi.texture = tex
+	return mmi
+
+func _paint_circle(img: Image, center: Vector2, radius: float, col: Color) -> void:
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	var r_sq: float = radius * radius
+	var min_x: int = maxi(0, int(floor(center.x - radius - 1.0)))
+	var max_x: int = mini(w - 1, int(ceil(center.x + radius + 1.0)))
+	var min_y: int = maxi(0, int(floor(center.y - radius - 1.0)))
+	var max_y: int = mini(h - 1, int(ceil(center.y + radius + 1.0)))
+	for py: int in range(min_y, max_y + 1):
+		for px: int in range(min_x, max_x + 1):
+			var dx: float = float(px) + 0.5 - center.x
+			var dy: float = float(py) + 0.5 - center.y
+			if dx * dx + dy * dy <= r_sq:
+				img.set_pixel(px, py, col)
+
+func _paint_arc(img: Image, center: Vector2, radius: float, a0: float, a1: float, thickness: float, col: Color) -> void:
+	var steps: int = 18
+	for i: int in range(steps + 1):
+		var a: float = lerpf(a0, a1, float(i) / float(steps))
+		var pt: Vector2 = center + Vector2(cos(a) * radius, sin(a) * radius)
+		_paint_circle(img, pt, thickness * 0.5, col)
+
+func _paint_rect(img: Image, rect: Rect2i, col: Color) -> void:
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	for py: int in range(maxi(0, rect.position.y), mini(h, rect.position.y + rect.size.y)):
+		for px: int in range(maxi(0, rect.position.x), mini(w, rect.position.x + rect.size.x)):
+			img.set_pixel(px, py, col)
+
+func _create_baked_bridge_texture() -> ImageTexture:
+	# Covers world x: 812..1088 (276px), y: 626..708 (82px); center = (950, 667)
+	var origin: Vector2 = Vector2(812.0, 626.0)
+	var img: Image = Image.create(276, 82, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+
+	var br_x0: int = int(820.0 - origin.x)
+	var br_x1: int = int(1080.0 - origin.x)
+	var br_w: int = br_x1 - br_x0
+	var br_y0: int = int(636.0 - origin.y)
+	var br_y1: int = int(684.0 - origin.y)
+	var br_h: int = br_y1 - br_y0
+
+	var wood_base: Color = Color(0.74, 0.54, 0.34, 1.0)
+	var wood_dark: Color = Color(0.48, 0.32, 0.18, 1.0)
+	var wood_light: Color = Color(0.84, 0.66, 0.44, 1.0)
+	var wood_rail: Color = Color(0.52, 0.34, 0.18, 1.0)
 
 	# A. Bridge Soft Water Shadow
-	draw_rect(Rect2(br_x0 + 12.0, br_y1, br_w - 24.0, 14.0), Color(0.08, 0.25, 0.42, 0.35), true)
+	_paint_rect(img, Rect2i(br_x0 + 12, br_y1, br_w - 24, 14), Color(0.08, 0.25, 0.42, 0.35))
 
-	# B. Heavy Wooden Support Piers in the water
-	var pier_piles_x: Array[float] = [br_x0 + 65.0, br_x0 + 130.0, br_x0 + 195.0]
-	for px: float in pier_piles_x:
-		draw_rect(Rect2(Vector2(px - 5.0, br_y0 - 2.0), Vector2(10.0, br_h + 16.0)), wood_dark, true)
-		draw_circle(Vector2(px, br_y1 + 14.0), 4.5, Color(0.18, 0.42, 0.58, 0.65))
+	# B. Support Piers in the water
+	for px_off: int in [65, 130, 195]:
+		var px: int = br_x0 + px_off
+		_paint_rect(img, Rect2i(px - 5, br_y0 - 2, 10, br_h + 16), wood_dark)
+		_paint_circle(img, Vector2(float(px), float(br_y1 + 14)), 4.5, Color(0.18, 0.42, 0.58, 0.65))
 
-	# C. Arched Wooden Bridge Deck (Planks)
-	draw_rect(Rect2(br_x0, br_y0, br_w, br_h), wood_base, true)
-	draw_rect(Rect2(br_x0, br_y0, br_w, br_h), wood_dark, false, 2.0)
+	# C. Arched Wooden Bridge Deck & border
+	_paint_rect(img, Rect2i(br_x0, br_y0, br_w, br_h), wood_base)
+	_paint_rect(img, Rect2i(br_x0, br_y0, br_w, 2), wood_dark)
+	_paint_rect(img, Rect2i(br_x0, br_y1 - 2, br_w, 2), wood_dark)
+	_paint_rect(img, Rect2i(br_x0, br_y0, 2, br_h), wood_dark)
+	_paint_rect(img, Rect2i(br_x1 - 2, br_y0, 2, br_h), wood_dark)
 
-	# Vertical Plank Lines on Deck
-	var plank_step: float = 14.0
-	var cur_px: float = br_x0 + plank_step
+	# Vertical Plank Lines
+	var cur_px: int = br_x0 + 14
 	while cur_px < br_x1:
-		draw_line(Vector2(cur_px, br_y0), Vector2(cur_px, br_y1), wood_dark, 1.5)
-		draw_line(Vector2(cur_px + 1.0, br_y0), Vector2(cur_px + 1.0, br_y1), wood_light, 1.0)
-		cur_px += plank_step
+		_paint_rect(img, Rect2i(cur_px, br_y0, 2, br_h), wood_dark)
+		_paint_rect(img, Rect2i(cur_px + 2, br_y0, 1, br_h), wood_light)
+		cur_px += 14
 
-	# D. Handrails with Baluster Posts (Lan can gỗ) - North & South Rails
-	draw_line(Vector2(br_x0, br_y0 + 2.0), Vector2(br_x1, br_y0 + 2.0), wood_rail, 3.0)
-	draw_line(Vector2(br_x0, br_y0 + 6.0), Vector2(br_x1, br_y0 + 6.0), wood_rail, 1.8)
-	draw_line(Vector2(br_x0, br_y1 - 2.0), Vector2(br_x1, br_y1 - 2.0), wood_rail, 3.0)
-	draw_line(Vector2(br_x0, br_y1 - 6.0), Vector2(br_x1, br_y1 - 6.0), wood_rail, 1.8)
+	# D. North & South Handrails + Baluster Posts
+	_paint_rect(img, Rect2i(br_x0, br_y0 + 1, br_w, 3), wood_rail)
+	_paint_rect(img, Rect2i(br_x0, br_y0 + 5, br_w, 2), wood_rail)
+	_paint_rect(img, Rect2i(br_x0, br_y1 - 4, br_w, 3), wood_rail)
+	_paint_rect(img, Rect2i(br_x0, br_y1 - 7, br_w, 2), wood_rail)
 
-	var post_x: float = br_x0 + 6.0
+	var post_x: int = br_x0 + 6
 	while post_x <= br_x1:
-		draw_line(Vector2(post_x, br_y0 - 4.0), Vector2(post_x, br_y0 + 8.0), wood_rail, 2.8)
-		draw_line(Vector2(post_x, br_y1 - 8.0), Vector2(post_x, br_y1 + 4.0), wood_rail, 2.8)
-		draw_circle(Vector2(post_x, br_y0 - 4.0), 2.2, wood_light)
-		draw_circle(Vector2(post_x, br_y1 + 4.0), 2.2, wood_light)
-		post_x += 24.0
+		_paint_rect(img, Rect2i(post_x - 1, br_y0 - 4, 3, 12), wood_rail)
+		_paint_rect(img, Rect2i(post_x - 1, br_y1 - 8, 3, 12), wood_rail)
+		_paint_circle(img, Vector2(float(post_x), float(br_y0 - 4)), 2.2, wood_light)
+		_paint_circle(img, Vector2(float(post_x), float(br_y1 + 4)), 2.2, wood_light)
+		post_x += 24
+
+	return ImageTexture.create_from_image(img)
+
+func get_minigame() -> FishingMinigame:
+	return _minigame
