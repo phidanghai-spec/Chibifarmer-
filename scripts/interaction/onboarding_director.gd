@@ -89,13 +89,15 @@ func _resolve_world_positions() -> void:
 	var buildings_container: Node2D = get_node_or_null("../BuildingsContainer") as Node2D
 	if buildings_container != null:
 		for b: Node in buildings_container.get_children():
-			if "feed_mill" in b.name.to_lower():
+			var b_machine_id: String = str(b.get("machine_id")) if b.get("machine_id") != null else ""
+			if b_machine_id == "feed_mill" or b.name == "feed_mill":
 				var b_node: Node2D = b as Node2D
 				if b_node != null:
 					feed_mill_pos = b_node.global_position
 					break
 
 func _auto_start_from_save() -> void:
+	_resolve_world_positions()
 	if steamboat_node == null:
 		steamboat_node = get_node_or_null("../RiverSteamboat") as Node2D
 		if steamboat_node == null:

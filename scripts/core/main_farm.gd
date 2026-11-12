@@ -736,6 +736,7 @@ func _spawn_production_machine(m_id: String, cell: Vector2i) -> ProductionMachin
 			GridManager.astar_grid.set_point_solid(c, true)
 
 	var machine: ProductionMachine = ProductionMachine.new()
+	machine.name = m_id
 	machine.y_sort_enabled = true
 	machine.machine_id = m_id
 	machine.grid_pos = cell
