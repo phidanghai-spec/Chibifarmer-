@@ -2091,15 +2091,15 @@ func open_build_modal() -> void:
 	scroll.add_child(grid)
 	
 	var catalog: Array[Dictionary] = [
-		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 10, "level": 1, "icon": "wheat", "materials": {}},
-		{"id": "feed_mill", "name": "Máy Nghiền Cám", "desc": "Nghiền thức ăn cho Gà, Bò, Heo", "cost": 80, "level": 2, "icon": "feed_mill", "materials": {"mat_plank": 2, "mat_bolt": 1}},
-		{"id": "bakery", "name": "Lò Bánh Mì", "desc": "Nướng bánh mì nóng giòn thơm lừng", "cost": 120, "level": 3, "icon": "bakery", "materials": {"mat_brick": 2, "mat_plank": 2}},
-		{"id": "cow_pen", "name": "Chuồng Bò Sữa", "desc": "Nuôi bò lấy sữa tươi béo ngậy", "cost": 100, "level": 3, "icon": "cow", "materials": {"mat_plank": 3, "mat_bolt": 1}},
-		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "level": 13, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
-		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "level": 8, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
-		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân ngắm cảnh", "cost": 15, "level": 2, "icon": "wooden_bench", "materials": {}},
-		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan check-in", "cost": 25, "level": 2, "icon": "flowerbed_round", "materials": {}},
-		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "level": 5, "icon": "fountain", "materials": {"mat_brick": 3}}
+		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 10, "icon": "wheat", "materials": {}},
+		{"id": "feed_mill", "name": "Máy Nghiền Cám", "desc": "Nghiền thức ăn cho Gà, Bò, Heo", "cost": 80, "icon": "feed_mill", "materials": {"mat_plank": 2, "mat_bolt": 1}},
+		{"id": "bakery", "name": "Lò Bánh Mì", "desc": "Nướng bánh mì nóng giòn thơm lừng", "cost": 120, "icon": "bakery", "materials": {"mat_brick": 2, "mat_plank": 2}},
+		{"id": "cow_pasture", "name": "Đồng Cỏ Bò", "desc": "Nuôi bò lấy sữa tươi béo ngậy", "cost": 100, "icon": "cow", "materials": {"mat_plank": 3, "mat_bolt": 1}},
+		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
+		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
+		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân ngắm cảnh", "cost": 15, "icon": "wooden_bench", "materials": {}},
+		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan check-in", "cost": 25, "icon": "flowerbed_round", "materials": {}},
+		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "icon": "fountain", "materials": {"mat_brick": 3}}
 	]
 	
 	for item in catalog:
@@ -2143,8 +2143,9 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	lbl_name.add_theme_color_override("font_color", Color(0.3, 0.18, 0.08))
 	vbox.add_child(lbl_name)
 	
+	var b_id: String = String(item.get("id", ""))
 	var cost: int = int(item.get("cost", 0))
-	var req_level: int = int(item.get("level", 1))
+	var req_level: int = DataManager.get_building_unlock_level(b_id, 1)
 	var req_mats: Dictionary = item.get("materials", {}) as Dictionary
 	var mat_str_parts: Array[String] = []
 	var has_all_mats: bool = true
@@ -2187,7 +2188,6 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	else:
 		btn_buy.text = "🔨 Xây Dựng"
 		btn_buy.disabled = false
-		var b_id: String = String(item.get("id", ""))
 		btn_buy.pressed.connect(func() -> void:
 			_build_modal.visible = false
 			if b_id == "field_plot":
@@ -2556,30 +2556,22 @@ func _refresh_badges() -> void:
 				btn_zoo.modulate = Color(1, 1, 1, 1)
 				btn_zoo.tooltip_text = "Sở Thú Bờ Đông"
 			var zoo_alerts: int = 0
-			var zoo_ids: Array[String] = ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]
-			var unlock_costs: Dictionary = {
-				"zoo_capybara": 1,
-				"zoo_panda": 2,
-				"zoo_penguin": 2,
-				"zoo_giraffe": 3
-			}
-			for a_id: String in zoo_ids:
+			for enc_cfg: Dictionary in DataManager.get_zoo_enclosures():
+				var raw_pieces: Variant = enc_cfg.get("puzzle_piece_cost", null)
+				if raw_pieces == null:
+					continue
+				var a_id: String = String(enc_cfg.get("id", ""))
 				if not SaveManager.is_animal_unlocked(a_id):
-					var cost: int = int(unlock_costs.get(a_id, 2))
+					var cost: int = int(raw_pieces)
 					if SaveManager.puzzle_pieces >= cost:
 						zoo_alerts += 1
-				else:
-					if not SaveManager.is_animal_fed(a_id):
-						if StorageManager.get_item_count("sanctuary_feed") > 0:
-							zoo_alerts += 1
-						elif a_id == "zoo_capybara" and StorageManager.get_item_count("carrot") > 0:
-							zoo_alerts += 1
-						elif a_id == "zoo_panda" and (StorageManager.get_item_count("apple") > 0 or StorageManager.get_item_count("sugarcane") > 0):
-							zoo_alerts += 1
-						elif a_id == "zoo_penguin" and (StorageManager.get_item_count("fish_carp") > 0 or StorageManager.get_item_count("fish_bass") > 0):
-							zoo_alerts += 1
-						elif a_id == "zoo_giraffe" and StorageManager.get_item_count("wheat") > 0:
-							zoo_alerts += 1
+				elif not SaveManager.is_animal_fed(a_id):
+					var foods_var: Variant = enc_cfg.get("foods", [])
+					if foods_var is Array:
+						for f_item: Variant in (foods_var as Array):
+							if StorageManager.get_item_count(String(f_item)) > 0:
+								zoo_alerts += 1
+								break
 							
 			if zoo_alerts > 0:
 				badge_zoo.visible = true
@@ -3274,48 +3266,30 @@ func _render_zoo_cards(vbox_cards: VBoxContainer, lbl_puzzle: Label, lbl_attr: L
 	if farm != null and farm.get("zoo_manager") != null:
 		zoo_mgr = farm.get("zoo_manager") as ZooManager
 		
-	var zoo_list: Array[Dictionary] = [
-		{
-			"id": "zoo_capybara",
-			"name": "Capybara 🍊",
-			"title": "Hồ Capybara",
-			"foods": "Cà Rốt / Bó Cỏ Dinh Dưỡng",
-			"food_keys": ["carrot", "sanctuary_feed"],
-			"pieces": 1,
-			"gold": 200,
-			"attr": 30
-		},
-		{
-			"id": "zoo_panda",
-			"name": "Gấu Trúc 🐼",
-			"title": "Rừng Trúc Gấu Trúc",
-			"foods": "Táo / Mía Đường / Bó Cỏ Dinh Dưỡng",
-			"food_keys": ["apple", "sugarcane", "sanctuary_feed"],
-			"pieces": 2,
-			"gold": 350,
-			"attr": 35
-		},
-		{
-			"id": "zoo_penguin",
-			"name": "Chim Cánh Cụt 🐧",
-			"title": "Bờ Đá Chim Cánh Cụt",
-			"foods": "Cá Chép / Cá Vược / Bó Cỏ Dinh Dưỡng",
-			"food_keys": ["fish_carp", "fish_bass", "sanctuary_feed"],
-			"pieces": 2,
-			"gold": 400,
-			"attr": 40
-		},
-		{
-			"id": "zoo_giraffe",
-			"name": "Hươu Cao Cổ 🦒",
-			"title": "Thảo Nguyên Hươu Cao Cổ",
-			"foods": "Lúa Mì / Bó Cỏ Dinh Dưỡng",
-			"food_keys": ["wheat", "sanctuary_feed"],
-			"pieces": 3,
-			"gold": 500,
-			"attr": 45
-		}
-	]
+	var zoo_list: Array[Dictionary] = []
+	for enc_cfg: Dictionary in DataManager.get_zoo_enclosures():
+		var raw_pieces: Variant = enc_cfg.get("puzzle_piece_cost", null)
+		if raw_pieces == null:
+			continue
+		var food_keys: Array[String] = []
+		var food_names: Array[String] = []
+		var foods_var: Variant = enc_cfg.get("foods", [])
+		if foods_var is Array:
+			for f_item: Variant in (foods_var as Array):
+				var f_id: String = String(f_item)
+				food_keys.append(f_id)
+				food_names.append(DataManager.get_item_display_name(f_id))
+		var raw_gold: Variant = enc_cfg.get("cost_gold", 0)
+		zoo_list.append({
+			"id": String(enc_cfg.get("id", "")),
+			"name": String(enc_cfg.get("animal_name", enc_cfg.get("name", ""))),
+			"title": String(enc_cfg.get("name", "")),
+			"foods": " / ".join(food_names),
+			"food_keys": food_keys,
+			"pieces": int(raw_pieces),
+			"gold": int(raw_gold) if raw_gold != null else 0,
+			"attr": int(enc_cfg.get("attraction_score", 30))
+		})
 	
 	for z in zoo_list:
 		vbox_cards.add_child(_build_zoo_card(z, zoo_mgr, vbox_cards, lbl_puzzle, lbl_attr))

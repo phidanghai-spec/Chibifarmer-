@@ -1,13 +1,13 @@
 # scripts/core/level_progression_manager.gd
-# Manages the full progression roadmap from Level 1 to Level 33 for Web & Desktop.
+# Manages the full progression roadmap from Level 1 to Level 33 using data/*.json as single source of truth.
 extends Node
 class_name LevelProgressionManager
 
-const UNLOCK_ROADMAP: Dictionary = {
+const BASE_FIELD_PLOTS: int = 6
+
+const LEVEL_METADATA: Dictionary = {
 	1: {
 		"title": "Tập Sự Làm Nông",
-		"crops": ["Lúa Mì (Wheat)"],
-		"buildings": ["6 Ô Ruộng Đầu Tiên", "Chuồng Gà Đẻ Trứng", "Máy Nghiền Cám"],
 		"gold_reward": 100,
 		"diamonds_reward": 2,
 		"coins_reward": 50,
@@ -15,8 +15,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	2: {
 		"title": "Mở Rộng Mùa Vụ",
-		"crops": ["Ngô Vàng (Corn)"],
-		"buildings": ["+2 Ô Ruộng Mới"],
 		"gold_reward": 120,
 		"diamonds_reward": 2,
 		"coins_reward": 20,
@@ -24,8 +22,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	3: {
 		"title": "Hương Vị Bánh Mì",
-		"crops": ["Cà Rốt (Carrot)"],
-		"buildings": ["Lò Nướng Bánh Mì"],
 		"gold_reward": 150,
 		"diamonds_reward": 2,
 		"coins_reward": 30,
@@ -33,8 +29,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	4: {
 		"title": "Nông Nghiệp Xanh",
-		"crops": ["Đậu Nành (Soybean)"],
-		"buildings": ["+2 Ô Ruộng Mới"],
 		"gold_reward": 180,
 		"diamonds_reward": 2,
 		"coins_reward": 25,
@@ -42,8 +36,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	5: {
 		"title": "Đồng Cỏ Sữa Tươi",
-		"crops": [],
-		"buildings": ["Chuồng Bò Sữa 🐄", "Sạp Hàng Ven Đường 🏪"],
 		"gold_reward": 250,
 		"diamonds_reward": 3,
 		"coins_reward": 50,
@@ -51,8 +43,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	6: {
 		"title": "Giao Thương Đường Dài",
-		"crops": ["Mía Đường (Sugarcane)"],
-		"buildings": ["Bến Đơn Xe Tải 🚚"],
 		"gold_reward": 300,
 		"diamonds_reward": 3,
 		"coins_reward": 60,
@@ -60,8 +50,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	7: {
 		"title": "Vườn Hoa Hướng Dương",
-		"crops": ["Hoa Hướng Dương (Sunflower)"],
-		"buildings": ["Hàng Rào Gỗ Trắng Decor"],
 		"gold_reward": 320,
 		"diamonds_reward": 2,
 		"coins_reward": 40,
@@ -69,8 +57,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	8: {
 		"title": "Bếp Bánh Ngọt Ngào",
-		"crops": ["Cà Chua (Tomato)"],
-		"buildings": ["Lò Bánh Ngọt 🍰"],
 		"gold_reward": 350,
 		"diamonds_reward": 3,
 		"coins_reward": 50,
@@ -78,8 +64,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	9: {
 		"title": "Trang Trại Đa Dạng",
-		"crops": [],
-		"buildings": ["Chuồng Heo Lấy Thịt 🐖", "+2 Ô Ruộng Mới"],
 		"gold_reward": 400,
 		"diamonds_reward": 3,
 		"coins_reward": 60,
@@ -87,8 +71,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	10: {
 		"title": "Đầm Câu Cá Sinh Thái",
-		"crops": ["Dâu Tây (Strawberry)"],
-		"buildings": ["Đầm Câu Cá Tự Nhiên 🎣"],
 		"gold_reward": 500,
 		"diamonds_reward": 5,
 		"coins_reward": 100,
@@ -96,8 +78,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	11: {
 		"title": "Khai Trương Sở Thú Bờ Đông",
-		"crops": ["Cá Chép (Carp)"],
-		"buildings": ["Cầu Gỗ Qua Sông 🌉", "Hồ Capybara 🍊 (Sở Thú)"],
 		"gold_reward": 600,
 		"diamonds_reward": 5,
 		"coins_reward": 150,
@@ -105,8 +85,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	12: {
 		"title": "Vườn Cây Táo Đỏ",
-		"crops": ["Cây Táo Đỏ (Apple Tree)"],
-		"buildings": ["+4 Ô Ruộng Mới"],
 		"gold_reward": 650,
 		"diamonds_reward": 3,
 		"coins_reward": 80,
@@ -114,8 +92,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	13: {
 		"title": "Quầy Nước Mát Lạnh",
-		"crops": [],
-		"buildings": ["Quầy Pha Chế Nước Ép 🍹"],
 		"gold_reward": 700,
 		"diamonds_reward": 4,
 		"coins_reward": 100,
@@ -123,8 +99,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	14: {
 		"title": "Hương Sắc Oải Hương",
-		"crops": ["Hoa Oải Hương (Lavender)"],
-		"buildings": ["Ghế Nghỉ Gỗ Công Viên"],
 		"gold_reward": 750,
 		"diamonds_reward": 3,
 		"coins_reward": 100,
@@ -132,8 +106,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	15: {
 		"title": "Bảo Tồn Gấu Trúc Quý",
-		"crops": [],
-		"buildings": ["Rừng Trúc Gấu Trúc 🐼 (Sở Thú)"],
 		"gold_reward": 850,
 		"diamonds_reward": 6,
 		"coins_reward": 200,
@@ -141,8 +113,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	16: {
 		"title": "Lễ Hội Bí Ngô Vàng",
-		"crops": ["Bí Đỏ Khổng Lồ (Pumpkin)"],
-		"buildings": ["Bù Nhìn Rơm & Ụ Rơm Vàng Decor"],
 		"gold_reward": 900,
 		"diamonds_reward": 4,
 		"coins_reward": 120,
@@ -150,8 +120,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	17: {
 		"title": "Mở Rộng Kho Chứa",
-		"crops": [],
-		"buildings": ["Nâng Cấp Kho Silo & Barn (+50 Sức chứa)"],
 		"gold_reward": 950,
 		"diamonds_reward": 4,
 		"coins_reward": 150,
@@ -159,8 +127,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	18: {
 		"title": "Quầy Lưu Niệm Sở Thú",
-		"crops": ["Cá Hồi Vàng (Salmon)"],
-		"buildings": ["Quầy Quà Lưu Niệm Sở Thú 🎁"],
 		"gold_reward": 1000,
 		"diamonds_reward": 5,
 		"coins_reward": 250,
@@ -168,8 +134,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	19: {
 		"title": "Xứ Sở Băng Tuyết",
-		"crops": [],
-		"buildings": ["Bờ Đá Chim Cánh Cụt 🐧 (Sở Thú)"],
 		"gold_reward": 1100,
 		"diamonds_reward": 6,
 		"coins_reward": 300,
@@ -177,8 +141,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	20: {
 		"title": "Vườn Hồng Tình Yêu",
-		"crops": ["Hoa Hồng Đỏ (Red Rose)"],
-		"buildings": ["Cổng Hoa Vòm Lãng Mạn"],
 		"gold_reward": 1200,
 		"diamonds_reward": 5,
 		"coins_reward": 200,
@@ -186,8 +148,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	21: {
 		"title": "Mở Rộng Thổ Nhưỡng",
-		"crops": [],
-		"buildings": ["+4 Ô Ruộng Mới (Tổng 18 Ô)"],
 		"gold_reward": 1300,
 		"diamonds_reward": 4,
 		"coins_reward": 180,
@@ -195,8 +155,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	22: {
 		"title": "Cây Trái Nhiệt Đới",
-		"crops": ["Cây Xoài Cát (Mango Tree)"],
-		"buildings": ["Đèn Lồng Công Viên Chiếu Sáng"],
 		"gold_reward": 1400,
 		"diamonds_reward": 5,
 		"coins_reward": 220,
@@ -204,8 +162,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	23: {
 		"title": "Điểm Hấp Dẫn Bùng Nổ",
-		"crops": [],
-		"buildings": ["Đài Phun Nước Bờ Đông ⛲"],
 		"gold_reward": 1500,
 		"diamonds_reward": 5,
 		"coins_reward": 300,
@@ -213,8 +169,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	24: {
 		"title": "Thảo Nguyên Phi Châu",
-		"crops": [],
-		"buildings": ["Thảo Nguyên Hươu Cao Cổ 🦒 (Sở Thú)"],
 		"gold_reward": 1650,
 		"diamonds_reward": 8,
 		"coins_reward": 400,
@@ -222,8 +176,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	25: {
 		"title": "Nông Trại Tiêu Biểu",
-		"crops": [],
-		"buildings": ["Bảng Vinh Danh Nông Trại 🏆"],
 		"gold_reward": 1800,
 		"diamonds_reward": 6,
 		"coins_reward": 350,
@@ -231,8 +183,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	26: {
 		"title": "Canh Tác Đỉnh Cao",
-		"crops": [],
-		"buildings": ["+4 Ô Ruộng Mới (Tổng 22 Ô)"],
 		"gold_reward": 2000,
 		"diamonds_reward": 6,
 		"coins_reward": 300,
@@ -240,8 +190,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	27: {
 		"title": "Đại Kho Lương Thực",
-		"crops": [],
-		"buildings": ["Nâng Cấp Kho Silo & Barn (+100 Sức chứa)"],
 		"gold_reward": 2200,
 		"diamonds_reward": 8,
 		"coins_reward": 400,
@@ -249,8 +197,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	28: {
 		"title": "Bay Cùng Khinh Khí Cầu",
-		"crops": [],
-		"buildings": ["Khinh Khí Cầu Rực Rỡ 🎈 (Sở Thú)"],
 		"gold_reward": 2500,
 		"diamonds_reward": 10,
 		"coins_reward": 600,
@@ -258,8 +204,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	29: {
 		"title": "Chuyên Gia Chăm Thú",
-		"crops": [],
-		"buildings": ["Hệ Thống Thức Ăn Nhanh Sở Thú"],
 		"gold_reward": 2700,
 		"diamonds_reward": 8,
 		"coins_reward": 500,
@@ -267,8 +211,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	30: {
 		"title": "Vùng Đất Thiên Đường",
-		"crops": [],
-		"buildings": ["Tượng Vàng Nông Dân Chibi 🗿"],
 		"gold_reward": 3000,
 		"diamonds_reward": 12,
 		"coins_reward": 800,
@@ -276,8 +218,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	31: {
 		"title": "Đại Thương Hội Nông Sản",
-		"crops": [],
-		"buildings": ["Sạp Hàng Mở Rộng 6 Ô Trưng Bày"],
 		"gold_reward": 3300,
 		"diamonds_reward": 10,
 		"coins_reward": 700,
@@ -285,8 +225,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	32: {
 		"title": "Bậc Thầy Nông Nghiệp",
-		"crops": [],
-		"buildings": ["+2 Ô Ruộng Tối Đa (Tổng 24 Ô Đất)"],
 		"gold_reward": 3600,
 		"diamonds_reward": 12,
 		"coins_reward": 900,
@@ -294,8 +232,6 @@ const UNLOCK_ROADMAP: Dictionary = {
 	},
 	33: {
 		"title": "Đại Điền Chủ Hoàng Gia",
-		"crops": [],
-		"buildings": ["Danh Hiệu Đại Điền Chủ 👑", "Huy Hiệu Vàng Vĩnh Viễn", "Kho Hàng Sức Chứa Gấp Đôi"],
 		"gold_reward": 5000,
 		"diamonds_reward": 25,
 		"coins_reward": 2000,
@@ -303,51 +239,147 @@ const UNLOCK_ROADMAP: Dictionary = {
 	}
 }
 
-static func get_unlock_info(lvl: int) -> Dictionary:
-	if UNLOCK_ROADMAP.has(lvl):
-		return UNLOCK_ROADMAP[lvl] as Dictionary
+static func _read_json_static(file_path: String) -> Dictionary:
+	if not FileAccess.file_exists(file_path):
+		return {}
+	var f: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	if f == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if parsed is Dictionary:
+		return parsed as Dictionary
+	return {}
+
+static func _get_dm_sources() -> Dictionary:
+	var ml: MainLoop = Engine.get_main_loop()
+	if ml is SceneTree:
+		var dm: Node = (ml as SceneTree).root.get_node_or_null("DataManager")
+		if dm != null:
+			var c_dict: Variant = dm.get("crops")
+			var b_dict: Variant = dm.get("buildings")
+			var r_dict: Variant = dm.get("level_rewards")
+			if c_dict is Dictionary and not (c_dict as Dictionary).is_empty() and b_dict is Dictionary and not (b_dict as Dictionary).is_empty():
+				return {
+					"crops": c_dict as Dictionary,
+					"buildings": b_dict as Dictionary,
+					"level_rewards": r_dict as Dictionary if r_dict is Dictionary else {}
+				}
 	return {
-		"title": "Cấp Độ Mới",
-		"crops": [],
-		"buildings": ["Thưởng Thăng Cấp"],
-		"gold_reward": 150 + lvl * 25,
-		"diamonds_reward": 2,
-		"coins_reward": 50,
-		"desc": "Tiếp tục phát triển nông trại để mở khóa thêm nhiều điều bất ngờ!"
+		"crops": _read_json_static("res://data/crops.json"),
+		"buildings": _read_json_static("res://data/buildings.json"),
+		"level_rewards": _read_json_static("res://data/level_rewards.json")
+	}
+
+static func get_total_field_plots_at_level(lvl: int) -> int:
+	var sources: Dictionary = _get_dm_sources()
+	var rewards: Dictionary = sources.get("level_rewards", {}) as Dictionary
+	var total: int = BASE_FIELD_PLOTS
+	var expansions: Variant = rewards.get("field_plot_expansion", [])
+	if expansions is Array:
+		for entry: Variant in (expansions as Array):
+			if entry is Dictionary:
+				var d: Dictionary = entry as Dictionary
+				if int(d.get("level", 0)) <= lvl:
+					total += int(d.get("add", 0))
+	return total
+
+static func get_unlock_info(lvl: int) -> Dictionary:
+	var meta: Dictionary = {}
+	if LEVEL_METADATA.has(lvl):
+		meta = LEVEL_METADATA[lvl] as Dictionary
+	else:
+		meta = {
+			"title": "Cấp Độ %d" % lvl,
+			"desc": "Tiếp tục phát triển nông trại du lịch!",
+			"gold_reward": 100 + lvl * 25,
+			"diamonds_reward": 1,
+			"coins_reward": 10 + lvl * 5
+		}
+	var sources: Dictionary = _get_dm_sources()
+	var crops_data: Dictionary = sources.get("crops", {}) as Dictionary
+	var buildings_data: Dictionary = sources.get("buildings", {}) as Dictionary
+	var rewards_data: Dictionary = sources.get("level_rewards", {}) as Dictionary
+	
+	var unlock_crops: Array[String] = []
+	for c_key: Variant in crops_data:
+		var c_id: String = String(c_key)
+		if c_id.ends_with("_seed"):
+			continue
+		var c_dict: Dictionary = crops_data[c_key] as Dictionary
+		if int(c_dict.get("unlock_level", 1)) == lvl:
+			unlock_crops.append(String(c_dict.get("name", c_id)))
+	
+	var unlock_buildings: Array[String] = []
+	for b_key: Variant in buildings_data:
+		var b_id: String = String(b_key)
+		var b_dict: Dictionary = buildings_data[b_key] as Dictionary
+		if int(b_dict.get("unlock_level", 1)) == lvl:
+			var b_name: String = String(b_dict.get("name", b_id))
+			if String(b_dict.get("category", "")) == "zoo_enclosure":
+				var p_cost: Variant = b_dict.get("puzzle_piece_cost", null)
+				if p_cost != null:
+					unlock_buildings.append("Khu Sở Thú: %s (%d Mảnh Ghép)" % [b_name, int(p_cost)])
+				else:
+					unlock_buildings.append("Khu Sở Thú: %s" % b_name)
+			else:
+				unlock_buildings.append(b_name)
+	
+	var plot_expansions: Variant = rewards_data.get("field_plot_expansion", [])
+	if plot_expansions is Array:
+		for entry: Variant in (plot_expansions as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
+				var add_plots: int = int((entry as Dictionary).get("add", 0))
+				var total_plots: int = get_total_field_plots_at_level(lvl)
+				unlock_buildings.append("+%d Ô Ruộng Mới (Tổng %d Ô)" % [add_plots, total_plots])
+	
+	var cap_expansions: Variant = rewards_data.get("silo_barn_capacity", [])
+	if cap_expansions is Array:
+		for entry: Variant in (cap_expansions as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
+				unlock_buildings.append("+%d Sức Chứa Kho Silo & Barn" % int((entry as Dictionary).get("add", 0)))
+	
+	var double_barn: Variant = rewards_data.get("barn_capacity_double", [])
+	if double_barn is Array:
+		for entry: Variant in (double_barn as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
+				unlock_buildings.append("Nhân Đôi Sức Chứa Kho Barn (x2)")
+	
+	var stall_slots: Variant = rewards_data.get("stall_display_slots", [])
+	if stall_slots is Array:
+		for entry: Variant in (stall_slots as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
+				unlock_buildings.append("+%d Ô Trưng Bày Sạp Hàng" % int((entry as Dictionary).get("add", 0)))
+	
+	var title_rewards: Variant = rewards_data.get("titles", [])
+	if title_rewards is Array:
+		for entry: Variant in (title_rewards as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
+				unlock_buildings.append("Danh Hiệu: %s" % String((entry as Dictionary).get("name", "")))
+	
+	return {
+		"title": String(meta.get("title", "Cấp Độ %d" % lvl)),
+		"desc": String(meta.get("desc", "")),
+		"crops": unlock_crops,
+		"buildings": unlock_buildings,
+		"gold_reward": int(meta.get("gold_reward", 100 + lvl * 25)),
+		"diamonds_reward": int(meta.get("diamonds_reward", 1)),
+		"coins_reward": int(meta.get("coins_reward", 10 + lvl * 5))
 	}
 
 static func is_crop_unlocked(crop_id: String, cur_level: int) -> bool:
-	match crop_id:
-		"wheat": return cur_level >= 1
-		"corn": return cur_level >= 2
-		"carrot": return cur_level >= 3
-		"soybean": return cur_level >= 4
-		"sugarcane": return cur_level >= 6
-		"sunflower": return cur_level >= 7
-		"tomato": return cur_level >= 8
-		"strawberry": return cur_level >= 10
-		"apple_tree": return cur_level >= 12
-		"lavender": return cur_level >= 14
-		"pumpkin": return cur_level >= 16
-		"rose": return cur_level >= 20
-		"mango_tree": return cur_level >= 22
-		_: return true
+	var crops_data: Dictionary = _get_dm_sources().get("crops", {}) as Dictionary
+	if crops_data.has(crop_id):
+		var c_dict: Dictionary = crops_data[crop_id] as Dictionary
+		return cur_level >= int(c_dict.get("unlock_level", 1))
+	return true
 
 static func is_building_unlocked(b_id: String, cur_level: int) -> bool:
-	match b_id:
-		"bakery": return cur_level >= 3
-		"cow_pen": return cur_level >= 5
-		"roadside_shop": return cur_level >= 5
-		"truck": return cur_level >= 6
-		"cake_oven": return cur_level >= 8
-		"pig_pen": return cur_level >= 9
-		"fishing": return cur_level >= 10
-		"zoo_bridge": return cur_level >= 11
-		"zoo_capybara": return cur_level >= 11
-		"juice_press": return cur_level >= 13
-		"zoo_panda": return cur_level >= 15
-		"zoo_shop": return cur_level >= 18
-		"zoo_penguin": return cur_level >= 19
-		"zoo_giraffe": return cur_level >= 24
-		"hot_air_balloon": return cur_level >= 28
-		_: return true
+	var buildings_data: Dictionary = _get_dm_sources().get("buildings", {}) as Dictionary
+	var lookup_id: String = b_id
+	if not buildings_data.has(lookup_id) and lookup_id == "cow_pen":
+		lookup_id = "cow_pasture"
+	if buildings_data.has(lookup_id):
+		var b_dict: Dictionary = buildings_data[lookup_id] as Dictionary
+		return cur_level >= int(b_dict.get("unlock_level", 1))
+	return true

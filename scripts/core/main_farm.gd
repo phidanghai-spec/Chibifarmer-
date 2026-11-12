@@ -1448,7 +1448,7 @@ func start_building_placement(building_id: String, cost: int, req_materials: Dic
 		elif building_id == "bakery":
 			tex_key = "bakery"
 			spr_sz = Vector2(88.0, 88.0)
-		elif building_id == "cow_pen" or building_id == "cow":
+		elif building_id == "cow_pen" or building_id == "cow_pasture" or building_id == "cow":
 			tex_key = "cow"
 			spr_sz = Vector2(76.0, 76.0)
 		elif building_id == "pig_pen" or building_id == "pig":
@@ -1490,7 +1490,7 @@ func start_building_placement(building_id: String, cost: int, req_materials: Dic
 		_update_ghost_building_preview(get_global_mouse_position())
 
 func _get_pending_build_tile_size(b_id: String) -> Vector2i:
-	if b_id in ["cow_pen", "cow", "pig_pen", "pig", "sheep_pen", "sheep"]:
+	if b_id in ["cow_pen", "cow_pasture", "cow", "pig_pen", "pig", "sheep_pen", "sheep"]:
 		return Vector2i(4, 3)
 	if b_id in ["mini_zoo", "feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
 		return Vector2i(3, 3)
@@ -1581,7 +1581,7 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 			_spawn_building_prop("building_mini_zoo", cell, Vector2i(3, 3), Vector2(96, 96))
 		elif _pending_build_id in ["feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
 			_spawn_production_machine(_pending_build_id, cell)
-		elif _pending_build_id in ["cow_pen", "cow"]:
+		elif _pending_build_id in ["cow_pen", "cow_pasture", "cow"]:
 			_spawn_animal_pen("cow", cell, 2)
 		elif _pending_build_id in ["pig_pen", "pig"]:
 			_spawn_animal_pen("pig", cell, 2)
@@ -1628,7 +1628,7 @@ func _try_activate_preplaced_building(b_id: String, cell: Vector2i, t_size: Vect
 						if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(c.x, c.y):
 							GridManager.astar_grid.set_point_solid(c, true)
 				return true
-	elif b_id in ["cow_pen", "cow", "pig_pen", "pig", "sheep_pen", "sheep"]:
+	elif b_id in ["cow_pen", "cow_pasture", "cow", "pig_pen", "pig", "sheep_pen", "sheep"]:
 		var target_anim: String = SaveManager._normalize_building_id(b_id)
 		for pen: AnimalPen in _animal_pens:
 			if is_instance_valid(pen) and pen.animal_id == target_anim and not pen.visible:

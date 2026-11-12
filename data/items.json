@@ -94,7 +94,7 @@
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 15,
-    "unlock_level": 1,
+    "unlock_level": 12,
     "storage_type": "silo",
     "description": "Táo đỏ tươi mọng nước, thu hoạch từ cây táo trong vườn."
   },
@@ -105,7 +105,7 @@
     "harvest_yield": 2,
     "xp_reward": 5,
     "base_price": 22,
-    "unlock_level": 1,
+    "unlock_level": 12,
     "storage_type": "silo",
     "description": "Xoài chín thơm ngọt, thu hoạch từ cây xoài trong vườn."
   },
@@ -116,7 +116,7 @@
     "harvest_yield": 1,
     "xp_reward": 1,
     "base_price": 8,
-    "unlock_level": 1,
+    "unlock_level": 12,
     "storage_type": "silo",
     "description": "Hạt giống cây táo dùng để gieo trồng cây táo mới."
   },
@@ -127,7 +127,7 @@
     "harvest_yield": 1,
     "xp_reward": 1,
     "base_price": 10,
-    "unlock_level": 1,
+    "unlock_level": 12,
     "storage_type": "silo",
     "description": "Hạt giống cây xoài dùng để gieo trồng cây xoài mới."
   },

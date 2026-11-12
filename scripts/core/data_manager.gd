@@ -8,6 +8,7 @@ var recipes: Dictionary = {}
 var fishes: Dictionary = {}
 var visitors: Dictionary = {}
 var avatar_catalog: Dictionary = {}
+var level_rewards: Dictionary = {}
 
 const ITEMS_PATH: String = "res://data/items.json"
 const CROPS_PATH: String = "res://data/crops.json"
@@ -17,6 +18,7 @@ const RECIPES_PATH: String = "res://data/recipes.json"
 const FISHES_PATH: String = "res://data/fishes.json"
 const VISITORS_PATH: String = "res://data/visitors.json"
 const AVATAR_CATALOG_PATH: String = "res://data/avatar_catalog.json"
+const LEVEL_REWARDS_PATH: String = "res://data/level_rewards.json"
 
 func _ready() -> void:
 	load_all_data()
@@ -30,6 +32,7 @@ func load_all_data() -> void:
 	fishes = _load_json(FISHES_PATH)
 	visitors = _load_json(VISITORS_PATH)
 	avatar_catalog = _load_json(AVATAR_CATALOG_PATH)
+	level_rewards = _load_json(LEVEL_REWARDS_PATH)
 	print("[DataManager] Successfully loaded all game data configurations.")
 
 func _load_json(file_path: String) -> Dictionary:
@@ -73,6 +76,42 @@ func get_animal(animal_id: String) -> Dictionary:
 
 func get_building(building_id: String) -> Dictionary:
 	return buildings.get(building_id, {}) as Dictionary
+
+func get_building_unlock_level(building_id: String, fallback: int = 1) -> int:
+	if buildings.has(building_id):
+		var b_dict: Dictionary = buildings[building_id] as Dictionary
+		return int(b_dict.get("unlock_level", fallback))
+	return fallback
+
+func get_level_rewards() -> Dictionary:
+	return level_rewards
+
+func get_zoo_enclosures() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for b_key: Variant in buildings:
+		var b_dict: Dictionary = buildings[b_key] as Dictionary
+		if String(b_dict.get("category", "")) == "zoo_enclosure":
+			result.append(b_dict)
+	return result
+
+func get_field_plot_add_at_level(target_level: int) -> int:
+	var expansions: Variant = level_rewards.get("field_plot_expansion", [])
+	if expansions is Array:
+		for entry: Variant in (expansions as Array):
+			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == target_level:
+				return int((entry as Dictionary).get("add", 0))
+	return 0
+
+func get_total_field_plots_at_level(target_level: int, base_plots: int = 6) -> int:
+	var total: int = base_plots
+	var expansions: Variant = level_rewards.get("field_plot_expansion", [])
+	if expansions is Array:
+		for entry: Variant in (expansions as Array):
+			if entry is Dictionary:
+				var d: Dictionary = entry as Dictionary
+				if int(d.get("level", 0)) <= target_level:
+					total += int(d.get("add", 0))
+	return total
 
 func get_recipe(recipe_id: String) -> Dictionary:
 	return recipes.get(recipe_id, {}) as Dictionary

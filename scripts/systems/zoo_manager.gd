@@ -133,7 +133,12 @@ func _setup_zoo_sanctuary() -> void:
 	if hot_air_balloon == null:
 		hot_air_balloon = Node2D.new()
 		hot_air_balloon.name = "HotAirBalloon"
-		hot_air_balloon.position = Vector2(1475.0, 310.0)
+		var balloon_cfg: Dictionary = DataManager.get_building("zoo_balloon")
+		var b_pos_var: Variant = balloon_cfg.get("pos", [1475.0, 310.0])
+		if b_pos_var is Array and (b_pos_var as Array).size() >= 2:
+			hot_air_balloon.position = Vector2(float(b_pos_var[0]), float(b_pos_var[1]))
+		else:
+			hot_air_balloon.position = Vector2(1475.0, 310.0)
 		hot_air_balloon.y_sort_enabled = true
 		hot_air_balloon.add_to_group("interactable")
 		
@@ -161,7 +166,7 @@ func _setup_zoo_sanctuary() -> void:
 		
 		# Balloon Label
 		var lbl_b: Label = Label.new()
-		lbl_b.text = "🎈 Khinh Khí Cầu"
+		lbl_b.text = "🎈 " + String(balloon_cfg.get("name", "Khinh Khí Cầu"))
 		lbl_b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_b.position = Vector2(-60.0, 18.0)
@@ -183,68 +188,35 @@ func _setup_zoo_sanctuary() -> void:
 		
 		add_child(hot_air_balloon)
 
-	# 4. Spawn the 4 Large Sanctuary Enclosures in a 2x2 Connected Park
-	var zoo_configs: Array[Dictionary] = [
-		{
-			"id": "zoo_capybara",
-			"name": "Capybara",
-			"title": "Hồ Capybara 🍊",
-			"pos": Vector2(1340.0, 210.0),
-			"foods": ["carrot", "sanctuary_feed"],
-			"pieces": 1,
-			"gold": 200,
-			"attraction": 30
-		},
-		{
-			"id": "zoo_panda",
-			"name": "Gấu Trúc",
-			"title": "Rừng Trúc Gấu Trúc 🐼",
-			"pos": Vector2(1610.0, 210.0),
-			"foods": ["apple", "sugarcane", "sanctuary_feed"],
-			"pieces": 2,
-			"gold": 350,
-			"attraction": 35
-		},
-		{
-			"id": "zoo_penguin",
-			"name": "Chim Cánh Cụt",
-			"title": "Bờ Đá Chim Cánh Cụt 🐧",
-			"pos": Vector2(1340.0, 410.0),
-			"foods": ["fish_carp", "fish_bass", "sanctuary_feed"],
-			"pieces": 2,
-			"gold": 400,
-			"attraction": 40
-		},
-		{
-			"id": "zoo_giraffe",
-			"name": "Hươu Cao Cổ",
-			"title": "Thảo Nguyên Hươu Cao Cổ 🦒",
-			"pos": Vector2(1610.0, 410.0),
-			"foods": ["wheat", "sanctuary_feed"],
-			"pieces": 3,
-			"gold": 500,
-			"attraction": 45
-		}
-	]
-
+	# 4. Spawn Sanctuary Enclosures from DataManager (data/buildings.json)
+	var zoo_configs: Array[Dictionary] = DataManager.get_zoo_enclosures()
 	for cfg: Dictionary in zoo_configs:
-		var a_id: String = cfg["id"]
-		if not enclosures.has(a_id):
-			var enc: ZooEnclosure = ZooEnclosureClass.new()
-			enc.name = "Enclosure_" + a_id
-			enc.animal_id = a_id
-			enc.animal_name = cfg["name"]
-			enc.enclosure_title = cfg["title"]
-			enc.position = cfg["pos"]
-			var f_list: Array[String] = []
-			for f_item in cfg["foods"]:
+		var raw_pieces: Variant = cfg.get("puzzle_piece_cost", null)
+		if raw_pieces == null:
+			continue
+		var a_id: String = String(cfg.get("id", ""))
+		if a_id.is_empty() or enclosures.has(a_id):
+			continue
+		var enc: ZooEnclosure = ZooEnclosureClass.new()
+		enc.name = "Enclosure_" + a_id
+		enc.animal_id = a_id
+		enc.animal_name = String(cfg.get("animal_name", cfg.get("name", a_id)))
+		enc.enclosure_title = String(cfg.get("title", cfg.get("name", a_id)))
+		var pos_var: Variant = cfg.get("pos", [0.0, 0.0])
+		if pos_var is Array and (pos_var as Array).size() >= 2:
+			enc.position = Vector2(float(pos_var[0]), float(pos_var[1]))
+		var f_list: Array[String] = []
+		var foods_var: Variant = cfg.get("foods", [])
+		if foods_var is Array:
+			for f_item: Variant in (foods_var as Array):
 				f_list.append(String(f_item))
-			enc.favorite_foods = f_list
-			enc.unlock_pieces_cost = cfg["pieces"]
-			enc.unlock_gold_cost = cfg["gold"]
-			enc.base_attraction = cfg["attraction"]
-			add_child(enc)
-			enclosures[a_id] = enc
+		enc.favorite_foods = f_list
+		enc.unlock_pieces_cost = int(raw_pieces)
+		var raw_gold: Variant = cfg.get("cost_gold", 0)
+		enc.unlock_gold_cost = int(raw_gold) if raw_gold != null else 0
+		enc.base_attraction = int(cfg.get("attraction_score", 30))
+		add_child(enc)
+		enclosures[a_id] = enc
 
 	call_deferred("_setup_zoo_grid_barriers_and_pathways")
 	call_deferred("_clear_overlapping_scenery")
@@ -289,12 +261,13 @@ func _setup_zoo_grid_barriers_and_pathways() -> void:
 
 	# 2. Mark the 4 Enclosures as Solid Obstacles (192x128px footprint)
 	# Leaving the central sand avenues open
-	var enclosure_centers: Array[Vector2] = [
-		Vector2(1340.0, 210.0), # Capybara
-		Vector2(1610.0, 210.0), # Panda
-		Vector2(1340.0, 410.0), # Penguin
-		Vector2(1610.0, 410.0)  # Giraffe
-	]
+	var enclosure_centers: Array[Vector2] = []
+	for cfg: Dictionary in DataManager.get_zoo_enclosures():
+		if cfg.get("puzzle_piece_cost", null) == null:
+			continue
+		var pos_var: Variant = cfg.get("pos", [])
+		if pos_var is Array and (pos_var as Array).size() >= 2:
+			enclosure_centers.append(Vector2(float(pos_var[0]), float(pos_var[1])))
 	
 	for center_pos: Vector2 in enclosure_centers:
 		var enc_rect: Rect2 = Rect2(center_pos.x - 96.0, center_pos.y - 64.0, 192.0, 128.0)
