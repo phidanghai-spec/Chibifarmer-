@@ -903,6 +903,8 @@ func _show_level_up_modal(new_level: int) -> void:
 	var title_str: String = String(u_info.get("title", "Tiến Trình Mới"))
 	var desc_str: String = String(u_info.get("desc", ""))
 	var crops: Array = u_info.get("crops", [])
+	var animals: Array = u_info.get("animals", [])
+	var fishes: Array = u_info.get("fishes", [])
 	var buildings: Array = u_info.get("buildings", [])
 	var gold_reward: int = int(u_info.get("gold_reward", 150 + new_level * 25))
 	var dia_reward: int = int(u_info.get("diamonds_reward", 2))
@@ -968,6 +970,10 @@ func _show_level_up_modal(new_level: int) -> void:
 	var unlocks: Array[String] = []
 	for c in crops:
 		unlocks.append("🌱 " + String(c))
+	for a in animals:
+		unlocks.append("🐾 " + String(a))
+	for f in fishes:
+		unlocks.append("🐟 " + String(f))
 	for b in buildings:
 		unlocks.append("🏗️ " + String(b))
 		
@@ -2090,17 +2096,73 @@ func open_build_modal() -> void:
 	grid.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(grid)
 	
-	var catalog: Array[Dictionary] = [
-		{"id": "field_plot", "name": "Ô Ruộng Màu Mỡ", "desc": "Gieo hạt và thu hoạch nông sản", "cost": 10, "icon": "wheat", "materials": {}},
-		{"id": "feed_mill", "name": "Máy Nghiền Cám", "desc": "Nghiền thức ăn cho Gà, Bò, Heo", "cost": 80, "icon": "feed_mill", "materials": {"mat_plank": 2, "mat_bolt": 1}},
-		{"id": "bakery", "name": "Lò Bánh Mì", "desc": "Nướng bánh mì nóng giòn thơm lừng", "cost": 120, "icon": "bakery", "materials": {"mat_brick": 2, "mat_plank": 2}},
-		{"id": "cow_pasture", "name": "Đồng Cỏ Bò", "desc": "Nuôi bò lấy sữa tươi béo ngậy", "cost": 100, "icon": "cow", "materials": {"mat_plank": 3, "mat_bolt": 1}},
-		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
-		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
-		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân ngắm cảnh", "cost": 15, "icon": "wooden_bench", "materials": {}},
-		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan check-in", "cost": 25, "icon": "flowerbed_round", "materials": {}},
-		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "icon": "fountain", "materials": {"mat_brick": 3}}
+	var shop_ids: Array[String] = [
+		"field_plot",
+		"feed_mill",
+		"bakery",
+		"cow_pasture",
+		"juice_stand",
+		"cake_oven",
+		"wooden_bench",
+		"flower_bed",
+		"fountain",
+		"hedge_white",
+		"wood_bridge",
+		"park_bench",
+		"scarecrow",
+		"zoo_shop",
+		"flower_arch",
+		"lantern_park",
+		"fountain_east",
+		"honor_board",
+		"zoo_fastfood",
+		"golden_statue"
 	]
+	
+	var catalog: Array[Dictionary] = []
+	for b_id: String in shop_ids:
+		var b_data: Dictionary = DataManager.get_building(b_id)
+		if b_data.is_empty():
+			continue
+		
+		var icon_key: String = ""
+		var custom_sprite: String = String(b_data.get("sprite", ""))
+		if not custom_sprite.is_empty() and SpriteAtlasManager.has_texture(custom_sprite):
+			icon_key = custom_sprite
+		elif SpriteAtlasManager.has_texture(b_id):
+			icon_key = b_id
+		else:
+			match b_id:
+				"field_plot": icon_key = "wheat"
+				"cow_pasture": icon_key = "cow"
+				"juice_stand": icon_key = "building_juice_stand"
+				"cake_oven": icon_key = "building_cake_oven"
+				"flower_bed": icon_key = "flowerbed_round"
+				"hedge_white": icon_key = "wooden_bench"
+				"wood_bridge": icon_key = "decor_wooden_bench"
+				"flower_arch": icon_key = "flowerbed_round"
+				"honor_board": icon_key = "decor_wooden_bench"
+				"zoo_fastfood": icon_key = "zoo_feed_shop"
+				"golden_statue": icon_key = "fountain"
+				_: icon_key = "decor_wooden_bench"
+		
+		catalog.append({
+			"id": b_id,
+			"name": String(b_data.get("name", b_id.capitalize())),
+			"desc": String(b_data.get("description", "")),
+			"cost_gold": b_data.get("cost_gold", null),
+			"unlock_level": int(b_data.get("unlock_level", 1)),
+			"build_materials": b_data.get("build_materials", {}) as Dictionary,
+			"icon": icon_key
+		})
+	
+	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var lv_a: int = int(a.get("unlock_level", 1))
+		var lv_b: int = int(b.get("unlock_level", 1))
+		if lv_a != lv_b:
+			return lv_a < lv_b
+		return String(a.get("id", "")) < String(b.get("id", ""))
+	)
 	
 	for item in catalog:
 		var card: PanelContainer = _create_build_card(item)
@@ -2144,9 +2206,11 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	vbox.add_child(lbl_name)
 	
 	var b_id: String = String(item.get("id", ""))
-	var cost: int = int(item.get("cost", 0))
-	var req_level: int = DataManager.get_building_unlock_level(b_id, 1)
-	var req_mats: Dictionary = item.get("materials", {}) as Dictionary
+	var raw_cost: Variant = item.get("cost_gold", null)
+	var has_price: bool = (raw_cost != null)
+	var cost: int = int(raw_cost) if has_price else 0
+	var req_level: int = int(item.get("unlock_level", 1))
+	var req_mats: Dictionary = item.get("build_materials", {}) as Dictionary
 	var mat_str_parts: Array[String] = []
 	var has_all_mats: bool = true
 	var missing_mat_msg: String = ""
@@ -2164,7 +2228,11 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 				missing_mat_msg = "Thiếu %s (%d/%d)" % [m_name, cur, needed]
 	
 	var lbl_info: Label = Label.new()
-	var cost_text: String = "Cấp %d | 💰 %d" % [req_level, cost]
+	var cost_text: String = ""
+	if has_price:
+		cost_text = "Cấp %d | 💰 %d" % [req_level, cost]
+	else:
+		cost_text = "Cấp %d | 💰 Chưa có giá" % req_level
 	if not mat_str_parts.is_empty():
 		cost_text += " | " + " ".join(mat_str_parts)
 	lbl_info.text = cost_text
@@ -2176,7 +2244,10 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	btn_buy.custom_minimum_size = Vector2(0, 24)
 	var can_afford_gold: bool = StorageManager.gold >= cost
 	var meets_level: bool = StorageManager.level >= req_level
-	if not meets_level:
+	if not has_price:
+		btn_buy.text = "Chưa có giá"
+		btn_buy.disabled = true
+	elif not meets_level:
 		btn_buy.text = "🔒 Cần Cấp %d" % req_level
 		btn_buy.disabled = true
 	elif not can_afford_gold:

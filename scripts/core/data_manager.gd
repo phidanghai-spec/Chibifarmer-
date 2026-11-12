@@ -94,25 +94,6 @@ func get_zoo_enclosures() -> Array[Dictionary]:
 			result.append(b_dict)
 	return result
 
-func get_field_plot_add_at_level(target_level: int) -> int:
-	var expansions: Variant = level_rewards.get("field_plot_expansion", [])
-	if expansions is Array:
-		for entry: Variant in (expansions as Array):
-			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == target_level:
-				return int((entry as Dictionary).get("add", 0))
-	return 0
-
-func get_total_field_plots_at_level(target_level: int, base_plots: int = 6) -> int:
-	var total: int = base_plots
-	var expansions: Variant = level_rewards.get("field_plot_expansion", [])
-	if expansions is Array:
-		for entry: Variant in (expansions as Array):
-			if entry is Dictionary:
-				var d: Dictionary = entry as Dictionary
-				if int(d.get("level", 0)) <= target_level:
-					total += int(d.get("add", 0))
-	return total
-
 func get_recipe(recipe_id: String) -> Dictionary:
 	return recipes.get(recipe_id, {}) as Dictionary
 

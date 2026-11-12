@@ -7,12 +7,13 @@
       1,
       1
     ],
-    "cost_gold": 1,
+    "cost_gold": 10,
     "build_time_seconds": 0,
     "unlock_level": 1,
     "attraction_score": 1,
     "is_walkable": false,
-    "description": "Mảnh đất màu mỡ để gieo hạt giống và thu hoạch mùa vụ tươi tốt."
+    "description": "Mảnh đất màu mỡ để gieo hạt giống và thu hoạch mùa vụ tươi tốt.",
+    "build_materials": {}
   },
   "path_tile": {
     "id": "path_tile",
@@ -37,13 +38,17 @@
       3,
       3
     ],
-    "cost_gold": 10,
+    "cost_gold": 80,
     "build_time_seconds": 5,
     "unlock_level": 1,
     "attraction_score": 5,
     "queue_slots": 3,
     "is_walkable": false,
-    "description": "Nghiền các loại nông sản hạt thành cám viên dinh dưỡng cho vật nuôi."
+    "description": "Nghiền các loại nông sản hạt thành cám viên dinh dưỡng cho vật nuôi.",
+    "build_materials": {
+      "mat_plank": 2,
+      "mat_bolt": 1
+    }
   },
   "chicken_coop": {
     "id": "chicken_coop",
@@ -85,13 +90,17 @@
       3,
       3
     ],
-    "cost_gold": 20,
+    "cost_gold": 120,
     "build_time_seconds": 10,
     "unlock_level": 2,
     "attraction_score": 8,
     "queue_slots": 3,
     "is_walkable": false,
-    "description": "Lò nướng củi thơm lừng các món bánh nóng hổi."
+    "description": "Lò nướng củi thơm lừng các món bánh nóng hổi.",
+    "build_materials": {
+      "mat_brick": 2,
+      "mat_plank": 2
+    }
   },
   "flower_bed": {
     "id": "flower_bed",
@@ -107,7 +116,8 @@
     "attraction_score": 6,
     "is_walkable": false,
     "description": "Bồn hoa cúc và tulip khoe sắc ngát hương, thu hút bướm lượn và du khách check-in.",
-    "cost_coins": 20
+    "cost_coins": 20,
+    "build_materials": {}
   },
   "wooden_bench": {
     "id": "wooden_bench",
@@ -123,7 +133,8 @@
     "attraction_score": 4,
     "is_walkable": false,
     "description": "Ghế gỗ mộc mạc đặt ven đường cho khách tham quan dừng chân ngắm cảnh.",
-    "cost_coins": 15
+    "cost_coins": 15,
+    "build_materials": {}
   },
   "lure_workbench": {
     "id": "lure_workbench",
@@ -170,7 +181,10 @@
     "attraction_score": 30,
     "is_walkable": false,
     "description": "Đài phun nước bằng cẩm thạch trắng, tâm điểm tham quan tuyệt đẹp của nông trại.",
-    "cost_coins": 80
+    "cost_coins": 80,
+    "build_materials": {
+      "mat_brick": 3
+    }
   },
   "cow_pasture": {
     "id": "cow_pasture",
@@ -182,12 +196,16 @@
       3,
       3
     ],
-    "cost_gold": 50,
+    "cost_gold": 100,
     "build_time_seconds": 10,
     "unlock_level": 6,
     "attraction_score": 10,
     "is_walkable": false,
-    "description": "Đồng cỏ xanh rợp bóng mát cho bầy bò sữa nhai cỏ thảnh thơi."
+    "description": "Đồng cỏ xanh rợp bóng mát cho bầy bò sữa nhai cỏ thảnh thơi.",
+    "build_materials": {
+      "mat_plank": 3,
+      "mat_bolt": 1
+    }
   },
   "dairy": {
     "id": "dairy",
@@ -213,13 +231,18 @@
       3,
       3
     ],
-    "cost_gold": 60,
+    "cost_gold": 150,
     "build_time_seconds": 30,
     "unlock_level": 6,
     "attraction_score": 8,
     "queue_slots": 3,
     "is_walkable": false,
-    "description": "Quầy pha chế các loại nước ép trái cây và sinh tố nhiệt đới mát lạnh."
+    "description": "Quầy pha chế các loại nước ép trái cây và sinh tố nhiệt đới mát lạnh.",
+    "build_materials": {
+      "mat_plank": 2,
+      "mat_bolt": 2,
+      "mat_brick": 2
+    }
   },
   "mini_zoo": {
     "id": "mini_zoo",
@@ -245,13 +268,17 @@
       3,
       3
     ],
-    "cost_gold": 120,
+    "cost_gold": 200,
     "build_time_seconds": 45,
     "unlock_level": 9,
     "attraction_score": 6,
     "queue_slots": 3,
     "is_walkable": false,
-    "description": "Lò nướng chuyên dụng các loại bánh kem dâu tây và bánh ngọt cao cấp."
+    "description": "Lò nướng chuyên dụng các loại bánh kem dâu tây và bánh ngọt cao cấp.",
+    "build_materials": {
+      "mat_brick": 3,
+      "mat_plank": 3
+    }
   },
   "pig_pen": {
     "id": "pig_pen",
@@ -318,115 +345,133 @@
     "is_walkable": false,
     "description": "Cối xay gió cổ tích quay đều trong gió, điểm nhấn du lịch nổi tiếng."
   },
-  "truck_station": {
-    "id": "truck_station",
-    "name": "Bến Đơn Xe Tải",
-    "type": "commercial",
-    "size": [2, 2],
-    "cost_gold": null,
-    "build_time_seconds": 0,
-    "unlock_level": 6,
-    "attraction_score": 10,
-    "is_walkable": false,
-    "sprite_missing": true,
-    "description": "Bến xe tải nhận đơn hàng giao thương kiếm Vàng và XP."
-  },
   "hedge_white": {
     "id": "hedge_white",
     "name": "Hàng Rào Gỗ Trắng",
     "type": "decor",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 7,
     "attraction_score": 5,
     "is_walkable": false,
     "sprite_missing": true,
-    "description": "Hàng rào gỗ trắng thanh lịch trang trí viền lối đi."
+    "description": "Hàng rào gỗ trắng thanh lịch trang trí viền lối đi.",
+    "build_materials": {}
   },
   "wood_bridge": {
     "id": "wood_bridge",
     "name": "Cầu Gỗ Qua Sông",
     "type": "structure",
-    "size": [3, 2],
+    "size": [
+      3,
+      2
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 11,
     "attraction_score": 15,
     "is_walkable": true,
     "sprite_missing": true,
-    "description": "Cầu gỗ nối trang trại sang khu Sở Thú Bờ Đông."
+    "description": "Cầu gỗ nối trang trại sang khu Sở Thú Bờ Đông.",
+    "build_materials": {}
   },
   "park_bench": {
     "id": "park_bench",
     "name": "Ghế Nghỉ Gỗ Công Viên",
     "type": "decor",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 14,
     "attraction_score": 6,
     "is_walkable": false,
     "sprite": "decor_wooden_bench",
-    "description": "Ghế nghỉ gỗ đặt trong công viên hoa cho du khách dừng chân."
+    "description": "Ghế nghỉ gỗ đặt trong công viên hoa cho du khách dừng chân.",
+    "build_materials": {}
   },
   "scarecrow": {
     "id": "scarecrow",
     "name": "Bù Nhìn Rơm & Ụ Rơm Vàng",
     "type": "decor",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 16,
     "attraction_score": 12,
     "is_walkable": false,
     "sprite": "chibi_scarecrow",
-    "description": "Bù nhìn rơm vui nhộn trang trí cho lễ hội thu hoạch bí ngô."
+    "description": "Bù nhìn rơm vui nhộn trang trí cho lễ hội thu hoạch bí ngô.",
+    "build_materials": {}
   },
   "zoo_shop": {
     "id": "zoo_shop",
     "name": "Quầy Quà Lưu Niệm Sở Thú",
     "type": "commercial",
-    "size": [2, 2],
+    "size": [
+      2,
+      2
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 18,
     "attraction_score": 18,
     "is_walkable": false,
     "sprite": "zoo_feed_shop",
-    "description": "Quầy bán đồ lưu niệm Chibi cho khách tham quan Sở Thú."
+    "description": "Quầy bán đồ lưu niệm Chibi cho khách tham quan Sở Thú.",
+    "build_materials": {}
   },
   "flower_arch": {
     "id": "flower_arch",
     "name": "Cổng Hoa Vòm Lãng Mạn",
     "type": "decor",
-    "size": [2, 1],
+    "size": [
+      2,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 20,
     "attraction_score": 25,
     "is_walkable": true,
     "sprite_missing": true,
-    "description": "Cổng hoa hồng vòm lãng mạn nâng tầm điểm check-in du lịch."
+    "description": "Cổng hoa hồng vòm lãng mạn nâng tầm điểm check-in du lịch.",
+    "build_materials": {}
   },
   "lantern_park": {
     "id": "lantern_park",
     "name": "Đèn Lồng Công Viên",
     "type": "decor",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 22,
     "attraction_score": 15,
     "is_walkable": false,
     "sprite": "decor_warm_lantern",
-    "description": "Đèn lồng công viên tỏa ánh sáng ấm áp vào buổi tối."
+    "description": "Đèn lồng công viên tỏa ánh sáng ấm áp vào buổi tối.",
+    "build_materials": {}
   },
   "fountain_east": {
     "id": "fountain_east",
     "name": "Đài Phun Nước Bờ Đông",
     "type": "decor",
-    "size": [2, 2],
+    "size": [
+      2,
+      2
+    ],
     "cost_gold": 150,
     "cost_coins": 80,
     "build_time_seconds": 0,
@@ -434,46 +479,61 @@
     "attraction_score": 30,
     "is_walkable": false,
     "sprite": "fountain",
-    "description": "Đài phun nước mát lành bên Bờ Đông thu hút đông đảo khách VIP."
+    "description": "Đài phun nước mát lành bên Bờ Đông thu hút đông đảo khách VIP.",
+    "build_materials": {
+      "mat_brick": 3
+    }
   },
   "honor_board": {
     "id": "honor_board",
     "name": "Bảng Vinh Danh Nông Trại",
     "type": "decor",
-    "size": [2, 1],
+    "size": [
+      2,
+      1
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 25,
     "attraction_score": 30,
     "is_walkable": false,
     "sprite_missing": true,
-    "description": "Bảng vinh danh trang trại tiêu biểu đạt chuẩn du lịch quốc tế."
+    "description": "Bảng vinh danh trang trại tiêu biểu đạt chuẩn du lịch quốc tế.",
+    "build_materials": {}
   },
   "zoo_fastfood": {
     "id": "zoo_fastfood",
     "name": "Hệ Thống Thức Ăn Nhanh Sở Thú",
     "type": "commercial",
-    "size": [2, 2],
+    "size": [
+      2,
+      2
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 29,
     "attraction_score": 25,
     "is_walkable": false,
     "sprite_missing": true,
-    "description": "Quầy thức ăn nhanh tiếp sức cho thú và du khách tham quan."
+    "description": "Quầy thức ăn nhanh tiếp sức cho thú và du khách tham quan.",
+    "build_materials": {}
   },
   "golden_statue": {
     "id": "golden_statue",
     "name": "Tượng Vàng Nông Dân Chibi",
     "type": "decor",
-    "size": [2, 2],
+    "size": [
+      2,
+      2
+    ],
     "cost_gold": null,
     "build_time_seconds": 0,
     "unlock_level": 30,
     "attraction_score": 50,
     "is_walkable": false,
     "sprite_missing": true,
-    "description": "Tượng vàng vinh danh nông trại du lịch hàng đầu."
+    "description": "Tượng vàng vinh danh nông trại du lịch hàng đầu.",
+    "build_materials": {}
   },
   "zoo_capybara": {
     "id": "zoo_capybara",
@@ -486,8 +546,14 @@
     "puzzle_piece_cost": 1,
     "cost_gold": 200,
     "attraction_score": 30,
-    "foods": ["carrot", "sanctuary_feed"],
-    "pos": [1340.0, 210.0],
+    "foods": [
+      "carrot",
+      "sanctuary_feed"
+    ],
+    "pos": [
+      1340.0,
+      210.0
+    ],
     "sprite": "zoo_enclosure_capybara",
     "description": "Chuồng nuôi Capybara thân thiện tại Sở Thú Bờ Đông."
   },
@@ -502,8 +568,15 @@
     "puzzle_piece_cost": 2,
     "cost_gold": 350,
     "attraction_score": 35,
-    "foods": ["apple", "sugarcane", "sanctuary_feed"],
-    "pos": [1610.0, 210.0],
+    "foods": [
+      "apple",
+      "sugarcane",
+      "sanctuary_feed"
+    ],
+    "pos": [
+      1610.0,
+      210.0
+    ],
     "sprite": "zoo_enclosure_panda",
     "description": "Khu rừng trúc cho những chú Gấu Trúc Chibi đáng yêu."
   },
@@ -518,8 +591,15 @@
     "puzzle_piece_cost": 2,
     "cost_gold": 400,
     "attraction_score": 40,
-    "foods": ["fish_carp", "fish_bass", "sanctuary_feed"],
-    "pos": [1340.0, 410.0],
+    "foods": [
+      "fish_carp",
+      "fish_bass",
+      "sanctuary_feed"
+    ],
+    "pos": [
+      1340.0,
+      410.0
+    ],
     "sprite": "zoo_enclosure_penguin",
     "description": "Bờ đá băng mát mẻ cho đàn Chim Cánh Cụt bơi lội."
   },
@@ -534,8 +614,14 @@
     "puzzle_piece_cost": 3,
     "cost_gold": 500,
     "attraction_score": 45,
-    "foods": ["wheat", "sanctuary_feed"],
-    "pos": [1610.0, 410.0],
+    "foods": [
+      "wheat",
+      "sanctuary_feed"
+    ],
+    "pos": [
+      1610.0,
+      410.0
+    ],
     "sprite": "zoo_enclosure_giraffe",
     "description": "Thảo nguyên rộng lớn cho Hươu Cao Cổ kiêu hãnh."
   },
@@ -550,7 +636,10 @@
     "puzzle_piece_cost": null,
     "cost_gold": null,
     "attraction_score": 10,
-    "pos": [1475.0, 310.0],
+    "pos": [
+      1475.0,
+      310.0
+    ],
     "sprite": "hot_air_balloon",
     "description": "Khinh khí cầu ngắm toàn cảnh Sở Thú Bờ Đông và đón khách VIP."
   }

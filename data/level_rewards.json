@@ -1,26 +1,35 @@
 {
-  "field_plot_expansion": [
-    {"level": 2, "add": 2},
-    {"level": 4, "add": 2},
-    {"level": 9, "add": 2},
-    {"level": 12, "add": 4},
-    {"level": 21, "add": 4},
-    {"level": 26, "add": 4},
-    {"level": 32, "add": 2}
-  ],
   "silo_barn_capacity": [
-    {"level": 17, "add": 50},
-    {"level": 27, "add": 100}
+    {
+      "level": 17,
+      "add": 50
+    },
+    {
+      "level": 27,
+      "add": 100
+    }
   ],
   "barn_capacity_double": [
-    {"level": 33}
+    {
+      "level": 33
+    }
   ],
   "stall_display_slots": [
-    {"level": 31, "add": 6}
+    {
+      "level": 31,
+      "add": 6
+    }
   ],
   "titles": [
-    {"level": 33, "id": "grand_landowner", "name": "Đại Điền Chủ"},
-    {"level": 33, "id": "gold_badge", "name": "Huy Hiệu Vàng Vĩnh Viễn"}
+    {
+      "level": 33,
+      "id": "grand_landowner",
+      "name": "Đại Điền Chủ"
+    },
+    {
+      "level": 33,
+      "id": "gold_badge",
+      "name": "Huy Hiệu Vàng Vĩnh Viễn"
+    }
   ]
 }
-

@@ -1478,9 +1478,19 @@ func start_building_placement(building_id: String, cost: int, req_materials: Dic
 		elif building_id == "wooden_bench":
 			tex_key = "wooden_bench"
 			spr_sz = Vector2(40.0, 30.0)
-		elif building_id == "fountain":
+		elif building_id in ["fountain", "fountain_east"]:
 			tex_key = "fountain"
 			spr_sz = Vector2(70.0, 70.0)
+		elif building_id in ["wooden_bench", "park_bench", "scarecrow", "zoo_shop", "lantern_park", "flower_arch", "hedge_white", "wood_bridge", "honor_board", "zoo_fastfood", "golden_statue"]:
+			var b_data: Dictionary = DataManager.get_building(building_id)
+			var spr: String = String(b_data.get("sprite", ""))
+			if not spr.is_empty() and SpriteAtlasManager.has_texture(spr):
+				tex_key = spr
+			elif SpriteAtlasManager.has_texture(building_id):
+				tex_key = building_id
+			else:
+				tex_key = "wooden_bench"
+			spr_sz = Vector2(40.0, 30.0)
 			
 		if SpriteAtlasManager.has_texture(tex_key):
 			_ghost_sprite.texture = SpriteAtlasManager.get_texture(tex_key)
@@ -1494,7 +1504,7 @@ func _get_pending_build_tile_size(b_id: String) -> Vector2i:
 		return Vector2i(4, 3)
 	if b_id in ["mini_zoo", "feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
 		return Vector2i(3, 3)
-	if b_id in ["bee_hive", "beehive_tree", "fountain", "poodle_house"]:
+	if b_id in ["bee_hive", "beehive_tree", "fountain", "fountain_east", "poodle_house"]:
 		return Vector2i(2, 2)
 	return Vector2i(1, 1)
 
@@ -1589,13 +1599,20 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 			_spawn_animal_pen("sheep", cell, 2)
 		elif _pending_build_id in ["bee_hive", "beehive_tree"]:
 			_spawn_building_prop("building_bee_hive", cell, Vector2i(2, 2), Vector2(70, 70))
-		elif _pending_build_id == "fountain":
+		elif _pending_build_id in ["fountain", "fountain_east"]:
 			_spawn_building_prop("fountain", cell, Vector2i(2, 2), Vector2(70, 70))
-		elif _pending_build_id == "flower_bed":
+		elif _pending_build_id in ["flower_bed", "flower_arch"]:
 			_spawn_flowerbed("flowerbed_round", snapped_pos, Vector2(36, 26))
 			save_custom_decorations()
-		elif _pending_build_id == "wooden_bench":
-			_spawn_movable_decor("wooden_bench", snapped_pos, Vector2(40, 30))
+		elif _pending_build_id in ["wooden_bench", "park_bench", "scarecrow", "zoo_shop", "lantern_park", "hedge_white", "wood_bridge", "honor_board", "zoo_fastfood", "golden_statue"]:
+			var spr_key: String = "wooden_bench"
+			var b_data: Dictionary = DataManager.get_building(_pending_build_id)
+			var spr_str: String = String(b_data.get("sprite", ""))
+			if not spr_str.is_empty() and SpriteAtlasManager.has_texture(spr_str):
+				spr_key = spr_str
+			elif SpriteAtlasManager.has_texture(_pending_build_id):
+				spr_key = _pending_build_id
+			_spawn_movable_decor(spr_key, snapped_pos, Vector2(40, 30))
 			save_custom_decorations()
 	
 	_refresh_building_progression_visibility()

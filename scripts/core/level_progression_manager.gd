@@ -3,8 +3,6 @@
 extends Node
 class_name LevelProgressionManager
 
-const BASE_FIELD_PLOTS: int = 6
-
 const LEVEL_METADATA: Dictionary = {
 	1: {
 		"title": "Tập Sự Làm Nông",
@@ -258,31 +256,24 @@ static func _get_dm_sources() -> Dictionary:
 		if dm != null:
 			var c_dict: Variant = dm.get("crops")
 			var b_dict: Variant = dm.get("buildings")
+			var a_dict: Variant = dm.get("animals")
+			var f_dict: Variant = dm.get("fishes")
 			var r_dict: Variant = dm.get("level_rewards")
 			if c_dict is Dictionary and not (c_dict as Dictionary).is_empty() and b_dict is Dictionary and not (b_dict as Dictionary).is_empty():
 				return {
 					"crops": c_dict as Dictionary,
 					"buildings": b_dict as Dictionary,
+					"animals": a_dict as Dictionary if a_dict is Dictionary else {},
+					"fishes": f_dict as Dictionary if f_dict is Dictionary else {},
 					"level_rewards": r_dict as Dictionary if r_dict is Dictionary else {}
 				}
 	return {
 		"crops": _read_json_static("res://data/crops.json"),
 		"buildings": _read_json_static("res://data/buildings.json"),
+		"animals": _read_json_static("res://data/animals.json"),
+		"fishes": _read_json_static("res://data/fishes.json"),
 		"level_rewards": _read_json_static("res://data/level_rewards.json")
 	}
-
-static func get_total_field_plots_at_level(lvl: int) -> int:
-	var sources: Dictionary = _get_dm_sources()
-	var rewards: Dictionary = sources.get("level_rewards", {}) as Dictionary
-	var total: int = BASE_FIELD_PLOTS
-	var expansions: Variant = rewards.get("field_plot_expansion", [])
-	if expansions is Array:
-		for entry: Variant in (expansions as Array):
-			if entry is Dictionary:
-				var d: Dictionary = entry as Dictionary
-				if int(d.get("level", 0)) <= lvl:
-					total += int(d.get("add", 0))
-	return total
 
 static func get_unlock_info(lvl: int) -> Dictionary:
 	var meta: Dictionary = {}
@@ -299,6 +290,8 @@ static func get_unlock_info(lvl: int) -> Dictionary:
 	var sources: Dictionary = _get_dm_sources()
 	var crops_data: Dictionary = sources.get("crops", {}) as Dictionary
 	var buildings_data: Dictionary = sources.get("buildings", {}) as Dictionary
+	var animals_data: Dictionary = sources.get("animals", {}) as Dictionary
+	var fishes_data: Dictionary = sources.get("fishes", {}) as Dictionary
 	var rewards_data: Dictionary = sources.get("level_rewards", {}) as Dictionary
 	
 	var unlock_crops: Array[String] = []
@@ -309,6 +302,23 @@ static func get_unlock_info(lvl: int) -> Dictionary:
 		var c_dict: Dictionary = crops_data[c_key] as Dictionary
 		if int(c_dict.get("unlock_level", 1)) == lvl:
 			unlock_crops.append(String(c_dict.get("name", c_id)))
+	
+	var unlock_animals: Array[String] = []
+	for a_key: Variant in animals_data:
+		var a_id: String = String(a_key)
+		var a_dict: Dictionary = animals_data[a_key] as Dictionary
+		if int(a_dict.get("unlock_level", 1)) == lvl:
+			var a_name: String = String(a_dict.get("name", a_id))
+			if bool(a_dict.get("locked", false)):
+				a_name += " (Mở khóa sau)"
+			unlock_animals.append(a_name)
+	
+	var unlock_fishes: Array[String] = []
+	for f_key: Variant in fishes_data:
+		var f_id: String = String(f_key)
+		var f_dict: Dictionary = fishes_data[f_key] as Dictionary
+		if int(f_dict.get("unlock_level", 1)) == lvl:
+			unlock_fishes.append(String(f_dict.get("name", f_id)))
 	
 	var unlock_buildings: Array[String] = []
 	for b_key: Variant in buildings_data:
@@ -324,14 +334,6 @@ static func get_unlock_info(lvl: int) -> Dictionary:
 					unlock_buildings.append("Khu Sở Thú: %s" % b_name)
 			else:
 				unlock_buildings.append(b_name)
-	
-	var plot_expansions: Variant = rewards_data.get("field_plot_expansion", [])
-	if plot_expansions is Array:
-		for entry: Variant in (plot_expansions as Array):
-			if entry is Dictionary and int((entry as Dictionary).get("level", 0)) == lvl:
-				var add_plots: int = int((entry as Dictionary).get("add", 0))
-				var total_plots: int = get_total_field_plots_at_level(lvl)
-				unlock_buildings.append("+%d Ô Ruộng Mới (Tổng %d Ô)" % [add_plots, total_plots])
 	
 	var cap_expansions: Variant = rewards_data.get("silo_barn_capacity", [])
 	if cap_expansions is Array:
@@ -361,25 +363,10 @@ static func get_unlock_info(lvl: int) -> Dictionary:
 		"title": String(meta.get("title", "Cấp Độ %d" % lvl)),
 		"desc": String(meta.get("desc", "")),
 		"crops": unlock_crops,
+		"animals": unlock_animals,
+		"fishes": unlock_fishes,
 		"buildings": unlock_buildings,
 		"gold_reward": int(meta.get("gold_reward", 100 + lvl * 25)),
 		"diamonds_reward": int(meta.get("diamonds_reward", 1)),
 		"coins_reward": int(meta.get("coins_reward", 10 + lvl * 5))
 	}
-
-static func is_crop_unlocked(crop_id: String, cur_level: int) -> bool:
-	var crops_data: Dictionary = _get_dm_sources().get("crops", {}) as Dictionary
-	if crops_data.has(crop_id):
-		var c_dict: Dictionary = crops_data[crop_id] as Dictionary
-		return cur_level >= int(c_dict.get("unlock_level", 1))
-	return true
-
-static func is_building_unlocked(b_id: String, cur_level: int) -> bool:
-	var buildings_data: Dictionary = _get_dm_sources().get("buildings", {}) as Dictionary
-	var lookup_id: String = b_id
-	if not buildings_data.has(lookup_id) and lookup_id == "cow_pen":
-		lookup_id = "cow_pasture"
-	if buildings_data.has(lookup_id):
-		var b_dict: Dictionary = buildings_data[lookup_id] as Dictionary
-		return cur_level >= int(b_dict.get("unlock_level", 1))
-	return true
