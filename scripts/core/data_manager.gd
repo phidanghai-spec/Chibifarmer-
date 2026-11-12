@@ -183,6 +183,9 @@ func get_item_name(item_id: String) -> String:
 		return String((fishes[item_id] as Dictionary).get("name", item_id))
 	return item_id.capitalize()
 
+func get_item_display_name(item_id: String) -> String:
+	return get_item_name(item_id)
+
 func get_item_base_price(item_id: String) -> int:
 	if items.has(item_id):
 		return int((items[item_id] as Dictionary).get("base_price", 5))

@@ -327,7 +327,7 @@ func _populate_slot_cards() -> void:
 			info_lbl.text = "\n[Ô Đất Trống]\nChưa có nông trại\nSẵn sàng khai hoang!"
 		else:
 			var farm_name: String = str(summary.get("farm_name", "Nông Trại"))
-			var player_name: String = str(summary.get("player_name", "Minh"))
+			var player_name: String = str(summary.get("player_name", "Nông Dân"))
 			var level: int = int(summary.get("level", 1))
 			var gold: int = int(summary.get("gold", 0))
 			info_lbl.text = "🌱 %s\n🧑 Chủ: %s\n⭐ Cấp độ: %d\n🪙 Vàng: %d" % [farm_name, player_name, level, gold]

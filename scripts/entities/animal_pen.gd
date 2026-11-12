@@ -374,6 +374,8 @@ func on_player_interact(_avatar: Node2D) -> void:
 	handle_pen_click()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not visible or not is_visible_in_tree():
+		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():

@@ -44,7 +44,7 @@ func _ready() -> void:
 	_bind_buttons()
 	_populate_category_options(0)
 	
-	# Default preset: Minh (Male)
+	# Default preset: Male
 	_apply_preset("male")
 
 func _load_catalog_data() -> void:
@@ -125,6 +125,11 @@ func _setup_tabs() -> void:
 			le.add_theme_stylebox_override("focus", input_sb)
 			le.add_theme_color_override("font_color", Color(0.25, 0.12, 0.04, 1.0))
 			le.add_theme_color_override("font_placeholder_color", Color(0.55, 0.40, 0.26, 0.8))
+	if input_player_name != null:
+		input_player_name.text_changed.connect(func(_new_text: String) -> void:
+			input_player_name.add_theme_stylebox_override("normal", input_sb)
+			input_player_name.add_theme_stylebox_override("focus", input_sb)
+		)
 	category_tabs.tab_changed.connect(_populate_category_options)
 
 func _bind_buttons() -> void:
@@ -186,8 +191,6 @@ func _apply_preset(gender: String) -> void:
 		avatar_preview.equip_part("hat", "hat_straw_ribbon")
 		avatar_preview.equip_part("outfit", "outfit_denim_overalls")
 		avatar_preview.equip_part("tool", "tool_sickle_chibi")
-		if input_player_name.text.is_empty() or input_player_name.text == "Mai":
-			input_player_name.text = "Minh"
 		if input_farm_name.text.is_empty():
 			input_farm_name.text = "Nông Trại Nắng Ấm"
 	else:
@@ -198,8 +201,6 @@ func _apply_preset(gender: String) -> void:
 		avatar_preview.equip_part("hat", "hat_straw_ribbon")
 		avatar_preview.equip_part("outfit", "outfit_floral_dress")
 		avatar_preview.equip_part("tool", "tool_sickle_chibi")
-		if input_player_name.text.is_empty() or input_player_name.text == "Minh":
-			input_player_name.text = "Mai"
 		if input_farm_name.text.is_empty():
 			input_farm_name.text = "Nông Trại Hương Hoa"
 
@@ -283,11 +284,21 @@ func _get_target_farm_scene() -> String:
 	return "res://scenes/main_farm.tscn"
 
 func _on_confirm_start_farm() -> void:
-	AudioManager.play_sfx("welcome_chime")
-	var p_name: String = input_player_name.text.strip_edges()
+	var p_name: String = input_player_name.text.strip_edges().substr(0, 16)
 	var f_name: String = input_farm_name.text.strip_edges()
 	if p_name.is_empty():
-		p_name = "Minh" if _current_gender == "male" else "Mai"
+		AudioManager.play_sfx("ui_wood_click")
+		if input_player_name != null:
+			input_player_name.placeholder_text = "Vui lòng nhập tên của bạn!"
+			input_player_name.grab_focus()
+			var normal_sb: StyleBox = input_player_name.get_theme_stylebox("normal")
+			if normal_sb is StyleBoxFlat:
+				var err_sb: StyleBoxFlat = normal_sb.duplicate() as StyleBoxFlat
+				err_sb.border_color = Color(0.85, 0.22, 0.18, 1.0)
+				input_player_name.add_theme_stylebox_override("normal", err_sb)
+				input_player_name.add_theme_stylebox_override("focus", err_sb)
+		return
+	AudioManager.play_sfx("welcome_chime")
 	if f_name.is_empty():
 		f_name = "Nông Trại Nắng Ấm"
 		
@@ -300,7 +311,7 @@ func _on_confirm_start_farm() -> void:
 		SaveManager.reset_to_level_1()
 		SaveManager.player_name = p_name
 		SaveManager.farm_name = f_name
-		SaveManager.selected_character = _current_gender
+		SaveManager.selected_character = "mai" if _current_gender == "female" else "minh"
 		SaveManager.avatar_config = saved_avatar_cfg
 		SaveManager.is_tutorial_completed = false
 		SaveManager.save_game()

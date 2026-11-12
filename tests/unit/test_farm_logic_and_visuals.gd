@@ -178,3 +178,97 @@ func test_phase1_timing_and_dev_speed_multiplier() -> void:
 		assert_int(StorageManager.xp).is_equal(xp_before + 1)
 
 	TickManager.dev_speed_multiplier = 1.0
+
+# ==============================================================================
+# 6. REGRESSION: DATA MANAGER DISPLAY NAME & CUSTOM PLAYER NAMING
+# ==============================================================================
+func test_data_manager_display_name_and_custom_player_naming() -> void:
+	for mat_id: String in ["mat_plank", "mat_bolt", "mat_brick"]:
+		var n1: String = DataManager.get_item_name(mat_id)
+		var n2: String = DataManager.get_item_display_name(mat_id)
+		assert_str(n1).is_not_empty()
+		assert_str(n2).is_equal(n1)
+
+	var creator_scene: PackedScene = load("res://scenes/ui/CharacterCreator.tscn") as PackedScene
+	assert_object(creator_scene).is_not_null()
+	if creator_scene != null:
+		var creator: CharacterCreator = auto_free(creator_scene.instantiate()) as CharacterCreator
+		add_child(creator)
+		await get_tree().process_frame
+		assert_str(creator.btn_preset_boy.text).not_contains("Minh")
+		assert_str(creator.btn_preset_girl.text).not_contains("Mai")
+		assert_str(creator.input_player_name.text).is_empty()
+		creator._apply_preset("female")
+		assert_str(creator.input_player_name.text).is_empty()
+		creator._apply_preset("male")
+		assert_str(creator.input_player_name.text).is_empty()
+
+# ==============================================================================
+# 7. REGRESSION: TUTORIAL LAYER/CLOSE, HIDDEN MACHINE CLICK & LEVEL 1 ZOO LOCK
+# ==============================================================================
+func test_tutorial_close_hidden_machine_and_level_1_zoo_lock() -> void:
+	# 1. TutorialOverlay must have a clickable close button and sit below UIHud modals
+	var tut_scene: PackedScene = load("res://scenes/ui/TutorialOverlay.tscn") as PackedScene
+	assert_object(tut_scene).is_not_null()
+	if tut_scene != null:
+		var tut: Control = auto_free(tut_scene.instantiate()) as Control
+		var btn_close: Button = tut.find_child("BtnCloseTutorial", true, false) as Button
+		assert_object(btn_close).is_not_null()
+		if btn_close != null:
+			assert_int(btn_close.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+
+	var main_scene: PackedScene = load("res://scenes/main/MainFarm.tscn") as PackedScene
+	var hud_scene: PackedScene = load("res://scenes/ui_hud.tscn") as PackedScene
+	assert_object(main_scene).is_not_null()
+	assert_object(hud_scene).is_not_null()
+	if main_scene != null and hud_scene != null:
+		var main_state: SceneState = main_scene.get_state()
+		var tut_layer_idx: int = -1
+		var tut_layer_val: int = -1
+		for i: int in range(main_state.get_node_count()):
+			if main_state.get_node_name(i) == &"TutorialLayer":
+				tut_layer_idx = i
+				for p: int in range(main_state.get_node_property_count(i)):
+					if main_state.get_node_property_name(i, p) == &"layer":
+						tut_layer_val = int(main_state.get_node_property_value(i, p))
+		assert_int(tut_layer_idx).is_greater_equal(0)
+
+		var hud_inst: CanvasLayer = auto_free(hud_scene.instantiate()) as CanvasLayer
+		assert_int(tut_layer_val).is_less(hud_inst.layer)
+
+	# 2. Invisible unbuilt machine must reject clicks
+	var hidden_machine: ProductionMachine = auto_free(ProductionMachine.new()) as ProductionMachine
+	hidden_machine.machine_id = "juice_stand"
+	hidden_machine.visible = false
+	add_child(hidden_machine)
+	assert_bool(hidden_machine.handle_machine_click()).is_false()
+
+	# 3. Fresh Level 1 must lock Zoo Sanctuary & exclude unbuilt Lv13 juice_stand
+	SaveManager.set_test_mode(true)
+	var prev_level: int = StorageManager.level
+	var prev_xp: int = StorageManager.xp
+	var prev_gold: int = StorageManager.gold
+	var prev_puzzle: int = SaveManager.puzzle_pieces
+	var prev_buildings: Array = SaveManager.unlocked_buildings.duplicate()
+	var prev_zoo: Dictionary = SaveManager.zoo_data.duplicate(true)
+
+	SaveManager.reset_to_level_1()
+	assert_int(StorageManager.level).is_equal(1)
+	assert_int(SaveManager.puzzle_pieces).is_equal(0)
+	assert_bool(SaveManager.is_animal_unlocked("zoo_capybara")).is_false()
+	assert_bool(SaveManager.unlocked_buildings.has("feed_mill")).is_true()
+	assert_bool(SaveManager.unlocked_buildings.has("juice_stand")).is_false()
+
+	if hud_scene != null:
+		var hud: UIHud = auto_free(hud_scene.instantiate()) as UIHud
+		add_child(hud)
+		await get_tree().process_frame
+		hud.open_zoo_modal()
+		assert_object(hud.find_child("ZooModal", true, false)).is_null()
+
+	StorageManager.level = prev_level
+	StorageManager.xp = prev_xp
+	StorageManager.gold = prev_gold
+	SaveManager.puzzle_pieces = prev_puzzle
+	SaveManager.unlocked_buildings = prev_buildings
+	SaveManager.zoo_data = prev_zoo

@@ -130,7 +130,9 @@ func _update_appearance() -> void:
 		_shadow_poly.visible = true
 		
 	var char_id: String = SaveManager.selected_character.to_lower()
-	if char_id != "mai":
+	if char_id == "mai" or char_id == "female":
+		char_id = "mai"
+	else:
 		char_id = "minh"
 	var tex_key: String = "player_" + char_id
 	var tex: Texture2D = SpriteAtlasManager.get_texture(tex_key)

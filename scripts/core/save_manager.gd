@@ -17,10 +17,10 @@ signal newspaper_updated()
 var custom_decorations: Array = []
 var building_custom_names: Dictionary = {} # building_id -> String
 var custom_building_positions: Dictionary = {} # building_id / instance_id -> Dictionary
-var unlocked_buildings: Array = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen"]
+var unlocked_buildings: Array = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen", "feed_mill"]
 
-var selected_character: String = "minh" # "minh" or "mai"
-var player_name: String = "Minh"
+var selected_character: String = "minh" # "minh"/"male" or "mai"/"female"
+var player_name: String = "Nông Dân"
 var farm_name: String = "Nông Trại Chibi"
 var avatar_config: Dictionary = {
 	"body": "body_warm_ivory",
@@ -35,10 +35,10 @@ var instant_interact: bool = true
 var player_position: Vector2 = Vector2(70.0, 640.0)
 
 # Zoo Sanctuary & Balloon System
-var puzzle_pieces: int = 5
+var puzzle_pieces: int = 0
 var balloon_level: int = 1
 var zoo_data: Dictionary = {
-	"zoo_capybara": { "unlocked": true, "fed_until": 0, "love_count": 0 },
+	"zoo_capybara": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 	"zoo_panda": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 	"zoo_penguin": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 	"zoo_giraffe": { "unlocked": false, "fed_until": 0, "love_count": 0 }
@@ -152,10 +152,10 @@ func _normalize_building_id(b_id: String) -> String:
 	return b_id
 
 func is_building_constructed(b_id: String) -> bool:
-	if StorageManager.level >= 7 or is_test_mode or _detect_test_mode():
+	if is_test_mode or _detect_test_mode():
 		return true
 	var norm: String = _normalize_building_id(b_id)
-	if norm in ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken"]:
+	if norm in ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "feed_mill"]:
 		return true
 	return unlocked_buildings.has(norm) or unlocked_buildings.has(b_id)
 
@@ -291,17 +291,18 @@ func reset_to_level_1() -> void:
 	var active_p: String = get_active_save_path()
 	if FileAccess.file_exists(active_p):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(active_p))
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
-	var custom_pos_path: String = "user://custom_structure_positions.json"
-	if FileAccess.file_exists(custom_pos_path):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
+	if not (is_test_mode or _detect_test_mode()):
+		if FileAccess.file_exists(SAVE_PATH):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		var custom_pos_path: String = "user://custom_structure_positions.json"
+		if FileAccess.file_exists(custom_pos_path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
 	print("[SaveManager] Reset and removed save files for Level 1 fresh start: ", active_p)
 
 	custom_decorations.clear()
 	building_custom_names.clear()
 	custom_building_positions.clear()
-	unlocked_buildings = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen"]
+	unlocked_buildings = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen", "feed_mill"]
 	
 	StorageManager.level = 1
 	StorageManager.xp = 0
@@ -335,7 +336,7 @@ func reset_to_level_1() -> void:
 	is_tutorial_completed = false
 
 	zoo_data = {
-		"zoo_capybara": { "unlocked": true, "fed_until": 0, "love_count": 0 },
+		"zoo_capybara": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 		"zoo_panda": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 		"zoo_penguin": { "unlocked": false, "fed_until": 0, "love_count": 0 },
 		"zoo_giraffe": { "unlocked": false, "fed_until": 0, "love_count": 0 }
@@ -357,7 +358,7 @@ func reset_to_level_1() -> void:
 	puzzle_pieces_changed.emit(puzzle_pieces)
 
 	selected_character = "minh"
-	player_name = "Minh"
+	player_name = "Nông Dân"
 	farm_name = "Nông Trại Chibi"
 	instant_interact = true
 	player_position = Vector2(70.0, 640.0)
@@ -526,6 +527,17 @@ func save_game() -> void:
 	
 	var json_str: String = JSON.stringify(save_data, "\t")
 	var target_path: String = get_active_save_path()
+	if OS.has_feature("web"):
+		var web_file: FileAccess = FileAccess.open(target_path, FileAccess.WRITE)
+		if web_file != null:
+			web_file.store_string(json_str)
+			web_file.close()
+		if not (is_test_mode or _detect_test_mode()):
+			var web_leg: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+			if web_leg != null:
+				web_leg.store_string(json_str)
+				web_leg.close()
+		return
 	var temp_path: String = target_path + ".tmp"
 	var file: FileAccess = FileAccess.open(temp_path, FileAccess.WRITE)
 	if file != null:
@@ -689,7 +701,7 @@ func load_game() -> bool:
 			"feed_mill", "bakery", "juice_stand", "cake_oven", "beehive_tree", "bee_hive", "poodle_house"
 		]
 	else:
-		unlocked_buildings = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen"]
+		unlocked_buildings = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen", "feed_mill"]
 	
 	# Restore Roadside Shop
 	# Restore Custom Decorations
@@ -718,7 +730,7 @@ func load_game() -> bool:
 	if data.has("player"):
 		var p_data: Dictionary = data["player"] as Dictionary
 		selected_character = String(p_data.get("selected_character", "minh"))
-		player_name = String(p_data.get("player_name", "Minh"))
+		player_name = String(p_data.get("player_name", "Nông Dân"))
 		if p_data.has("farm_name"):
 			farm_name = String(p_data.get("farm_name", farm_name))
 		if p_data.has("avatar_config"):
@@ -732,12 +744,16 @@ func load_game() -> bool:
 	# Restore Zoo Sanctuary
 	if data.has("zoo_sanctuary"):
 		var z_data: Dictionary = data["zoo_sanctuary"] as Dictionary
-		puzzle_pieces = int(z_data.get("puzzle_pieces", 5))
+		puzzle_pieces = int(z_data.get("puzzle_pieces", 0))
 		balloon_level = int(z_data.get("balloon_level", 1))
 		if z_data.has("animals"):
 			var anims: Dictionary = z_data["animals"] as Dictionary
 			for k: String in anims:
 				zoo_data[k] = (anims[k] as Dictionary).duplicate()
+	if StorageManager.level < 11 and zoo_data.has("zoo_capybara"):
+		var capy: Dictionary = zoo_data["zoo_capybara"] as Dictionary
+		if int(capy.get("love_count", 0)) == 0 and int(capy.get("fed_until", 0)) == 0:
+			capy["unlocked"] = false
 	
 	# Restore Pet Poodle & Newspaper
 	if data.has("poodle"):

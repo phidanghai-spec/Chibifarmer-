@@ -168,13 +168,16 @@ script = ExtResource("16_star")
 photo_booth_area = NodePath("../ZooPhotoBooth")
 camera_flash_light = NodePath("../ZooPhotoBooth/CameraFlashOverlay")
 
-[node name="UILayer" type="CanvasLayer" parent="."]
-layer = 15
+[node name="TutorialLayer" type="CanvasLayer" parent="."]
+layer = 10
 
-[node name="TutorialOverlay" parent="UILayer" instance=ExtResource("12_tut")]
+[node name="TutorialOverlay" parent="TutorialLayer" instance=ExtResource("12_tut")]
+
+[node name="TourismStarHUD" parent="TutorialLayer" instance=ExtResource("17_starhud")]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 20
 
 [node name="OfflineReportModal" parent="UILayer" instance=ExtResource("13_rep")]
-
-[node name="TourismStarHUD" parent="UILayer" instance=ExtResource("17_starhud")]
 
 [node name="FarmAlmanacModal" parent="UILayer" instance=ExtResource("18_almanac")]

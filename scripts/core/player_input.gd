@@ -56,7 +56,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# 2. PRIORITY 2: Check Animal Pens (1-Click Feed / Harvest)
 	if main_farm != null:
 		for pen: AnimalPen in main_farm._animal_pens:
-			if is_instance_valid(pen) and mpos.distance_to(pen.global_position) <= 95.0:
+			if is_instance_valid(pen) and pen.is_visible_in_tree() and mpos.distance_to(pen.global_position) <= 95.0:
 				if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
 					main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
 				pen.handle_pen_click()
@@ -67,10 +67,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	# 3. PRIORITY 3: Check Zoo Enclosures (1-Click Feed / Unlock)
 	if main_farm != null:
 		var zm: ZooManager = main_farm.find_child("ZooManager", true, false) as ZooManager
-		if zm != null:
+		if zm != null and zm.is_visible_in_tree():
 			for enc_id: String in zm.enclosures:
 				var enc: ZooEnclosure = zm.enclosures[enc_id] as ZooEnclosure
-				if is_instance_valid(enc) and mpos.distance_to(enc.global_position) <= 100.0:
+				if is_instance_valid(enc) and enc.is_visible_in_tree() and mpos.distance_to(enc.global_position) <= 100.0:
 					if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
 						main_farm.drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
 					enc.on_player_interact(player_avatar)
@@ -79,7 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					return
 
 	# 4. PRIORITY 4: Check River Steamboat (1-Click Popup Modal)
-	if main_farm != null and is_instance_valid(main_farm.river_steamboat):
+	if main_farm != null and is_instance_valid(main_farm.river_steamboat) and main_farm.river_steamboat.is_visible_in_tree():
 		var local_boat: Vector2 = mpos - main_farm.river_steamboat.global_position
 		if Rect2(-45.0, -50.0, 175.0, 110.0).has_point(local_boat):
 			if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
@@ -89,7 +89,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 	# 5. PRIORITY 5: Check Beehive Tree (1-Click Harvest / Quick Boost)
-	if main_farm != null and is_instance_valid(main_farm.beehive_tree):
+	if main_farm != null and is_instance_valid(main_farm.beehive_tree) and main_farm.beehive_tree.is_visible_in_tree():
 		var local_hive: Vector2 = mpos - main_farm.beehive_tree.global_position
 		if Rect2(-36.0, -48.0, 72.0, 84.0).has_point(local_hive):
 			if main_farm.drag_action_manager != null and main_farm.drag_action_manager.current_tool != DragActionManager.ToolType.NONE:
@@ -185,48 +185,48 @@ func find_interactable_at(world_pos: Vector2) -> Node:
 
 	# 2. Production Machines (Lò nướng, Cối xay)
 	for machine: ProductionMachine in main_farm._production_machines:
-		if is_instance_valid(machine) and world_pos.distance_to(machine.global_position) <= 75.0:
+		if is_instance_valid(machine) and machine.is_visible_in_tree() and world_pos.distance_to(machine.global_position) <= 75.0:
 			return machine
 
 	# 3. Animal Pens (Chuồng gia súc)
 	for pen: AnimalPen in main_farm._animal_pens:
-		if is_instance_valid(pen) and world_pos.distance_to(pen.global_position) <= 95.0:
+		if is_instance_valid(pen) and pen.is_visible_in_tree() and world_pos.distance_to(pen.global_position) <= 95.0:
 			return pen
 
 	# 4. Fishing Spot (Bến câu cá)
-	if main_farm.fishing_spot != null and is_instance_valid(main_farm.fishing_spot):
+	if main_farm.fishing_spot != null and is_instance_valid(main_farm.fishing_spot) and main_farm.fishing_spot.is_visible_in_tree():
 		if main_farm.fishing_spot.fishing_rect.has_point(world_pos) or world_pos.distance_to(Vector2(790.0, 745.0)) <= 80.0:
 			return main_farm.fishing_spot
 
 	# 5. Fruit Trees (Cây ăn quả)
 	for decor: MovableDecor in main_farm._movable_decors:
-		if is_instance_valid(decor) and decor.is_fruit_tree and world_pos.distance_to(decor.global_position) <= 60.0:
+		if is_instance_valid(decor) and decor.is_visible_in_tree() and decor.is_fruit_tree and world_pos.distance_to(decor.global_position) <= 60.0:
 			return decor
 
 	# 6. Barn, Silo, Truck, Roadside Shop Props
-	if main_farm._barn_prop != null and is_instance_valid(main_farm._barn_prop):
+	if main_farm._barn_prop != null and is_instance_valid(main_farm._barn_prop) and main_farm._barn_prop.is_visible_in_tree():
 		if world_pos.distance_to(main_farm._barn_prop.global_position) <= 65.0:
 			return main_farm._barn_prop
 			
-	if main_farm._silo_prop != null and is_instance_valid(main_farm._silo_prop):
+	if main_farm._silo_prop != null and is_instance_valid(main_farm._silo_prop) and main_farm._silo_prop.is_visible_in_tree():
 		if world_pos.distance_to(main_farm._silo_prop.global_position) <= 65.0:
 			return main_farm._silo_prop
 			
-	if main_farm._truck_prop != null and is_instance_valid(main_farm._truck_prop):
+	if main_farm._truck_prop != null and is_instance_valid(main_farm._truck_prop) and main_farm._truck_prop.is_visible_in_tree():
 		if world_pos.distance_to(main_farm._truck_prop.global_position) <= 65.0:
 			return main_farm._truck_prop
 
-	if main_farm._roadside_shop_prop != null and is_instance_valid(main_farm._roadside_shop_prop):
+	if main_farm._roadside_shop_prop != null and is_instance_valid(main_farm._roadside_shop_prop) and main_farm._roadside_shop_prop.is_visible_in_tree():
 		if world_pos.distance_to(main_farm._roadside_shop_prop.global_position) <= 65.0:
 			return main_farm._roadside_shop_prop
 
 	# 7. River Steamboat & Beehive Tree
-	if main_farm.river_steamboat != null and is_instance_valid(main_farm.river_steamboat):
+	if main_farm.river_steamboat != null and is_instance_valid(main_farm.river_steamboat) and main_farm.river_steamboat.is_visible_in_tree():
 		var local_b: Vector2 = world_pos - main_farm.river_steamboat.global_position
 		if Rect2(-45.0, -50.0, 175.0, 110.0).has_point(local_b):
 			return main_farm.river_steamboat
 
-	if main_farm.beehive_tree != null and is_instance_valid(main_farm.beehive_tree):
+	if main_farm.beehive_tree != null and is_instance_valid(main_farm.beehive_tree) and main_farm.beehive_tree.is_visible_in_tree():
 		var local_h: Vector2 = world_pos - main_farm.beehive_tree.global_position
 		if Rect2(-36.0, -48.0, 72.0, 84.0).has_point(local_h):
 			return main_farm.beehive_tree
@@ -235,6 +235,8 @@ func find_interactable_at(world_pos: Vector2) -> Node:
 	for node: Node in get_tree().get_nodes_in_group("interactable"):
 		if node is Node2D and is_instance_valid(node):
 			var n2d: Node2D = node as Node2D
+			if not n2d.is_visible_in_tree():
+				continue
 			if world_pos.distance_to(n2d.global_position) <= 40.0:
 				return n2d
 

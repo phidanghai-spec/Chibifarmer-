@@ -238,6 +238,7 @@ func _ready() -> void:
 	SaveManager.quest_updated.connect(func(_id: String) -> void: _refresh_badges())
 	EventBus.quest_completed.connect(func(_id: String) -> void: _refresh_badges())
 	EventBus.zoo_animal_fed.connect(func(_id: String) -> void: _refresh_badges())
+	EventBus.leveled_up.connect(func(_lvl: int) -> void: _refresh_badges())
 	_refresh_badges()
 	
 	if RoadsideShop != null:
@@ -820,7 +821,7 @@ func _update_avatar_portrait() -> void:
 			avatar_portrait = find_child("AvatarPortrait", true, false) as TextureRect
 	if avatar_portrait != null:
 		var char_id: String = SaveManager.selected_character.to_lower()
-		var tex_key: String = "portrait_mai" if char_id == "mai" else "portrait_minh"
+		var tex_key: String = "portrait_mai" if (char_id == "mai" or char_id == "female") else "portrait_minh"
 		if SpriteAtlasManager.has_texture(tex_key):
 			avatar_portrait.texture = SpriteAtlasManager.get_texture(tex_key)
 
@@ -980,7 +981,7 @@ func _show_level_up_modal(new_level: int) -> void:
 		vbox.add_child(lbl_unlock)
 	
 	var lbl_rewards: Label = Label.new()
-	lbl_rewards.text = "🎁 Phần thưởng: +%d 🪙 Vàng  +%d 💎 Kim Cương  +%d ✨ Xu" % [gold_reward, dia_reward, coins_reward]
+	lbl_rewards.text = "🎁 Phần thưởng: +%d 💰 Vàng  +%d 💎 Kim Cương  +%d ✨ Xu" % [gold_reward, dia_reward, coins_reward]
 	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_rewards.add_theme_font_size_override("font_size", 12)
 	lbl_rewards.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
@@ -1062,19 +1063,20 @@ func open_settings_modal() -> void:
 	vbox.add_child(hbox_chars)
 	
 	var btn_char_minh: Button = Button.new()
-	btn_char_minh.text = "🧑 Minh (Nam)"
+	btn_char_minh.text = "👨 Nông Dân Nam"
 	btn_char_minh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_char_minh.custom_minimum_size = Vector2(0, 34)
 	hbox_chars.add_child(btn_char_minh)
 	
 	var btn_char_mai: Button = Button.new()
-	btn_char_mai.text = "👧 Mai (Nữ)"
+	btn_char_mai.text = "👩 Nông Dân Nữ"
 	btn_char_mai.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_char_mai.custom_minimum_size = Vector2(0, 34)
 	hbox_chars.add_child(btn_char_mai)
 	
 	var update_char_buttons: Callable = func() -> void:
-		if SaveManager.selected_character == "minh":
+		var sel_char: String = SaveManager.selected_character.to_lower()
+		if sel_char == "minh" or sel_char == "male":
 			btn_char_minh.modulate = Color(1.2, 1.3, 0.8)
 			btn_char_mai.modulate = Color(0.9, 0.9, 0.9)
 		else:
@@ -1088,14 +1090,14 @@ func open_settings_modal() -> void:
 		update_char_buttons.call()
 		_update_avatar_portrait()
 		AudioManager.play_sfx("click")
-		show_floating_notice("🧑 Đã chọn nhân vật: Minh!")
+		show_floating_notice("👨 Đã chọn nhân vật: Nông Dân Nam!")
 	)
 	btn_char_mai.pressed.connect(func() -> void:
 		SaveManager.set_player_character("mai")
 		update_char_buttons.call()
 		_update_avatar_portrait()
 		AudioManager.play_sfx("click")
-		show_floating_notice("👧 Đã chọn nhân vật: Mai!")
+		show_floating_notice("👩 Đã chọn nhân vật: Nông Dân Nữ!")
 	)
 	
 	# Character Name Input
@@ -1104,7 +1106,7 @@ func open_settings_modal() -> void:
 	vbox.add_child(hbox_name)
 	
 	var lbl_name_prompt: Label = Label.new()
-	lbl_name_prompt.text = "Tên nông trại:"
+	lbl_name_prompt.text = "Tên nông dân:"
 	lbl_name_prompt.add_theme_font_size_override("font_size", 11)
 	lbl_name_prompt.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_name.add_child(lbl_name_prompt)
@@ -1112,7 +1114,7 @@ func open_settings_modal() -> void:
 	var edit_player_name: LineEdit = LineEdit.new()
 	edit_player_name.text = SaveManager.player_name
 	edit_player_name.max_length = 16
-	edit_player_name.placeholder_text = "Nhập tên..."
+	edit_player_name.placeholder_text = "Nhập tên của bạn..."
 	edit_player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit_player_name.text_changed.connect(func(new_text: String) -> void:
 		SaveManager.set_player_name(new_text)
@@ -2093,8 +2095,8 @@ func open_build_modal() -> void:
 		{"id": "feed_mill", "name": "Máy Nghiền Cám", "desc": "Nghiền thức ăn cho Gà, Bò, Heo", "cost": 80, "level": 2, "icon": "feed_mill", "materials": {"mat_plank": 2, "mat_bolt": 1}},
 		{"id": "bakery", "name": "Lò Bánh Mì", "desc": "Nướng bánh mì nóng giòn thơm lừng", "cost": 120, "level": 3, "icon": "bakery", "materials": {"mat_brick": 2, "mat_plank": 2}},
 		{"id": "cow_pen", "name": "Chuồng Bò Sữa", "desc": "Nuôi bò lấy sữa tươi béo ngậy", "cost": 100, "level": 3, "icon": "cow", "materials": {"mat_plank": 3, "mat_bolt": 1}},
-		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "level": 5, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
-		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "level": 6, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
+		{"id": "juice_stand", "name": "Quầy Nước Pha Chế", "desc": "Nước ép táo & sinh tố giải nhiệt", "cost": 150, "level": 13, "icon": "building_juice_stand", "materials": {"mat_plank": 2, "mat_bolt": 2, "mat_brick": 2}},
+		{"id": "cake_oven", "name": "Lò Bánh Ngọt", "desc": "Nướng bánh kem dâu tây hảo hạng", "cost": 200, "level": 8, "icon": "building_cake_oven", "materials": {"mat_brick": 3, "mat_plank": 3}},
 		{"id": "wooden_bench", "name": "Ghế Gỗ Nghỉ Chân", "desc": "Khách du lịch dừng chân ngắm cảnh", "cost": 15, "level": 2, "icon": "wooden_bench", "materials": {}},
 		{"id": "flower_bed", "name": "Bồn Hoa Cúc Rực Rỡ", "desc": "Tăng điểm cảnh quan check-in", "cost": 25, "level": 2, "icon": "flowerbed_round", "materials": {}},
 		{"id": "fountain", "name": "Đài Phun Nước Cổ Kính", "desc": "Tâm điểm check-in tuyệt đẹp", "cost": 150, "level": 5, "icon": "fountain", "materials": {"mat_brick": 3}}
@@ -2542,39 +2544,48 @@ func _refresh_badges() -> void:
 		else:
 			badge_quests.visible = false
 			
-	# 2. Zoo notification badge
+	# 2. Zoo notification badge (chỉ kích hoạt từ Cấp 11 trở lên)
 	if badge_zoo != null:
-		var zoo_alerts: int = 0
-		var zoo_ids: Array[String] = ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]
-		var unlock_costs: Dictionary = {
-			"zoo_capybara": 1,
-			"zoo_panda": 2,
-			"zoo_penguin": 2,
-			"zoo_giraffe": 3
-		}
-		for a_id: String in zoo_ids:
-			if not SaveManager.is_animal_unlocked(a_id):
-				var cost: int = int(unlock_costs.get(a_id, 2))
-				if SaveManager.puzzle_pieces >= cost:
-					zoo_alerts += 1
-			else:
-				if not SaveManager.is_animal_fed(a_id):
-					if StorageManager.get_item_count("sanctuary_feed") > 0:
-						zoo_alerts += 1
-					elif a_id == "zoo_capybara" and StorageManager.get_item_count("carrot") > 0:
-						zoo_alerts += 1
-					elif a_id == "zoo_panda" and (StorageManager.get_item_count("apple") > 0 or StorageManager.get_item_count("sugarcane") > 0):
-						zoo_alerts += 1
-					elif a_id == "zoo_penguin" and (StorageManager.get_item_count("fish_carp") > 0 or StorageManager.get_item_count("fish_bass") > 0):
-						zoo_alerts += 1
-					elif a_id == "zoo_giraffe" and StorageManager.get_item_count("wheat") > 0:
-						zoo_alerts += 1
-						
-		if zoo_alerts > 0:
-			badge_zoo.visible = true
-			badge_zoo.text = str(zoo_alerts)
-		else:
+		if StorageManager.level < 11:
 			badge_zoo.visible = false
+			if btn_zoo != null:
+				btn_zoo.modulate = Color(0.75, 0.75, 0.75, 0.85)
+				btn_zoo.tooltip_text = "🔒 Sở Thú Bờ Đông (Mở khóa ở Cấp 11)"
+		else:
+			if btn_zoo != null:
+				btn_zoo.modulate = Color(1, 1, 1, 1)
+				btn_zoo.tooltip_text = "Sở Thú Bờ Đông"
+			var zoo_alerts: int = 0
+			var zoo_ids: Array[String] = ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]
+			var unlock_costs: Dictionary = {
+				"zoo_capybara": 1,
+				"zoo_panda": 2,
+				"zoo_penguin": 2,
+				"zoo_giraffe": 3
+			}
+			for a_id: String in zoo_ids:
+				if not SaveManager.is_animal_unlocked(a_id):
+					var cost: int = int(unlock_costs.get(a_id, 2))
+					if SaveManager.puzzle_pieces >= cost:
+						zoo_alerts += 1
+				else:
+					if not SaveManager.is_animal_fed(a_id):
+						if StorageManager.get_item_count("sanctuary_feed") > 0:
+							zoo_alerts += 1
+						elif a_id == "zoo_capybara" and StorageManager.get_item_count("carrot") > 0:
+							zoo_alerts += 1
+						elif a_id == "zoo_panda" and (StorageManager.get_item_count("apple") > 0 or StorageManager.get_item_count("sugarcane") > 0):
+							zoo_alerts += 1
+						elif a_id == "zoo_penguin" and (StorageManager.get_item_count("fish_carp") > 0 or StorageManager.get_item_count("fish_bass") > 0):
+							zoo_alerts += 1
+						elif a_id == "zoo_giraffe" and StorageManager.get_item_count("wheat") > 0:
+							zoo_alerts += 1
+							
+			if zoo_alerts > 0:
+				badge_zoo.visible = true
+				badge_zoo.text = str(zoo_alerts)
+			else:
+				badge_zoo.visible = false
 
 func open_quests_modal() -> void:
 	AudioManager.play_sfx("click")
@@ -3157,6 +3168,9 @@ func _navigate_to_world_pos(dest_pos: Vector2, area_name: String) -> void:
 
 func open_zoo_modal() -> void:
 	AudioManager.play_sfx("click")
+	if StorageManager.level < 11:
+		show_floating_notice("🔒 Sở Thú Bờ Đông sẽ mở khóa ở Cấp 11! (Hiện tại: Cấp %d)" % StorageManager.level)
+		return
 	if _zoo_modal != null and is_instance_valid(_zoo_modal):
 		_zoo_modal.queue_free()
 		return
@@ -4188,16 +4202,16 @@ func open_steamboat_modal(boat: Node2D = null) -> void:
 		
 	_steamboat_modal = PanelContainer.new()
 	_steamboat_modal.name = "SteamboatModal"
-	_steamboat_modal.custom_minimum_size = Vector2(500, 430)
+	_steamboat_modal.custom_minimum_size = Vector2(500, 360)
 	_steamboat_modal.anchors_preset = Control.PRESET_CENTER
 	_steamboat_modal.anchor_left = 0.5
 	_steamboat_modal.anchor_top = 0.5
 	_steamboat_modal.anchor_right = 0.5
 	_steamboat_modal.anchor_bottom = 0.5
 	_steamboat_modal.offset_left = -250
-	_steamboat_modal.offset_top = -215
+	_steamboat_modal.offset_top = -180
 	_steamboat_modal.offset_right = 250
-	_steamboat_modal.offset_bottom = 215
+	_steamboat_modal.offset_bottom = 180
 	_steamboat_modal.z_index = 100
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()

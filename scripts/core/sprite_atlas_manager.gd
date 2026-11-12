@@ -456,16 +456,32 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("mat_bolt", "res://assets/sprites/mat_bolt.png")
 	_load_standalone_texture("mat_brick", "res://assets/sprites/mat_brick.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
-	if FileAccess.file_exists(res_path):
-		var global_path: String = ProjectSettings.globalize_path(res_path)
-		var img: Image = Image.new()
-		var err: Error = img.load(global_path)
-		if err == OK and not img.is_empty():
+	if ResourceLoader.exists(res_path):
+		var loaded: Resource = ResourceLoader.load(res_path)
+		if loaded is Texture2D:
+			var tex: Texture2D = loaded as Texture2D
 			if key == "plot_block_empty":
-				img.resize(128, 64, Image.INTERPOLATE_LANCZOS)
-			textures[key] = ImageTexture.create_from_image(img)
+				var raw_img: Image = tex.get_image()
+				if raw_img != null and not raw_img.is_empty():
+					var resized: Image = raw_img.duplicate() as Image
+					if resized.is_compressed():
+						resized.decompress()
+					resized.resize(128, 64, Image.INTERPOLATE_LANCZOS)
+					textures[key] = ImageTexture.create_from_image(resized)
+					return
+			textures[key] = tex
 			if VERBOSE_LOG:
-				print("[SpriteAtlasManager] Loaded authentic standalone texture: " + key)
+				print("[SpriteAtlasManager] Loaded packed standalone texture: " + key)
+			return
+
+	var single_candidate: Array[String] = [res_path]
+	var img: Image = _load_image_from_candidates(single_candidate)
+	if img != null and not img.is_empty():
+		if key == "plot_block_empty":
+			img.resize(128, 64, Image.INTERPOLATE_LANCZOS)
+		textures[key] = ImageTexture.create_from_image(img)
+		if VERBOSE_LOG:
+			print("[SpriteAtlasManager] Loaded authentic standalone texture: " + key)
 
 func _setup_aliases() -> void:
 	# Ensure backwards compatibility and easy access for game systems
@@ -572,12 +588,34 @@ func _ensure_essential_icons() -> void:
 
 func _load_image_from_candidates(candidates: Array[String]) -> Image:
 	for path: String in candidates:
+		if ResourceLoader.exists(path):
+			var tex: Texture2D = ResourceLoader.load(path) as Texture2D
+			if tex != null:
+				var res_img: Image = tex.get_image()
+				if res_img != null and not res_img.is_empty():
+					var copy_img: Image = res_img.duplicate() as Image
+					if copy_img.is_compressed():
+						copy_img.decompress()
+					return copy_img
 		if FileAccess.file_exists(path):
-			var global_path: String = ProjectSettings.globalize_path(path)
 			var img: Image = Image.new()
-			var err: Error = img.load(global_path)
-			if err == OK and not img.is_empty():
-				return img
+			var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+			if not bytes.is_empty():
+				var low: String = path.to_lower()
+				var buf_err: Error = ERR_FILE_UNRECOGNIZED
+				if low.ends_with(".png"):
+					buf_err = img.load_png_from_buffer(bytes)
+				elif low.ends_with(".jpg") or low.ends_with(".jpeg"):
+					buf_err = img.load_jpg_from_buffer(bytes)
+				elif low.ends_with(".webp"):
+					buf_err = img.load_webp_from_buffer(bytes)
+				if buf_err == OK and not img.is_empty():
+					return img
+			if not OS.has_feature("web"):
+				var global_path: String = ProjectSettings.globalize_path(path)
+				var err: Error = img.load(global_path)
+				if err == OK and not img.is_empty():
+					return img
 	return null
 
 func _process_atlas_sheet(image: Image, mapping: Array, inset_margin: int = 8) -> void:

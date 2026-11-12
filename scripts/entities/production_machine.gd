@@ -202,6 +202,10 @@ func _on_second_ticked(_current_unix: int) -> void:
 			_label_status.text = ""
 
 func handle_machine_click() -> bool:
+	if not visible or (is_inside_tree() and not is_visible_in_tree()):
+		return false
+	if machine_id != "" and SaveManager != null and not SaveManager.is_building_constructed(machine_id):
+		return false
 	var farm: Node = get_tree().current_scene if is_inside_tree() else null
 	var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 
@@ -322,6 +326,10 @@ func on_player_interact(_avatar: Node2D) -> void:
 	handle_machine_click()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not visible or not is_visible_in_tree():
+		return
+	if machine_id != "" and SaveManager != null and not SaveManager.is_building_constructed(machine_id):
+		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():

@@ -144,7 +144,7 @@ func _ready() -> void:
 	EventBus.path_tile_changed.connect(_on_path_tile_changed)
 	EventBus.field_harvested.connect(_on_field_harvested_material_drop)
 	EventBus.truck_order_completed.connect(_on_truck_completed_material_drop)
-	EventBus.level_up.connect(_on_player_level_up)
+	EventBus.leveled_up.connect(_on_player_level_up)
 
 	# Link DragActionManager
 	if drag_action_manager != null:
@@ -1739,6 +1739,17 @@ func _refresh_building_progression_visibility() -> void:
 		elif nid == "barista":
 			npc.visible = SaveManager.is_building_constructed("juice_stand")
 
+	var zoo_unlocked: bool = (StorageManager.level >= 11)
+	if zoo_unlocked and not SaveManager.is_animal_unlocked("zoo_capybara"):
+		SaveManager.unlock_animal("zoo_capybara")
+	if zoo_manager != null and is_instance_valid(zoo_manager):
+		zoo_manager.visible = zoo_unlocked
+		zoo_manager.process_mode = Node.PROCESS_MODE_INHERIT if zoo_unlocked else Node.PROCESS_MODE_DISABLED
+	var photo_booth: Node2D = get_node_or_null("ZooPhotoBooth") as Node2D
+	if photo_booth != null and is_instance_valid(photo_booth):
+		photo_booth.visible = zoo_unlocked
+		photo_booth.process_mode = Node.PROCESS_MODE_INHERIT if zoo_unlocked else Node.PROCESS_MODE_DISABLED
+
 func _on_player_level_up(_new_level: int) -> void:
 	_refresh_building_progression_visibility()
 
@@ -1753,7 +1764,7 @@ func award_random_construction_material(source_label: String = "Nhặt được 
 	var mat_pool: Array[String] = ["mat_plank", "mat_bolt", "mat_brick"]
 	var picked: String = mat_pool[randi() % mat_pool.size()]
 	StorageManager.add_item(picked, 1)
-	var mat_name: String = DataManager.get_item_display_name(picked)
+	var mat_name: String = DataManager.get_item_name(picked)
 	if ui_hud != null and ui_hud.has_method("show_floating_notice"):
 		ui_hud.show_floating_notice("🎁 %s: +1 %s!" % [source_label, mat_name])
 	return picked

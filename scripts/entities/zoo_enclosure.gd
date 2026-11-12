@@ -420,6 +420,10 @@ func _show_floating_text(msg: String) -> void:
 		print("[ZooEnclosure] ", msg)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not visible or not is_visible_in_tree():
+		return
+	if StorageManager != null and StorageManager.level < 11:
+		return
 	if not (event is InputEventMouseButton):
 		return
 	var mb: InputEventMouseButton = event as InputEventMouseButton

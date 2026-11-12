@@ -62,7 +62,7 @@ static func read_slot_summary(slot_index: int) -> Dictionary:
 			d["level"] = int(econ.get("level", d.get("level", 1)))
 			d["gold"] = int(econ.get("gold", d.get("gold", 500)))
 		var p_info: Dictionary = d.get("player", {}) as Dictionary
-		d["player_name"] = str(p_info.get("player_name", d.get("player_name", "Minh")))
+		d["player_name"] = str(p_info.get("player_name", d.get("player_name", "Nông Dân")))
 		d["farm_name"] = str(d.get("farm_name", p_info.get("farm_name", "Nông Trại Chibi")))
 		if d.has("save_timestamp") and not d.has("last_timestamp"):
 			d["last_timestamp"] = d["save_timestamp"]

@@ -48,7 +48,9 @@ func _ready() -> void:
 	call_deferred("_auto_start_from_save")
 
 func _resolve_ui_nodes() -> void:
-	tutorial_overlay = get_node_or_null("../UILayer/TutorialOverlay") as Control
+	tutorial_overlay = get_node_or_null("../TutorialLayer/TutorialOverlay") as Control
+	if tutorial_overlay == null:
+		tutorial_overlay = get_node_or_null("../UILayer/TutorialOverlay") as Control
 	if tutorial_overlay == null:
 		tutorial_overlay = get_node_or_null("TutorialOverlay") as Control
 		
@@ -58,6 +60,9 @@ func _resolve_ui_nodes() -> void:
 		hand_pointer = tutorial_overlay.find_child("HandPointerSprite", true, false) as Sprite2D
 		step_label = tutorial_overlay.find_child("StepProgressLabel", true, false) as Label
 		elder_portrait = tutorial_overlay.find_child("ElderPortrait", true, false) as TextureRect
+		var btn_close: Button = tutorial_overlay.find_child("BtnCloseTutorial", true, false) as Button
+		if btn_close != null and not btn_close.pressed.is_connected(_on_close_tutorial_pressed):
+			btn_close.pressed.connect(_on_close_tutorial_pressed)
 
 		if elder_portrait != null and SpriteAtlasManager != null:
 			var p_tex: Texture2D = SpriteAtlasManager.get_texture("npc_elder_portrait")
@@ -68,6 +73,9 @@ func _resolve_ui_nodes() -> void:
 			var ptr_tex: Texture2D = SpriteAtlasManager.get_texture("ui_hand_pointer_chibi")
 			if ptr_tex != null:
 				hand_pointer.texture = ptr_tex
+
+func _on_close_tutorial_pressed() -> void:
+	_advance_to_step(Step.COMPLETED)
 
 func _resolve_world_positions() -> void:
 	# Tìm vị trí thực tế của ô ruộng đầu tiên trên bản đồ nếu có
