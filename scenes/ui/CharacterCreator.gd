@@ -279,9 +279,11 @@ func _on_randomize_pressed() -> void:
 	EventBus.avatar_config_randomized.emit(avatar_preview.current_config)
 
 func _get_target_farm_scene() -> String:
-	if FileAccess.file_exists(MAIN_FARM_SCENE_PATH):
+	if ResourceLoader.exists(MAIN_FARM_SCENE_PATH):
 		return MAIN_FARM_SCENE_PATH
-	return "res://scenes/main_farm.tscn"
+	if ResourceLoader.exists("res://scenes/main_farm.tscn"):
+		return "res://scenes/main_farm.tscn"
+	return MAIN_FARM_SCENE_PATH
 
 func _on_confirm_start_farm() -> void:
 	var p_name: String = input_player_name.text.strip_edges().substr(0, 16)

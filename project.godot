@@ -51,6 +51,14 @@ gdscript/warnings/assert_always_true=0
 gdscript/warnings/integer_division=0
 gdscript/warnings/narrowing_conversion=0
 
+[display]
+
+window/size/viewport_width=1152
+window/size/viewport_height=648
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")

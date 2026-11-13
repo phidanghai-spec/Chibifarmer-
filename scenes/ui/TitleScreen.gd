@@ -255,9 +255,11 @@ func _bind_ui_signals() -> void:
 		)
 
 func _get_target_farm_scene() -> String:
-	if FileAccess.file_exists(MAIN_FARM_SCENE):
+	if ResourceLoader.exists(MAIN_FARM_SCENE):
 		return MAIN_FARM_SCENE
-	return "res://scenes/main_farm.tscn"
+	if ResourceLoader.exists("res://scenes/main_farm.tscn"):
+		return "res://scenes/main_farm.tscn"
+	return MAIN_FARM_SCENE
 
 func _on_continue_pressed() -> void:
 	if _latest_slot == -1:
