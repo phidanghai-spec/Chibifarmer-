@@ -162,7 +162,7 @@
     "craft_time_seconds": 1800,
     "xp_reward": 6,
     "base_price": 38,
-    "unlock_level": 6,
+    "unlock_level": 7,
     "storage_type": "barn",
     "description": "Ly nước mía giải khát mát lạnh mùa hè."
   },
@@ -178,7 +178,7 @@
     "craft_time_seconds": 2400,
     "xp_reward": 10,
     "base_price": 65,
-    "unlock_level": 6,
+    "unlock_level": 12,
     "storage_type": "barn",
     "description": "Nước ép táo đỏ ngọt thanh tự nhiên giàu vitamin."
   },
@@ -195,7 +195,7 @@
     "craft_time_seconds": 3000,
     "xp_reward": 15,
     "base_price": 110,
-    "unlock_level": 6,
+    "unlock_level": 12,
     "storage_type": "barn",
     "description": "Sinh tố xoài chín xay nhuyễn cùng sữa tươi béo thơm."
   },
