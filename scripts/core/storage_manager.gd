@@ -105,27 +105,27 @@ func spend_diamonds(amount: int) -> bool:
 
 const LEVEL_XP_TABLE: Dictionary = {
 	1: 20,
-	2: 30,
-	3: 45,
+	2: 35,
+	3: 50,
 	4: 75,
-	5: 170,
-	6: 250,
-	7: 380,
-	8: 520,
-	9: 720,
-	10: 950,
-	11: 1250,
-	12: 1650,
-	13: 2100,
-	14: 2600,
-	15: 3200,
-	16: 3800
+	5: 110,
+	6: 150,
+	7: 200,
+	8: 260,
+	9: 330,
+	10: 420,
+	11: 500,
+	12: 600,
+	13: 720,
+	14: 860,
+	15: 1000,
+	16: 1150
 }
 
 func get_required_xp(target_level: int) -> int:
-	if LEVEL_XP_TABLE.has(target_level):
-		return int(LEVEL_XP_TABLE[target_level])
-	return int(3800 + (target_level - 16) * 800)
+	if target_level <= 16:
+		return int(LEVEL_XP_TABLE.get(target_level, 20))
+	return int(1150 + (target_level - 16) * 300)
 
 func add_xp(amount: int) -> void:
 	if amount <= 0:
