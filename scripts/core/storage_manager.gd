@@ -22,6 +22,7 @@ const CONSTRUCTION_MATERIALS: Array[String] = ["mat_plank", "mat_bolt", "mat_bri
 
 func _ready() -> void:
 	_init_starter_inventory()
+	recalculate_capacities()
 
 func _init_starter_inventory() -> void:
 	silo_items.clear()
@@ -136,6 +137,7 @@ func add_xp(amount: int) -> void:
 	while xp >= needed:
 		xp -= needed
 		level += 1
+		recalculate_capacities()
 		var gold_reward: int = 150 + level * 25
 		var dia_reward: int = 2
 		add_gold(gold_reward)
@@ -273,6 +275,35 @@ func get_item_count_in_storage(storage_type: String, item_id: String) -> int:
 	if storage_type == "silo":
 		return int(silo_items.get(item_id, 0))
 	return int(barn_items.get(item_id, 0))
+
+func recalculate_capacities() -> void:
+	var rewards: Dictionary = DataManager.get_level_rewards() if DataManager != null else {}
+	var new_silo_cap: int = 100
+	var new_barn_cap: int = 100
+
+	var cap_entries: Array = rewards.get("silo_barn_capacity", []) as Array
+	for entry_var: Variant in cap_entries:
+		if typeof(entry_var) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_var as Dictionary
+		if int(entry.get("level", 999999)) <= level:
+			var add_val: int = int(entry.get("add", 0))
+			new_silo_cap += add_val
+			new_barn_cap += add_val
+
+	var double_entries: Array = rewards.get("barn_capacity_double", []) as Array
+	for entry_var: Variant in double_entries:
+		if typeof(entry_var) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_var as Dictionary
+		if int(entry.get("level", 999999)) <= level:
+			new_barn_cap *= 2
+			break
+
+	silo_capacity = new_silo_cap
+	barn_capacity = new_barn_cap
+	EventBus.storage_updated.emit("silo", get_silo_used(), silo_capacity)
+	EventBus.storage_updated.emit("barn", get_barn_used(), barn_capacity)
 
 func upgrade_storage(storage_type: String, capacity_increase: int) -> void:
 	if capacity_increase <= 0:

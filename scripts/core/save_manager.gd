@@ -348,12 +348,11 @@ func reset_to_level_1() -> void:
 	daily_chest_50_claimed = false
 	daily_chest_100_claimed = false
 	
+	StorageManager.recalculate_capacities()
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
 	EventBus.gold_changed.emit(StorageManager.gold, 0)
 	EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	zoo_updated.emit("")
 	puzzle_pieces_changed.emit(puzzle_pieces)
 
@@ -672,12 +671,11 @@ func load_game() -> bool:
 				if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
 					StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
+		StorageManager.recalculate_capacities()
 		EventBus.coins_changed.emit(StorageManager.coins, 0)
 		EventBus.gold_changed.emit(StorageManager.gold, 0)
 		EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 		EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-		EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-		EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	
 	# Restore Building Custom Names
 	if data.has("building_custom_names"):
