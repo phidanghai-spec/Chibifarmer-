@@ -2148,7 +2148,8 @@ func open_build_modal() -> void:
 	hbox_head.add_child(btn_close)
 	
 	var shop_ids: Array[String] = [
-		"field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven",
+		"field_plot", "feed_mill", "bakery", "cow_pasture", "pig_pen", "sheep_pasture",
+		"juice_stand", "cake_oven",
 		"wooden_bench", "flower_bed", "fountain", "hedge_white", "wood_bridge", "park_bench",
 		"scarecrow", "zoo_shop", "flower_arch", "lantern_park", "fountain_east", "honor_board",
 		"zoo_fastfood", "golden_statue"
@@ -2170,6 +2171,8 @@ func open_build_modal() -> void:
 			match b_id:
 				"field_plot": icon_key = "wheat"
 				"cow_pasture": icon_key = "cow"
+				"pig_pen": icon_key = "pig"
+				"sheep_pasture": icon_key = "sheep"
 				"juice_stand": icon_key = "building_juice_stand"
 				"cake_oven": icon_key = "building_cake_oven"
 				"flower_bed": icon_key = "flowerbed_round"
@@ -2181,7 +2184,7 @@ func open_build_modal() -> void:
 				"golden_statue": icon_key = "fountain"
 				_: icon_key = "decor_wooden_bench"
 		
-		var is_prod: bool = (b_id in ["field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven"])
+		var is_prod: bool = (b_id in ["field_plot", "feed_mill", "bakery", "cow_pasture", "pig_pen", "sheep_pasture", "juice_stand", "cake_oven"])
 		catalog.append({
 			"id": b_id,
 			"name": String(b_data.get("name", b_id.capitalize())),

@@ -297,6 +297,27 @@
     "is_walkable": false,
     "description": "Chuồng tắm bùn mát rượi cho đàn heo ú nu."
   },
+  "sheep_pasture": {
+    "id": "sheep_pasture",
+    "name": "Chuồng Cừu",
+    "type": "pen",
+    "animal_id": "sheep",
+    "capacity": 5,
+    "size": [
+      3,
+      3
+    ],
+    "cost_gold": 120,
+    "build_time_seconds": 30,
+    "unlock_level": 16,
+    "attraction_score": 12,
+    "is_walkable": false,
+    "description": "Đồng cỏ xanh mướt cho đàn cừu trắng bồng bềnh.",
+    "build_materials": {
+      "mat_plank": 3,
+      "mat_bolt": 2
+    }
+  },
   "decor_picnic_table": {
     "id": "decor_picnic_table",
     "name": "Bàn Picnic Đồng Quê",
