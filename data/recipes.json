@@ -4,8 +4,7 @@
     "name": "Cám Gà",
     "building_id": "feed_mill",
     "ingredients": {
-      "wheat": 2,
-      "corn": 1
+      "wheat": 2
     },
     "produce_item_id": "chicken_feed",
     "produce_count": 3,
@@ -14,7 +13,7 @@
     "base_price": 7,
     "unlock_level": 1,
     "storage_type": "barn",
-    "description": "Thức ăn nghiền mịn từ lúa mì và ngô dành cho gà."
+    "description": "Thức ăn nghiền mịn từ lúa mì dành cho gà."
   },
   "bread": {
     "id": "bread",
