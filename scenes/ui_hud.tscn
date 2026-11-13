@@ -218,7 +218,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(84, 34)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "🏪 Kho Hàng"
+text = "Kho Hàng"
 
 [node name="ResourceHBox" type="HBoxContainer" parent="TopLeftHUD"]
 mouse_filter = 2
@@ -248,7 +248,7 @@ theme_override_constants/separation = 4
 mouse_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
-text = "✨"
+text = "★"
 
 [node name="LabelCoins" type="Label" parent="TopLeftHUD/ResourceHBox/PillCoins/Margin/HBox"]
 unique_name_in_owner = true
@@ -291,7 +291,7 @@ theme_override_constants/separation = 4
 mouse_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
-text = "💎"
+text = "KC"
 
 [node name="LabelDiamonds" type="Label" parent="TopLeftHUD/ResourceHBox/PillDiamonds/Margin/HBox"]
 unique_name_in_owner = true
@@ -380,7 +380,7 @@ mouse_filter = 2
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 12
-text = "🌾"
+text = "Silo"
 
 [node name="VBoxSilo" type="VBoxContainer" parent="TopLeftHUD/ResourceHBox/PillSilo/Margin/HBox"]
 mouse_filter = 2
@@ -431,7 +431,7 @@ mouse_filter = 2
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 12
-text = "📦"
+text = "Kho"
 
 [node name="VBoxBarn" type="VBoxContainer" parent="TopLeftHUD/ResourceHBox/PillBarn/Margin/HBox"]
 mouse_filter = 2
@@ -493,15 +493,15 @@ theme_override_colors/font_color = Color(0.42, 0.22, 0.08, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 12
-text = "✨ 85"
+text = "85 Điểm"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BtnZoo" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(40, 34)
+custom_minimum_size = Vector2(65, 34)
 layout_mode = 2
-text = "🦁"
+text = "Sở Thú"
 tooltip_text = "Sổ Tay Bảo Tồn Sở Thú"
 
 [node name="BadgeZoo" type="Label" parent="TopRightHUD/BtnZoo"]
@@ -526,9 +526,9 @@ vertical_alignment = 1
 
 [node name="BtnQuests" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(40, 34)
+custom_minimum_size = Vector2(75, 34)
 layout_mode = 2
-text = "📜"
+text = "Nhiệm Vụ"
 tooltip_text = "Bảng Nhiệm Vụ Nông Trại & Sở Thú"
 
 [node name="BadgeQuests" type="Label" parent="TopRightHUD/BtnQuests"]
@@ -553,16 +553,16 @@ vertical_alignment = 1
 
 [node name="BtnAudioToggle" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(34, 34)
+custom_minimum_size = Vector2(45, 34)
 layout_mode = 2
-text = "🔊"
+text = "Loa"
 tooltip_text = "Bật / Tắt Âm Thanh"
 
 [node name="BtnSettings" type="Button" parent="TopRightHUD"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(34, 34)
+custom_minimum_size = Vector2(65, 34)
 layout_mode = 2
-text = "⚙️"
+text = "Cài Đặt"
 tooltip_text = "Cài Đặt"
 
 [node name="BottomPanel" type="PanelContainer" parent="."]
@@ -597,25 +597,25 @@ alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(110, 36)
 layout_mode = 2
-text = "🏗️ Xây Dựng"
+text = "Xây Dựng"
 
 [node name="BtnSeeds" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 36)
 layout_mode = 2
-text = "🌱 Hạt Giống"
+text = "Hạt Giống"
 
 [node name="BtnSickle" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(95, 36)
 layout_mode = 2
-text = "✂️ Liềm"
+text = "Liềm"
 
 [node name="BtnBuildField" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(105, 36)
 layout_mode = 2
-text = "🚜 Ruộng"
+text = "Ruộng"
 
 [node name="BtnBuildPath" type="Button" parent="BottomPanel/MarginContainer/HBoxTools"]
 unique_name_in_owner = true
@@ -627,7 +627,7 @@ text = "Đường"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(105, 36)
 layout_mode = 2
-text = "🔨 Tháo Dỡ"
+text = "Tháo Dỡ"
 
 [node name="VSeparator" type="VSeparator" parent="BottomPanel/MarginContainer/HBoxTools"]
 mouse_filter = 2
@@ -675,13 +675,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
 theme_override_font_sizes/font_size = 18
-text = "🏪 SẠP HÀNG VEN ĐƯỜNG (ROADSIDE SHOP)"
+text = "SẠP HÀNG VEN ĐƯỜNG"
 horizontal_alignment = 1
 
 [node name="BtnCloseShop" type="Button" parent="PanelShop/VBox/Header"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-text = "✕"
+text = "X"
 
 [node name="ShopSlotsContainer" type="GridContainer" parent="PanelShop/VBox"]
 unique_name_in_owner = true
@@ -719,13 +719,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
 theme_override_font_sizes/font_size = 18
-text = "🚚 BẢNG ĐƠN HÀNG XE TẢI (TRUCK ORDERS)"
+text = "BẢNG ĐƠN HÀNG XE TẢI"
 horizontal_alignment = 1
 
 [node name="BtnCloseTruck" type="Button" parent="PanelTruck/VBox/Header"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-text = "✕"
+text = "X"
 
 [node name="TruckOrdersContainer" type="GridContainer" parent="PanelTruck/VBox"]
 unique_name_in_owner = true
@@ -767,28 +767,28 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-text = "🌾 Lúa Mì"
+text = "Lúa Mì"
 alignment = 0
 
 [node name="BtnSelectCorn" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-text = "🌽 Ngô"
+text = "Ngô"
 alignment = 0
 
 [node name="BtnSelectAppleTree" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-text = "🍎 Mầm Cây Táo"
+text = "Cây Táo"
 alignment = 0
 
 [node name="BtnSelectMangoTree" type="Button" parent="PanelSeedsMenu/ScrollSeeds/VBoxSeeds"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-text = "🥭 Mầm Cây Xoài"
+text = "Cây Xoài"
 alignment = 0
 
 [connection signal="pressed" from="PanelShop/VBox/Header/BtnCloseShop" to="." method="toggle_shop_popup"]

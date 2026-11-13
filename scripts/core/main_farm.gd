@@ -1132,10 +1132,14 @@ func simulate_click_at_world_pos(world_pos: Vector2) -> bool:
 			if ui_hud != null and ui_hud.has_method("cancel_all_active_tools"):
 				ui_hud.call("cancel_all_active_tools")
 			return true
-	# 0. Ô Ruộng (FieldPlot - Contextual interaction: Thu hoạch chín hoặc Bật menu hạt giống)
+	# 0. Ô Ruộng (FieldPlot - Contextual interaction: Thu hoạch chín, Gieo hạt hoặc Tháo dỡ)
 	var clicked_cell: Vector2i = GridManager.world_to_grid(world_pos)
 	var plot: FieldPlot = get_field_plot_at(clicked_cell)
 	if plot != null and is_instance_valid(plot):
+		if is_dismantle_tool:
+			if drag_action_manager != null and drag_action_manager.has_method("_handle_dismantle"):
+				drag_action_manager.call("_handle_dismantle", clicked_cell)
+			return true
 		plot.handle_direct_click()
 		return true
 

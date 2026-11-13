@@ -101,6 +101,23 @@ func _ready() -> void:
 	_refresh_continue_button()
 	_bind_ui_signals()
 	_populate_slot_cards()
+	_setup_viewport_scaling()
+
+func _setup_viewport_scaling() -> void:
+	_on_viewport_size_changed()
+	if get_tree() != null and get_tree().root != null:
+		get_tree().root.size_changed.connect(_on_viewport_size_changed)
+
+func _on_viewport_size_changed() -> void:
+	var vp_size: Vector2 = get_viewport_rect().size
+	if vp_size.x <= 0 or vp_size.y <= 0:
+		return
+	var base_size: Vector2 = Vector2(1152.0, 648.0)
+	var sc: float = maxf(vp_size.x / base_size.x, vp_size.y / base_size.y)
+	var panorama: Node2D = get_node_or_null("LivePanoramaBg") as Node2D
+	if panorama != null:
+		panorama.scale = Vector2(sc, sc)
+		panorama.position = (vp_size - base_size * sc) * 0.5
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -332,7 +349,7 @@ func _populate_slot_cards() -> void:
 			var player_name: String = str(summary.get("player_name", "Nông Dân"))
 			var level: int = int(summary.get("level", 1))
 			var gold: int = int(summary.get("gold", 0))
-			info_lbl.text = "🌱 %s\n🧑 Chủ: %s\n⭐ Cấp độ: %d\n🪙 Vàng: %d" % [farm_name, player_name, level, gold]
+			info_lbl.text = " %s\n Chủ: %s\n⭐ Cấp độ: %d\n Vàng: %d" % [farm_name, player_name, level, gold]
 		vbox.add_child(info_lbl)
 		
 		var btn_green_sb: StyleBoxFlat = StyleBoxFlat.new()
@@ -380,7 +397,7 @@ func _populate_slot_cards() -> void:
 
 			var btn_new: Button = Button.new()
 			btn_new.custom_minimum_size = Vector2(0.0, 28.0)
-			btn_new.text = "🔄 LẬP MỚI (CẤP 1)"
+			btn_new.text = " LẬP MỚI (CẤP 1)"
 			btn_new.add_theme_font_size_override("font_size", 11)
 			btn_new.add_theme_stylebox_override("normal", btn_wood_sb)
 			btn_new.add_theme_stylebox_override("hover", btn_wood_sb)

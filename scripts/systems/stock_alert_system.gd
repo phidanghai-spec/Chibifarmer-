@@ -44,7 +44,7 @@ func _ready() -> void:
 	_banner_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 	_banner_btn.custom_minimum_size = Vector2(232, 34)
 	_banner_btn.size = Vector2(232, 34)
-	_banner_btn.text = "✨ Nông trại êm ả!"
+	_banner_btn.text = "Nông trại êm ả!"
 	_banner_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner_btn.add_theme_font_size_override("font_size", 10)
 	_banner_btn.add_theme_color_override("font_color", Color(0.24, 0.15, 0.08))
@@ -129,47 +129,47 @@ func _scan_stock_alerts() -> void:
 	if wheat_count <= 4:
 		_active_alerts.append({
 			"item": "wheat",
-			"text": "🌾 Thiếu Lúa Mì (%d còn lại)! Bấm để gieo hạt" % wheat_count,
+			"text": "Thiếu Lúa Mì (%d còn lại)! Bấm để gieo hạt" % wheat_count,
 			"pos": wheat_pos
 		})
-		_update_npc_bubble("baker", "⚠️ Thiếu Lúa Mì!", true)
+		_update_npc_bubble("baker", "Cần Lúa Mì!", true)
 	else:
-		_update_npc_bubble("baker", "🍞 Bánh Đã Sẵn!", false)
+		_update_npc_bubble("baker", "Bánh Đã Sẵn!", false)
 	
 	if corn_count <= 4:
 		_active_alerts.append({
 			"item": "corn",
-			"text": "🌽 Thiếu Ngô (%d còn lại)! Bấm để gieo trồng" % corn_count,
+			"text": "Thiếu Ngô (%d còn lại)! Bấm để gieo trồng" % corn_count,
 			"pos": corn_pos
 		})
-		_update_npc_bubble("rancher", "⚠️ Cần Ngô xay cám!", true)
+		_update_npc_bubble("rancher", "Cần Ngô Xay Cám!", true)
 	else:
-		_update_npc_bubble("rancher", "🥛 Bầy Thú No Nê!", false)
+		_update_npc_bubble("rancher", "Bầy Thú No Nê!", false)
 	
 	if egg_count <= 2:
 		_active_alerts.append({
 			"item": "egg",
-			"text": "🥚 Thiếu Trứng Gà (%d còn lại)! Bấm để thăm chuồng" % egg_count,
+			"text": "Thiếu Trứng Gà (%d còn lại)! Bấm để thăm chuồng" % egg_count,
 			"pos": egg_pos
 		})
-		_update_npc_bubble("pastry", "⚠️ Thiếu Trứng gà!", true)
+		_update_npc_bubble("pastry", "Cần Trứng Gà!", true)
 	else:
-		_update_npc_bubble("pastry", "🍰 Bánh Kem Xong!", false)
+		_update_npc_bubble("pastry", "Bánh Kem Xong!", false)
 	
 	if milk_count <= 2:
 		_active_alerts.append({
 			"item": "milk",
-			"text": "🥛 Thiếu Sữa Bò (%d còn lại)! Bấm để vắt sữa" % milk_count,
+			"text": "Thiếu Sữa Bò (%d còn lại)! Bấm để vắt sữa" % milk_count,
 			"pos": milk_pos
 		})
-		_update_npc_bubble("barista", "⚠️ Thiếu Sữa tươi!", true)
+		_update_npc_bubble("barista", "Cần Sữa Tươi!", true)
 	else:
-		_update_npc_bubble("barista", "🧃 Nước Mát Lạnh!", false)
+		_update_npc_bubble("barista", "Nước Mát Lạnh!", false)
 	
 	if npcs.has("keeper"):
-		_update_npc_bubble("keeper", "🌾 Kho Sẵn Sàng!", false)
+		_update_npc_bubble("keeper", "Kho Sẵn Sàng!", false)
 	if npcs.has("fisher"):
-		_update_npc_bubble("fisher", "🎣 Sẵn Sàng!", false)
+		_update_npc_bubble("fisher", "Bến Cá Sẵn Sàng!", false)
 	
 	if not _active_alerts.is_empty():
 		_current_alert_idx = _current_alert_idx % _active_alerts.size()

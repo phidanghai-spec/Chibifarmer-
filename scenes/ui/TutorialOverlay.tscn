@@ -101,7 +101,7 @@ theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_close_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_close_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_close_btn")
-text = "✕"
+text = "X"
 
 [node name="HandPointerSprite" type="Sprite2D" parent="."]
 z_index = 20

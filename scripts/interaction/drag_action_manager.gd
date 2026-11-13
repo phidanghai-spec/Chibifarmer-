@@ -363,9 +363,14 @@ func _handle_dismantle(cell: Vector2i) -> void:
 			print("[DragActionManager] Dismantled path at cell: ", cell)
 			return
 
-	# 2. Empty Field Plot
+	# 2. Field Plot (Dismantle plot reliably, harvesting crop if ripe)
 	var plot: FieldPlot = _get_field_plot_at(cell)
-	if plot != null and plot.state == FieldPlot.PlotState.EMPTY:
+	if plot != null:
+		if plot.state == FieldPlot.PlotState.READY:
+			plot.harvest()
+		plot.queue_free()
+		if main_farm != null and main_farm.get("field_plots") != null:
+			(main_farm.get("field_plots") as Dictionary).erase(cell)
 		var inst_id: int = GridManager.occupied_cells.get(cell, 0)
 		if inst_id > 0:
 			GridManager.remove_building(inst_id)
@@ -377,7 +382,7 @@ func _handle_dismantle(cell: Vector2i) -> void:
 		StorageManager.add_gold(1)
 		AudioManager.play_sfx("click")
 		_bump_cursor_fx()
-		print("[DragActionManager] Dismantled empty field plot at cell: ", cell)
+		print("[DragActionManager] Dismantled field plot at cell: ", cell)
 		return
 
 	# 3. Movable Decor

@@ -217,10 +217,10 @@ func _ready() -> void:
 
 	# Audio Mute / Unmute Toggle Button
 	if btn_audio_toggle != null:
-		btn_audio_toggle.text = "🔇" if AudioManager.is_muted else "🔊"
+		btn_audio_toggle.text = "Tắt" if AudioManager.is_muted else "Loa"
 		btn_audio_toggle.pressed.connect(func() -> void:
 			var muted: bool = AudioManager.toggle_mute()
-			btn_audio_toggle.text = "🔇" if muted else "🔊"
+			btn_audio_toggle.text = "Tắt" if muted else "Loa"
 			if not muted:
 				AudioManager.play_sfx("click")
 		)
@@ -259,11 +259,11 @@ func _ready() -> void:
 	
 	if btn_plus_coins != null:
 		btn_plus_coins.pressed.connect(func() -> void:
-			show_floating_notice("✨ Mở Sạp Hàng ven đường hoặc đón thêm du khách để nhận Xu Du Lịch!")
+			show_floating_notice(" Mở Sạp Hàng ven đường hoặc đón thêm du khách để nhận Xu Du Lịch!")
 		)
 	if btn_plus_diamond != null:
 		btn_plus_diamond.pressed.connect(func() -> void:
-			show_floating_notice("💎 Hoàn thành Nhiệm Vụ & giải cứu thú sở thú để nhận thêm Kim Cương!")
+			show_floating_notice("Kim Cương Hoàn thành Nhiệm Vụ & giải cứu thú sở thú để nhận thêm Kim Cương!")
 		)
 	if btn_plus_gold != null:
 		btn_plus_gold.pressed.connect(func() -> void:
@@ -952,7 +952,7 @@ func _show_level_up_modal(new_level: int) -> void:
 	vbox.add_child(lbl_title)
 	
 	var lbl_level_badge: Label = Label.new()
-	lbl_level_badge.text = "⭐ CẤP ĐỘ %d: %s ⭐" % [new_level, title_str]
+	lbl_level_badge.text = "★ CẤP ĐỘ %d: %s ★" % [new_level, title_str]
 	lbl_level_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_level_badge.add_theme_font_size_override("font_size", 18)
 	lbl_level_badge.add_theme_color_override("font_color", Color(0.25, 0.15, 0.10))
@@ -987,7 +987,7 @@ func _show_level_up_modal(new_level: int) -> void:
 		vbox.add_child(lbl_unlock)
 	
 	var lbl_rewards: Label = Label.new()
-	lbl_rewards.text = "🎁 Phần thưởng: +%d 💰 Vàng  +%d 💎 Kim Cương  +%d ✨ Xu" % [gold_reward, dia_reward, coins_reward]
+	lbl_rewards.text = " Phần thưởng: +%d 💰 Vàng  +%d Kim Cương Kim Cương  +%d  Xu" % [gold_reward, dia_reward, coins_reward]
 	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_rewards.add_theme_font_size_override("font_size", 12)
 	lbl_rewards.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
@@ -1044,7 +1044,7 @@ func open_settings_modal() -> void:
 	vbox.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "⚙️ CÀI ĐẶT & CHẾ ĐỘ CHƠI"
+	lbl_title.text = " CÀI ĐẶT & CHẾ ĐỘ CHƠI"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_title.add_theme_font_size_override("font_size", 14)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
@@ -1229,7 +1229,7 @@ func _on_storage_updated(storage_type: String, current_used: int, max_cap: int) 
 
 func _on_attraction_score_changed(new_score: int) -> void:
 	if label_attraction != null:
-		label_attraction.text = "✨ %d" % new_score
+		label_attraction.text = " %d" % new_score
 
 func _format_number(num: int) -> String:
 	# Format with commas: 5450 -> "5,450"
@@ -1268,10 +1268,27 @@ func _refresh_shop_ui() -> void:
 
 func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
-	card.custom_minimum_size = Vector2(140, 110)
+	card.custom_minimum_size = Vector2(150, 135)
+	
+	# Warm wooden board styling for roadside shop slots
+	var wood_box: StyleBoxFlat = StyleBoxFlat.new()
+	wood_box.bg_color = Color(0.82, 0.58, 0.35, 1.0) # Bảng gỗ nâu ấm
+	wood_box.border_color = Color(0.46, 0.26, 0.12, 1.0) # Viền gỗ sẫm
+	wood_box.set_border_width_all(3)
+	wood_box.border_width_bottom = 5
+	wood_box.set_corner_radius_all(12)
+	wood_box.shadow_color = Color(0.2, 0.1, 0.05, 0.35)
+	wood_box.shadow_size = 4
+	wood_box.shadow_offset = Vector2(0, 2)
+	wood_box.content_margin_left = 8
+	wood_box.content_margin_right = 8
+	wood_box.content_margin_top = 8
+	wood_box.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", wood_box)
 	
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 4)
 	card.add_child(vbox)
 	
 	var item_id: String = String(slot.get("item_id", ""))
@@ -1281,51 +1298,92 @@ func _create_shop_slot_card(slot_index: int, slot: Dictionary) -> PanelContainer
 	
 	if item_id == "":
 		# Empty slot: button to quick list items
+		var empty_wood: StyleBoxFlat = wood_box.duplicate() as StyleBoxFlat
+		empty_wood.bg_color = Color(0.72, 0.50, 0.30, 0.75)
+		card.add_theme_stylebox_override("panel", empty_wood)
+		
 		var lbl_empty: Label = Label.new()
 		lbl_empty.text = "Ô Trống"
 		lbl_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_empty.add_theme_font_size_override("font_size", 14)
+		lbl_empty.add_theme_color_override("font_color", Color(0.35, 0.20, 0.08))
 		vbox.add_child(lbl_empty)
 		
 		var btn_list: Button = Button.new()
 		btn_list.text = "+ Đăng Bán"
+		btn_list.custom_minimum_size = Vector2(100, 32)
+		_apply_dialog_action_button(btn_list, false)
 		btn_list.pressed.connect(func() -> void: open_sell_item_picker(slot_index))
 		vbox.add_child(btn_list)
 	elif is_sold:
 		# Sold: Collect money!
+		var icon_rect: TextureRect = TextureRect.new()
+		icon_rect.custom_minimum_size = Vector2(40, 40)
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.texture = _get_item_or_crop_texture(item_id)
+		vbox.add_child(icon_rect)
+		
 		var lbl_sold: Label = Label.new()
 		lbl_sold.text = "💰 ĐÃ BÁN!"
-		lbl_sold.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+		lbl_sold.add_theme_color_override("font_color", Color(1.0, 0.95, 0.2))
+		lbl_sold.add_theme_font_size_override("font_size", 13)
 		lbl_sold.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_sold)
 		
 		var btn_collect: Button = Button.new()
 		btn_collect.text = "Nhận %d Vàng" % price
+		btn_collect.custom_minimum_size = Vector2(110, 30)
+		_apply_dialog_action_button(btn_collect, true)
 		btn_collect.pressed.connect(func() -> void:
 			RoadsideShop.collect_coins(slot_index)
 		)
 		vbox.add_child(btn_collect)
 	else:
-		# On sale
+		# On sale: Show item image, count and price
+		var icon_rect: TextureRect = TextureRect.new()
+		icon_rect.custom_minimum_size = Vector2(44, 44)
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.texture = _get_item_or_crop_texture(item_id)
+		vbox.add_child(icon_rect)
+		
 		var item_name: String = DataManager.get_item_name(item_id)
 		var lbl_info: Label = Label.new()
 		lbl_info.text = "%dx %s" % [count, item_name]
 		lbl_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_info.add_theme_font_size_override("font_size", 12)
+		lbl_info.add_theme_color_override("font_color", Color(0.25, 0.12, 0.04))
 		vbox.add_child(lbl_info)
 		
 		var lbl_price: Label = Label.new()
 		lbl_price.text = "Giá: %d Vàng" % price
-		lbl_price.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		lbl_price.add_theme_color_override("font_color", Color(1.0, 0.92, 0.3))
+		lbl_price.add_theme_font_size_override("font_size", 12)
 		lbl_price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_price)
 		
 		var btn_sim: Button = Button.new()
 		btn_sim.text = "Bán Cho Khách"
+		btn_sim.custom_minimum_size = Vector2(110, 26)
+		_apply_dialog_action_button(btn_sim, true)
 		btn_sim.pressed.connect(func() -> void:
 			RoadsideShop.buy_slot_by_shopper(slot_index)
 		)
 		vbox.add_child(btn_sim)
 	
 	return card
+
+func _get_item_or_crop_texture(item_id: String) -> Texture2D:
+	if SpriteAtlasManager.has_texture(item_id):
+		return SpriteAtlasManager.get_texture(item_id)
+	if SpriteAtlasManager.has_texture("crop_" + item_id):
+		return SpriteAtlasManager.get_texture("crop_" + item_id)
+	if SpriteAtlasManager.has_texture("item_" + item_id):
+		return SpriteAtlasManager.get_texture("item_" + item_id)
+	if SpriteAtlasManager.has_texture("icon_" + item_id):
+		return SpriteAtlasManager.get_texture("icon_" + item_id)
+	return null
 
 func open_sell_item_picker(slot_index: int) -> void:
 	AudioManager.play_sfx("click")
@@ -1470,12 +1528,12 @@ func open_sell_item_picker(slot_index: int) -> void:
 			hbox_row.add_child(btn_sell_norm)
 			
 			var btn_sell_max: Button = Button.new()
-			btn_sell_max.text = "⭐ %d" % max_price
+			btn_sell_max.text = "★ %d" % max_price
 			btn_sell_max.tooltip_text = "Đăng bán giá tối đa"
 			btn_sell_max.pressed.connect(func() -> void:
 				if RoadsideShop.list_item(slot_index, i_id, sell_qty, max_price):
 					AudioManager.play_sfx("coin")
-					show_floating_notice("⭐ Đã đăng bán %dx %s giá tối đa (%d Vàng)!" % [sell_qty, i_name, max_price])
+					show_floating_notice("★ Đã đăng bán %dx %s giá tối đa (%d Vàng)!" % [sell_qty, i_name, max_price])
 					_sell_picker_modal.queue_free()
 					_refresh_shop_ui()
 			)
@@ -1555,7 +1613,7 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	var gold: int = int(order.get("reward_gold", 0))
 	var xp: int = int(order.get("reward_xp", 0))
 	var lbl_rew: Label = Label.new()
-	lbl_rew.text = "+%d Vàng  +%d ⭐" % [gold, xp]
+	lbl_rew.text = "+%d Vàng  +%d ★" % [gold, xp]
 	lbl_rew.add_theme_font_size_override("font_size", 12)
 	lbl_rew.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
 	hbox_header.add_child(lbl_rew)
@@ -1597,29 +1655,34 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	vbox.add_child(hbox_btns)
 	
 	var btn_send: Button = Button.new()
-	btn_send.text = "🚚 Giao Hàng"
+	btn_send.text = "Giao Hàng"
 	btn_send.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_send.disabled = not can_fulfill
-	btn_send.custom_minimum_size = Vector2(110, 30)
+	btn_send.custom_minimum_size = Vector2(110, 32)
+	_apply_dialog_action_button(btn_send, false)
 	btn_send.pressed.connect(func() -> void:
 		if TruckOrderSystem.fulfill_order(order_index):
-			# Emit flying loot for rewards
 			var truck_screen_pos: Vector2 = Vector2(352, 576)
 			_on_loot_collected("gold", gold, truck_screen_pos)
 			_on_loot_collected("xp", xp, truck_screen_pos + Vector2(25, -15))
-			
-			# Trigger truck drive animation on farm
 			var farm: Node = get_tree().current_scene
 			if farm != null and farm.has_method("play_truck_delivery_animation"):
 				farm.call("play_truck_delivery_animation")
-			
 			panel_truck.visible = false
 	)
 	hbox_btns.add_child(btn_send)
 	
 	var btn_trash: Button = Button.new()
-	btn_trash.text = "🗑️ Đổi Đơn"
-	btn_trash.custom_minimum_size = Vector2(80, 30)
+	btn_trash.text = "Đổi Đơn"
+	btn_trash.custom_minimum_size = Vector2(80, 32)
+	var sb_trash: StyleBoxFlat = StyleBoxFlat.new()
+	sb_trash.bg_color = Color(0.85, 0.35, 0.25)
+	sb_trash.border_color = Color(0.60, 0.20, 0.15)
+	sb_trash.set_border_width_all(2)
+	sb_trash.set_corner_radius_all(8)
+	btn_trash.add_theme_stylebox_override("normal", sb_trash)
+	btn_trash.add_theme_stylebox_override("hover", sb_trash)
+	btn_trash.add_theme_color_override("font_color", Color(1, 1, 1))
 	btn_trash.pressed.connect(func() -> void:
 		TruckOrderSystem.trash_order(order_index)
 	)
@@ -1795,7 +1858,7 @@ func _refresh_storage_modal() -> void:
 	var hbox_head: HBoxContainer = HBoxContainer.new()
 	vbox.add_child(hbox_head)
 	
-	var default_title: String = "🌾 QUẢN LÝ KHO SILO" if _current_storage_view == "silo" else "📦 QUẢN LÝ KHO BARN"
+	var default_title: String = " QUẢN LÝ KHO SILO" if _current_storage_view == "silo" else "📦 QUẢN LÝ KHO BARN"
 	var building_key: String = "building_silo" if _current_storage_view == "silo" else "building_barn"
 	var display_title: String = SaveManager.get_building_name(building_key, default_title)
 	
@@ -1807,7 +1870,7 @@ func _refresh_storage_modal() -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_rename: Button = Button.new()
-	btn_rename.text = "✏️ Đổi Tên"
+	btn_rename.text = "Đổi Tên"
 	btn_rename.custom_minimum_size = Vector2(80, 26)
 	btn_rename.pressed.connect(func() -> void:
 		open_rename_modal(building_key, default_title, func(_new_name: String) -> void:
@@ -1974,7 +2037,7 @@ func open_rename_modal(building_id: String, default_name: String, on_renamed: Ca
 	_rename_modal.add_child(vbox)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "✏️ Đổi Tên Công Trình"
+	lbl_title.text = "Đổi Tên Công Trình"
 	lbl_title.add_theme_font_size_override("font_size", 14)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	vbox.add_child(lbl_title)
@@ -2039,20 +2102,20 @@ func open_build_modal() -> void:
 	
 	_build_modal = PanelContainer.new()
 	_build_modal.name = "BuildModal"
-	_build_modal.custom_minimum_size = Vector2(510, 390)
+	_build_modal.custom_minimum_size = Vector2(760, 520)
 	_build_modal.anchors_preset = Control.PRESET_CENTER
 	_build_modal.anchor_left = 0.5
 	_build_modal.anchor_top = 0.5
 	_build_modal.anchor_right = 0.5
 	_build_modal.anchor_bottom = 0.5
-	_build_modal.offset_left = -255.0
-	_build_modal.offset_top = -195.0
-	_build_modal.offset_right = 255.0
-	_build_modal.offset_bottom = 195.0
+	_build_modal.offset_left = -380.0
+	_build_modal.offset_top = -260.0
+	_build_modal.offset_right = 380.0
+	_build_modal.offset_bottom = 260.0
 	_build_modal.z_index = 80
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = Color(0.98, 0.95, 0.88, 0.98)
+	sb.bg_color = Color(0.99, 0.96, 0.90, 0.98)
 	sb.border_color = Color(0.60, 0.40, 0.22, 1.0)
 	sb.set_border_width_all(3)
 	sb.set_corner_radius_all(14)
@@ -2063,7 +2126,7 @@ func open_build_modal() -> void:
 	_build_modal.add_theme_stylebox_override("panel", sb)
 	
 	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	_build_modal.add_child(vbox)
 	
 	# Header
@@ -2071,9 +2134,9 @@ func open_build_modal() -> void:
 	vbox.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "🏗️ CỬA HÀNG XÂY DỰNG & TRANG TRÍ"
+	lbl_title.text = "CỬA HÀNG XÂY DỰNG & TRANG TRÍ"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_title.add_theme_font_size_override("font_size", 15)
+	lbl_title.add_theme_font_size_override("font_size", 16)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
 	hbox_head.add_child(lbl_title)
 	
@@ -2084,39 +2147,11 @@ func open_build_modal() -> void:
 	)
 	hbox_head.add_child(btn_close)
 	
-	# Catalog Items
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(478, 310)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(scroll)
-	
-	var grid: GridContainer = GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	scroll.add_child(grid)
-	
 	var shop_ids: Array[String] = [
-		"field_plot",
-		"feed_mill",
-		"bakery",
-		"cow_pasture",
-		"juice_stand",
-		"cake_oven",
-		"wooden_bench",
-		"flower_bed",
-		"fountain",
-		"hedge_white",
-		"wood_bridge",
-		"park_bench",
-		"scarecrow",
-		"zoo_shop",
-		"flower_arch",
-		"lantern_park",
-		"fountain_east",
-		"honor_board",
-		"zoo_fastfood",
-		"golden_statue"
+		"field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven",
+		"wooden_bench", "flower_bed", "fountain", "hedge_white", "wood_bridge", "park_bench",
+		"scarecrow", "zoo_shop", "flower_arch", "lantern_park", "fountain_east", "honor_board",
+		"zoo_fastfood", "golden_statue"
 	]
 	
 	var catalog: Array[Dictionary] = []
@@ -2146,6 +2181,7 @@ func open_build_modal() -> void:
 				"golden_statue": icon_key = "fountain"
 				_: icon_key = "decor_wooden_bench"
 		
+		var is_prod: bool = (b_id in ["field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven"])
 		catalog.append({
 			"id": b_id,
 			"name": String(b_data.get("name", b_id.capitalize())),
@@ -2153,7 +2189,8 @@ func open_build_modal() -> void:
 			"cost_gold": b_data.get("cost_gold", null),
 			"unlock_level": int(b_data.get("unlock_level", 1)),
 			"build_materials": b_data.get("build_materials", {}) as Dictionary,
-			"icon": icon_key
+			"icon": icon_key,
+			"category": "production" if is_prod else "decor"
 		})
 	
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -2164,18 +2201,58 @@ func open_build_modal() -> void:
 		return String(a.get("id", "")) < String(b.get("id", ""))
 	)
 	
-	for item in catalog:
-		var card: PanelContainer = _create_build_card(item)
-		grid.add_child(card)
+	# Category Tabs
+	var hbox_tabs: HBoxContainer = HBoxContainer.new()
+	hbox_tabs.add_theme_constant_override("separation", 8)
+	vbox.add_child(hbox_tabs)
 	
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(728, 410)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	scroll.add_child(grid)
+	
+	var populate_grid: Callable = func(filter_cat: String) -> void:
+		for c: Node in grid.get_children():
+			c.queue_free()
+		for item: Dictionary in catalog:
+			if filter_cat != "all" and String(item.get("category", "")) != filter_cat:
+				continue
+			var card: PanelContainer = _create_build_card(item)
+			grid.add_child(card)
+			
+	var btn_all: Button = Button.new()
+	btn_all.text = "Tất Cả (%d)" % catalog.size()
+	_apply_dialog_action_button(btn_all, true)
+	btn_all.pressed.connect(func() -> void: populate_grid.call("all"))
+	hbox_tabs.add_child(btn_all)
+	
+	var btn_prod: Button = Button.new()
+	btn_prod.text = "Sản Xuất & Ruộng"
+	_apply_dialog_action_button(btn_prod, true)
+	btn_prod.pressed.connect(func() -> void: populate_grid.call("production"))
+	hbox_tabs.add_child(btn_prod)
+	
+	var btn_decor: Button = Button.new()
+	btn_decor.text = "Trang Trí & Cảnh Quan"
+	_apply_dialog_action_button(btn_decor, true)
+	btn_decor.pressed.connect(func() -> void: populate_grid.call("decor"))
+	hbox_tabs.add_child(btn_decor)
+	
+	populate_grid.call("all")
 	add_child(_build_modal)
 
 func _create_build_card(item: Dictionary) -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
-	card.custom_minimum_size = Vector2(230, 92)
+	card.custom_minimum_size = Vector2(236, 96)
 	
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = Color(1.0, 1.0, 1.0, 0.88)
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.92)
 	sb.border_color = Color(0.80, 0.70, 0.55, 1.0)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(8)
@@ -2218,9 +2295,9 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 		var needed: int = int(req_mats[m_id])
 		var cur: int = StorageManager.get_item_count(m_id)
 		var m_name: String = StorageManager.get_item_display_name(m_id)
-		if m_id == "mat_plank": mat_str_parts.append("🪵%d" % needed)
-		elif m_id == "mat_bolt": mat_str_parts.append("🔩%d" % needed)
-		elif m_id == "mat_brick": mat_str_parts.append("🧱%d" % needed)
+		if m_id == "mat_plank": mat_str_parts.append("Ván Gỗ:%d" % needed)
+		elif m_id == "mat_bolt": mat_str_parts.append("Bu-lông:%d" % needed)
+		elif m_id == "mat_brick": mat_str_parts.append("Gạch:%d" % needed)
 		else: mat_str_parts.append("%s x%d" % [m_name, needed])
 		if cur < needed:
 			has_all_mats = false
@@ -2230,9 +2307,9 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	var lbl_info: Label = Label.new()
 	var cost_text: String = ""
 	if has_price:
-		cost_text = "Cấp %d | 💰 %d" % [req_level, cost]
+		cost_text = "Cấp %d | %d Vàng" % [req_level, cost]
 	else:
-		cost_text = "Cấp %d | 💰 Chưa có giá" % req_level
+		cost_text = "Cấp %d | Chưa có giá" % req_level
 	if not mat_str_parts.is_empty():
 		cost_text += " | " + " ".join(mat_str_parts)
 	lbl_info.text = cost_text
@@ -2241,14 +2318,14 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 	vbox.add_child(lbl_info)
 	
 	var btn_buy: Button = Button.new()
-	btn_buy.custom_minimum_size = Vector2(0, 24)
+	btn_buy.custom_minimum_size = Vector2(0, 26)
 	var can_afford_gold: bool = StorageManager.gold >= cost
 	var meets_level: bool = StorageManager.level >= req_level
 	if not has_price:
 		btn_buy.text = "Chưa có giá"
 		btn_buy.disabled = true
 	elif not meets_level:
-		btn_buy.text = "🔒 Cần Cấp %d" % req_level
+		btn_buy.text = "Cần Cấp %d" % req_level
 		btn_buy.disabled = true
 	elif not can_afford_gold:
 		btn_buy.text = "Thiếu Vàng"
@@ -2257,8 +2334,9 @@ func _create_build_card(item: Dictionary) -> PanelContainer:
 		btn_buy.text = missing_mat_msg
 		btn_buy.disabled = true
 	else:
-		btn_buy.text = "🔨 Xây Dựng"
+		btn_buy.text = "Xây Dựng"
 		btn_buy.disabled = false
+		_apply_dialog_action_button(btn_buy, false)
 		btn_buy.pressed.connect(func() -> void:
 			_build_modal.visible = false
 			if b_id == "field_plot":
@@ -2443,7 +2521,7 @@ func open_production_recipe_modal(machine: ProductionMachine) -> void:
 	hbox_head.add_child(lbl_title)
 	
 	var btn_rename: Button = Button.new()
-	btn_rename.text = "✏️ Đổi Tên"
+	btn_rename.text = "Đổi Tên"
 	btn_rename.custom_minimum_size = Vector2(75, 26)
 	btn_rename.tooltip_text = "Đổi tên công trình này"
 	btn_rename.pressed.connect(func() -> void:
@@ -2479,15 +2557,15 @@ func open_production_recipe_modal(machine: ProductionMachine) -> void:
 	
 	if not machine.queue.is_empty():
 		var btn_speedup: Button = Button.new()
-		btn_speedup.text = "⚡ Hoàn Thành Ngay (1 💎)"
+		btn_speedup.text = "Hoàn Thành Ngay (1 Kim Cương)"
 		btn_speedup.custom_minimum_size = Vector2(0, 30)
 		btn_speedup.pressed.connect(func() -> void:
 			if StorageManager.diamonds < 1:
-				show_floating_notice("⚠️ Bạn không đủ Kim Cương (cần 1 💎)!")
+				show_floating_notice("⚠️ Bạn không đủ Kim Cương (cần 1 Kim Cương)!")
 				return
 			if is_instance_valid(machine):
 				if machine.speed_up_current_job():
-					show_floating_notice("⚡ Đã hoàn thành ngay bằng 1 💎!")
+					show_floating_notice("⚡ Đã hoàn thành ngay bằng 1 Kim Cương!")
 					open_production_recipe_modal(machine)
 		)
 		vbox.add_child(btn_speedup)
@@ -2578,13 +2656,13 @@ func _create_recipe_row(machine: ProductionMachine, rec: Dictionary) -> PanelCon
 	btn_craft.custom_minimum_size = Vector2(90, 32)
 	var rec_id: String = String(rec.get("id", ""))
 	if not has_all_ings:
-		btn_craft.text = "⚠️ Thiếu Đồ"
+		btn_craft.text = "Thiếu Đồ"
 		btn_craft.pressed.connect(func() -> void:
 			show_floating_notice("⚠️ Không đủ nguyên liệu để sản xuất %s!" % String(rec.get("name", prod_item)))
 			AudioManager.play_sfx("click")
 		)
 	else:
-		btn_craft.text = "🍳 Sản Xuất"
+		btn_craft.text = "Sản Xuất"
 		btn_craft.disabled = false
 		btn_craft.pressed.connect(func() -> void:
 			if is_instance_valid(machine):
@@ -2621,7 +2699,7 @@ func _refresh_badges() -> void:
 			badge_zoo.visible = false
 			if btn_zoo != null:
 				btn_zoo.modulate = Color(0.75, 0.75, 0.75, 0.85)
-				btn_zoo.tooltip_text = "🔒 Sở Thú Bờ Đông (Mở khóa ở Cấp 11)"
+				btn_zoo.tooltip_text = "[Khóa]  Sở Thú Bờ Đông (Mở khóa ở Cấp 11)"
 		else:
 			if btn_zoo != null:
 				btn_zoo.modulate = Color(1, 1, 1, 1)
@@ -2694,7 +2772,7 @@ func open_quests_modal() -> void:
 	vbox_main.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "📜 BẢNG NHIỆM VỤ NÔNG TRẠI & SỞ THÚ"
+	lbl_title.text = " BẢNG NHIỆM VỤ NÔNG TRẠI & SỞ THÚ"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_title.add_theme_font_size_override("font_size", 15)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
@@ -2806,12 +2884,12 @@ func _render_quests_list(vbox_list: VBoxContainer) -> void:
 		
 		var unlock_preview: String = ""
 		match cur_lvl:
-			1: unlock_preview = "🌽 Cây Ngô (Bắp) | ⚙️ Máy Nghiền Cám | 🌾 Thêm Ô Ruộng (+3)"
+			1: unlock_preview = " Cây Ngô (Bắp) |  Máy Nghiền Cám |  Thêm Ô Ruộng (+3)"
 			2: unlock_preview = "🥕 Cà Rốt | 🥖 Lò Bánh Mì Nóng | 🐄 Chuồng Bò Sữa (+Sữa Tươi)"
 			3: unlock_preview = "🌱 Đậu Nành | 🚢 Bến Tàu Hơi Nước | 🎣 Đầm Câu Cá Tự Nhiên"
 			4: unlock_preview = "🎋 Mía Đường | 🧃 Quầy Nước Pha Chế | 🐖 Chuồng Heo | 🐝 Cây Tổ Ong"
 			5: unlock_preview = "🍓 Dâu Tây | 🎂 Tiệm Bánh Ngọt Kem | 🐑 Chuồng Cừu | 🐶 Nhà Cún Poodle"
-			_: unlock_preview = "🦁 Khu Bảo Tồn Sở Thú Bờ Đông | 🎈 Bến Khinh Khí Cầu | 🦩 Thú Quý Hiếm"
+			_: unlock_preview = " Khu Bảo Tồn Sở Thú Bờ Đông | 🎈 Bến Khinh Khí Cầu | 🦩 Thú Quý Hiếm"
 		var rm_desc: Label = Label.new()
 		rm_desc.text = "Mở khóa tiếp theo: " + unlock_preview
 		rm_desc.add_theme_font_size_override("font_size", 10)
@@ -2939,42 +3017,52 @@ func _build_activity_points_bar(vbox_list: VBoxContainer) -> PanelContainer:
 	# Chest 50
 	var btn_c50: Button = Button.new()
 	btn_c50.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_c50.custom_minimum_size = Vector2(0, 30)
+	btn_c50.custom_minimum_size = Vector2(0, 32)
 	if SaveManager.daily_chest_50_claimed:
-		btn_c50.text = "✅ Rương 50 ⚡ (Đã nhận)"
+		btn_c50.text = "Rương 50 Điểm (Đã nhận)"
 		btn_c50.disabled = true
 	elif cur_pts >= 50:
-		btn_c50.text = "🎁 Mở Rương 50 ⚡ (1 🧩, 100 👑, 1 🥗)"
-		btn_c50.modulate = Color(1.2, 1.3, 0.8)
+		btn_c50.text = "Mở Rương 50 Điểm"
+		_apply_dialog_action_button(btn_c50, false)
 		btn_c50.pressed.connect(func() -> void:
 			if SaveManager.claim_daily_chest(50):
-				show_floating_notice("🎉 Đã nhận Rương 50 ⚡: +1 Mảnh Ghép 🧩, +100 Vàng 👑, +1 Cỏ Dinh Dưỡng 🥗!")
+				var rews: Array[Dictionary] = [
+					{"text": "+1 Mảnh Ghép Sở Thú", "icon": _get_item_or_crop_texture("item_zoo_puzzle_piece")},
+					{"text": "+100 Vàng", "icon": _get_item_or_crop_texture("wheat")},
+					{"text": "+1 Cỏ Dinh Dưỡng", "icon": _get_item_or_crop_texture("mat_plank")}
+				]
+				show_chest_reward_modal("RƯƠNG BÁU 50 ĐIỂM", rews)
 				_refresh_badges()
 				_render_quests_list(vbox_list)
 		)
 	else:
-		btn_c50.text = "🔒 Rương 50 ⚡ (1 🧩, 100 👑, 1 🥗)"
+		btn_c50.text = "Rương 50 Điểm (Cần 50 Điểm)"
 		btn_c50.disabled = true
 	hbox_chests.add_child(btn_c50)
 	
 	# Chest 100
 	var btn_c100: Button = Button.new()
 	btn_c100.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_c100.custom_minimum_size = Vector2(0, 30)
+	btn_c100.custom_minimum_size = Vector2(0, 32)
 	if SaveManager.daily_chest_100_claimed:
-		btn_c100.text = "✅ Rương 100 ⚡ (Đã nhận)"
+		btn_c100.text = "Rương 100 Điểm (Đã nhận)"
 		btn_c100.disabled = true
 	elif cur_pts >= 100:
-		btn_c100.text = "🎁 Mở Rương 100 ⚡ (2 🧩, 3 💎, 2 🥗)"
-		btn_c100.modulate = Color(1.2, 1.3, 0.8)
+		btn_c100.text = "Mở Rương 100 Điểm"
+		_apply_dialog_action_button(btn_c100, false)
 		btn_c100.pressed.connect(func() -> void:
 			if SaveManager.claim_daily_chest(100):
-				show_floating_notice("🎉 Đã nhận Rương 100 ⚡: +2 Mảnh Ghép 🧩, +3 Kim Cương 💎, +2 Cỏ Dinh Dưỡng 🥗!")
+				var rews: Array[Dictionary] = [
+					{"text": "+2 Mảnh Ghép Sở Thú", "icon": _get_item_or_crop_texture("item_zoo_puzzle_piece")},
+					{"text": "+3 Kim Cương", "icon": _get_item_or_crop_texture("wheat")},
+					{"text": "+2 Cỏ Dinh Dưỡng", "icon": _get_item_or_crop_texture("mat_plank")}
+				]
+				show_chest_reward_modal("RƯƠNG BÁU 100 ĐIỂM", rews)
 				_refresh_badges()
 				_render_quests_list(vbox_list)
 		)
 	else:
-		btn_c100.text = "🔒 Rương 100 ⚡ (2 🧩, 3 💎, 2 🥗)"
+		btn_c100.text = "Rương 100 Điểm (Cần 100 Điểm)"
 		btn_c100.disabled = true
 	hbox_chests.add_child(btn_c100)
 	
@@ -3013,7 +3101,7 @@ func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_lis
 	
 	# Left Icon
 	var icon_lbl: Label = Label.new()
-	icon_lbl.text = "🎯" if not is_daily else "☀️"
+	icon_lbl.text = "[Hằng Ngày]" if is_daily else "[Mục Tiêu]"
 	icon_lbl.add_theme_font_size_override("font_size", 22)
 	icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hbox.add_child(icon_lbl)
@@ -3043,18 +3131,18 @@ func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_lis
 	var coins: int = int(q.get("reward_coins", 0))
 	var dia: int = int(q.get("reward_diamonds", 0))
 	var pieces: int = int(q.get("reward_pieces", 0))
-	if g > 0: rew_parts.append("+%d 👑" % g)
+	if g > 0: rew_parts.append("+%d Vàng" % g)
 	if coins > 0: rew_parts.append("+%d Xu" % coins)
-	if xp > 0: rew_parts.append("+%d ⭐" % xp)
-	if dia > 0: rew_parts.append("+%d 💎" % dia)
-	if pieces > 0: rew_parts.append("+%d 🧩" % pieces)
+	if xp > 0: rew_parts.append("+%d XP" % xp)
+	if dia > 0: rew_parts.append("+%d Kim Cương" % dia)
+	if pieces > 0: rew_parts.append("+%d Mảnh Ghép" % pieces)
 	var mats_rew: Dictionary = q.get("reward_materials", {}) as Dictionary
 	for m_id: String in mats_rew:
 		var cnt: int = int(mats_rew[m_id])
 		if cnt > 0:
 			var m_name: String = StorageManager.get_item_display_name(m_id)
 			rew_parts.append("+%d %s" % [cnt, m_name])
-	if is_daily: rew_parts.append("+25 ⚡")
+	if is_daily: rew_parts.append("+25 Điểm")
 	
 	var lbl_rew: Label = Label.new()
 	lbl_rew.text = "Tiến độ: (%d/%d)  |  Thưởng: %s" % [mini(cur_prog, target_prog), target_prog, ", ".join(rew_parts)]
@@ -3070,13 +3158,14 @@ func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_lis
 	if is_claimed:
 		var btn_done: Button = Button.new()
 		btn_done.custom_minimum_size = Vector2(90, 32)
-		btn_done.text = "✅ Đã Nhận"
+		btn_done.text = "Đã Nhận"
 		btn_done.disabled = true
 		hbox_action.add_child(btn_done)
 	elif can_claim:
 		var btn_claim: Button = Button.new()
 		btn_claim.custom_minimum_size = Vector2(100, 32)
-		btn_claim.text = "🎁 Nhận Thưởng"
+		btn_claim.text = "Nhận Thưởng"
+		_apply_dialog_action_button(btn_claim, false)
 		btn_claim.modulate = Color(1.2, 1.3, 0.8)
 		btn_claim.pressed.connect(func() -> void:
 			if is_daily:
@@ -3093,7 +3182,8 @@ func _build_quest_card(q: Dictionary, is_daily: bool, qm: QuestManager, vbox_lis
 		if nav_pos != Vector2.ZERO:
 			var btn_nav: Button = Button.new()
 			btn_nav.custom_minimum_size = Vector2(95, 32)
-			btn_nav.text = "🏃 Thực Hiện"
+			btn_nav.text = "Thực Hiện"
+			_apply_dialog_action_button(btn_nav, true)
 			btn_nav.tooltip_text = "Di chuyển nhân vật và camera tới %s" % nav_name
 			btn_nav.pressed.connect(func() -> void:
 				_navigate_to_world_pos(nav_pos, nav_name)
@@ -3179,10 +3269,10 @@ func _build_vip_card(req: Dictionary, index: int, qm: QuestManager, vbox_list: V
 	var coins: int = int(req.get("reward_coins", 0))
 	var xp: int = int(req.get("reward_xp", 0))
 	var pieces: int = int(req.get("reward_pieces", 0))
-	if g > 0: rew_parts.append("+%d 👑" % g)
+	if g > 0: rew_parts.append("+%d Vàng" % g)
 	if coins > 0: rew_parts.append("+%d Xu" % coins)
-	if xp > 0: rew_parts.append("+%d ⭐" % xp)
-	if pieces > 0: rew_parts.append("+%d 🧩" % pieces)
+	if xp > 0: rew_parts.append("+%d XP" % xp)
+	if pieces > 0: rew_parts.append("+%d Mảnh Ghép" % pieces)
 	
 	var lbl_rew: Label = Label.new()
 	lbl_rew.text = "Thưởng: " + ", ".join(rew_parts)
@@ -3232,7 +3322,7 @@ func _navigate_to_world_pos(dest_pos: Vector2, area_name: String) -> void:
 func open_zoo_modal() -> void:
 	AudioManager.play_sfx("click")
 	if StorageManager.level < 11:
-		show_floating_notice("🔒 Sở Thú Bờ Đông sẽ mở khóa ở Cấp 11! (Hiện tại: Cấp %d)" % StorageManager.level)
+		show_floating_notice("[Khóa]  Sở Thú Bờ Đông sẽ mở khóa ở Cấp 11! (Hiện tại: Cấp %d)" % StorageManager.level)
 		return
 	if _zoo_modal != null and is_instance_valid(_zoo_modal):
 		_zoo_modal.queue_free()
@@ -3276,7 +3366,7 @@ func open_zoo_modal() -> void:
 	vbox_main.add_child(hbox_head)
 	
 	var lbl_title: Label = Label.new()
-	lbl_title.text = "🦁 SỔ TAY BẢO TỒN SỞ THÚ (BỜ ĐÔNG SÔNG)"
+	lbl_title.text = " SỔ TAY BẢO TỒN SỞ THÚ (BỜ ĐÔNG SÔNG)"
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_title.add_theme_font_size_override("font_size", 14)
 	lbl_title.add_theme_color_override("font_color", Color(0.35, 0.20, 0.10))
@@ -3309,7 +3399,7 @@ func open_zoo_modal() -> void:
 	hbox_stats.add_child(lbl_puzzle)
 	
 	var lbl_attr: Label = Label.new()
-	lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % total_attr
+	lbl_attr.text = " Điểm Hấp Dẫn Sở Thú: +%d" % total_attr
 	lbl_attr.add_theme_font_size_override("font_size", 12)
 	lbl_attr.add_theme_color_override("font_color", Color(0.85, 0.40, 0.10))
 	hbox_stats.add_child(lbl_attr)
@@ -3416,13 +3506,13 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 	var lbl_status: Label = Label.new()
 	lbl_status.add_theme_font_size_override("font_size", 10)
 	if not is_unlocked:
-		lbl_status.text = "🔒 Chưa Mở Khóa  |  Chi phí: %d 🧩 Mảnh Ghép hoặc %d 👑 Vàng" % [z["pieces"], z["gold"]]
+		lbl_status.text = "[Khóa]  Chưa Mở Khóa  |  Chi phí: %d 🧩 Mảnh Ghép hoặc %d 👑 Vàng" % [z["pieces"], z["gold"]]
 		lbl_status.add_theme_color_override("font_color", Color(0.70, 0.35, 0.15))
 	elif is_fed:
-		lbl_status.text = "🟢 Đang No Bụng  |  +x2 Điểm Hấp Dẫn (+%d ✨)" % (int(z["attr"]) * 2)
+		lbl_status.text = "🟢 Đang No Bụng  |  +x2 Điểm Hấp Dẫn (+%d )" % (int(z["attr"]) * 2)
 		lbl_status.add_theme_color_override("font_color", Color(0.18, 0.60, 0.20))
 	else:
-		lbl_status.text = "🟡 Đang Đói Bụng  |  Điểm Hấp Dẫn: +%d ✨" % int(z["attr"])
+		lbl_status.text = "🟡 Đang Đói Bụng  |  Điểm Hấp Dẫn: +%d " % int(z["attr"])
 		lbl_status.add_theme_color_override("font_color", Color(0.80, 0.50, 0.10))
 	vbox_info.add_child(lbl_status)
 	
@@ -3445,7 +3535,7 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 				AudioManager.play_sfx("level_up")
 				show_floating_notice("🎉 Đã mở khóa %s!" % z["title"])
 				lbl_puzzle.text = "🧩 Mảnh Ghép Sở Thú: %d" % SaveManager.puzzle_pieces
-				if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+				if zoo_mgr != null: lbl_attr.text = " Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
 				_refresh_badges()
 				_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
 		)
@@ -3461,7 +3551,7 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 				SaveManager.unlock_animal(a_id)
 				AudioManager.play_sfx("level_up")
 				show_floating_notice("🎉 Đã mở khóa %s!" % z["title"])
-				if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+				if zoo_mgr != null: lbl_attr.text = " Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
 				_refresh_badges()
 				_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
 		)
@@ -3519,7 +3609,7 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 					EventBus.zoo_animal_fed.emit(a_id)
 					AudioManager.play_sfx("sell")
 					show_floating_notice("❤️ Cho %s ăn thành công! +60 XP, +80 Vàng, +25 Xu Du Lịch!" % z["name"])
-					if zoo_mgr != null: lbl_attr.text = "✨ Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
+					if zoo_mgr != null: lbl_attr.text = " Điểm Hấp Dẫn Sở Thú: +%d" % zoo_mgr.get_total_attraction_score()
 					_refresh_badges()
 					_render_zoo_cards(vbox_cards, lbl_puzzle, lbl_attr)
 				else:
@@ -3761,9 +3851,12 @@ func _create_feed_shop_card(title: String, desc: String, status_text: String, bt
 func _apply_dialog_close_button(btn: Button) -> void:
 	if btn == null:
 		return
-	btn.text = "✕"
-	btn.custom_minimum_size = Vector2(30, 30)
+	btn.text = "X"
+	btn.custom_minimum_size = Vector2(32, 32)
 	btn.focus_mode = Control.FOCUS_NONE
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.9, 0.9))
+	btn.add_theme_font_size_override("font_size", 16)
 	
 	var sb_norm: StyleBoxFlat = StyleBoxFlat.new()
 	sb_norm.bg_color = Color(0.91, 0.30, 0.24) # #E74C3C 3D Red-Orange
@@ -3992,12 +4085,12 @@ func open_hot_air_balloon_modal() -> void:
 		vbox_cards.add_child(card2)
 	else:
 		var card_max: PanelContainer = _create_feed_shop_card(
-			"⭐ Khinh Khí Cầu Đạt Cấp Tối Đa (Lv.5)",
+			"★ Khinh Khí Cầu Đạt Cấp Tối Đa (Lv.5)",
 			"Đã mở khóa toàn bộ hiệu suất! Tip du khách tại Sở Thú tăng tối đa +50% vĩnh viễn.",
 			"Trạng thái: Tối đa (Level 5)",
-			"⭐ Đã Tối Đa",
+			"★ Đã Tối Đa",
 			func() -> void:
-				show_floating_notice("⭐ Khinh Khí Cầu đã đạt cấp độ tối đa!")
+				show_floating_notice("★ Khinh Khí Cầu đã đạt cấp độ tối đa!")
 		)
 		vbox_cards.add_child(card_max)
 	
@@ -4345,7 +4438,7 @@ func open_steamboat_modal(boat: Node2D = null) -> void:
 	var all_filled: bool = bool(boat.call("are_all_crates_filled")) if boat.has_method("are_all_crates_filled") else false
 	if all_filled:
 		var btn_chest: Button = Button.new()
-		btn_chest.text = "🎁 Nhận Rương Bến Tàu & Cho Tàu Khởi Hành"
+		btn_chest.text = " Nhận Rương Bến Tàu & Cho Tàu Khởi Hành"
 		btn_chest.custom_minimum_size = Vector2(380, 42)
 		btn_chest.add_theme_font_size_override("font_size", 14)
 		_apply_dialog_action_button(btn_chest, false)
@@ -4484,3 +4577,92 @@ func _create_steamboat_crate_card(boat: Node2D, crate: Dictionary, idx: int) -> 
 		hbox.add_child(btn_crate)
 		
 	return card
+
+
+func show_chest_reward_modal(title_text: String, rewards: Array[Dictionary]) -> void:
+	AudioManager.play_sfx("welcome_chime")
+	var modal: PanelContainer = PanelContainer.new()
+	modal.name = "ChestRewardModal"
+	modal.custom_minimum_size = Vector2(460, 340)
+	modal.anchors_preset = Control.PRESET_CENTER
+	modal.anchor_left = 0.5
+	modal.anchor_top = 0.5
+	modal.anchor_right = 0.5
+	modal.anchor_bottom = 0.5
+	modal.offset_left = -230.0
+	modal.offset_top = -170.0
+	modal.offset_right = 230.0
+	modal.offset_bottom = 170.0
+	modal.z_index = 120
+	
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(0.99, 0.96, 0.90, 0.98)
+	sb.border_color = Color(0.85, 0.65, 0.20, 1.0)
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(18)
+	sb.shadow_color = Color(0.2, 0.1, 0.05, 0.6)
+	sb.shadow_size = 16
+	sb.content_margin_left = 20
+	sb.content_margin_right = 20
+	sb.content_margin_top = 18
+	sb.content_margin_bottom = 18
+	modal.add_theme_stylebox_override("panel", sb)
+	
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	modal.add_child(vbox)
+	
+	var chest_img: TextureRect = TextureRect.new()
+	chest_img.custom_minimum_size = Vector2(160, 90)
+	chest_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	chest_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var tex_banner: Texture2D = load("res://assets/sprites/ui_offline_chest_banner.png") as Texture2D
+	if tex_banner != null:
+		chest_img.texture = tex_banner
+	vbox.add_child(chest_img)
+	
+	var lbl_t: Label = Label.new()
+	lbl_t.text = title_text
+	lbl_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_t.add_theme_font_size_override("font_size", 16)
+	lbl_t.add_theme_color_override("font_color", Color(0.45, 0.22, 0.05))
+	vbox.add_child(lbl_t)
+	
+	var r_box: VBoxContainer = VBoxContainer.new()
+	r_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(r_box)
+	
+	for rew: Dictionary in rewards:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 8)
+		
+		var icon_tex: Texture2D = rew.get("icon", null) as Texture2D
+		if icon_tex != null:
+			var icon_rect: TextureRect = TextureRect.new()
+			icon_rect.custom_minimum_size = Vector2(28, 28)
+			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon_rect.texture = icon_tex
+			row.add_child(icon_rect)
+			
+		var lbl_rew: Label = Label.new()
+		lbl_rew.text = String(rew.get("text", ""))
+		lbl_rew.add_theme_font_size_override("font_size", 14)
+		lbl_rew.add_theme_color_override("font_color", Color(0.18, 0.55, 0.20))
+		row.add_child(lbl_rew)
+		r_box.add_child(row)
+		
+	var btn_ok: Button = Button.new()
+	btn_ok.text = "NHẬN QUÀ"
+	btn_ok.custom_minimum_size = Vector2(180, 40)
+	btn_ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_dialog_action_button(btn_ok, false)
+	btn_ok.pressed.connect(func() -> void:
+		AudioManager.play_sfx("welcome_chime")
+		modal.queue_free()
+	)
+	vbox.add_child(btn_ok)
+	
+	add_child(modal)

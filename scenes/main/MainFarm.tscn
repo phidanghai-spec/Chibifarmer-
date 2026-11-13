@@ -66,12 +66,12 @@ visible = false
 z_index = 8
 
 [node name="Lantern1" type="Sprite2D" parent="EnvironmentDirector/LanternGlowRoot"]
-position = Vector2(620, 520)
+position = Vector2(512, 620)
 scale = Vector2(0.45, 0.45)
 texture = ExtResource("19_lantern_tex")
 
 [node name="Lantern2" type="Sprite2D" parent="EnvironmentDirector/LanternGlowRoot"]
-position = Vector2(180, 560)
+position = Vector2(240, 500)
 scale = Vector2(0.45, 0.45)
 texture = ExtResource("19_lantern_tex")
 

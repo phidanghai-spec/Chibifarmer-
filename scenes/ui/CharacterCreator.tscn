@@ -175,7 +175,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.24, 0.12, 0.04, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "🎲 NGẪU NHIÊN DIỆN MẠO"
+text = "NGẪU NHIÊN DIỆN MẠO"
 
 [node name="RightCustomizationPanel" type="PanelContainer" parent="MainSplitHBox"]
 layout_mode = 2
@@ -197,7 +197,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.22, 0.12, 0.04, 1)
 theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "👨 Nông Dân Nam"
+text = "Nông Dân Nam"
 
 [node name="BtnPresetGirl" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/PresetHBox"]
 custom_minimum_size = Vector2(0, 42)
@@ -206,7 +206,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.22, 0.12, 0.04, 1)
 theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "👩 Nông Dân Nữ"
+text = "Nông Dân Nữ"
 
 [node name="QuickOutfitsLabel" type="Label" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
 layout_mode = 2
@@ -225,7 +225,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
 theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "🌾 Yếm Jean"
+text = "Yếm Jean"
 
 [node name="BtnOutfitDress" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
 custom_minimum_size = Vector2(0, 34)
@@ -234,7 +234,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
 theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "🌸 Váy Hoa"
+text = "Váy Hoa"
 
 [node name="BtnOutfitBaker" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
 custom_minimum_size = Vector2(0, 34)
@@ -243,7 +243,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
 theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "🥖 Đồ Làm Bánh"
+text = "Đồ Làm Bánh"
 
 [node name="BtnOutfitCarpenter" type="Button" parent="MainSplitHBox/RightCustomizationPanel/RightVBox/QuickOutfitsHBox"]
 custom_minimum_size = Vector2(0, 34)
@@ -252,7 +252,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.25, 0.14, 0.06, 1)
 theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxFlat_wood_btn")
-text = "🪵 Thợ Mộc"
+text = "Thợ Mộc"
 
 [node name="CategoryTabs" type="TabBar" parent="MainSplitHBox/RightCustomizationPanel/RightVBox"]
 layout_mode = 2

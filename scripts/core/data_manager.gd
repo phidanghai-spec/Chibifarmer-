@@ -21,7 +21,16 @@ const AVATAR_CATALOG_PATH: String = "res://data/avatar_catalog.json"
 const LEVEL_REWARDS_PATH: String = "res://data/level_rewards.json"
 
 func _ready() -> void:
+	_setup_emoji_fallback()
 	load_all_data()
+
+func _setup_emoji_fallback() -> void:
+	if ResourceLoader.exists("res://assets/fonts/Nunito-Bold.ttf") and ResourceLoader.exists("res://assets/fonts/emoji_fallback.ttf"):
+		var main_font: FontFile = load("res://assets/fonts/Nunito-Bold.ttf") as FontFile
+		var emoji_font: FontFile = load("res://assets/fonts/emoji_fallback.ttf") as FontFile
+		if main_font != null and emoji_font != null:
+			main_font.fallbacks = [emoji_font]
+			print("[DataManager] Successfully configured emoji font fallback!")
 
 func load_all_data() -> void:
 	items = _load_json(ITEMS_PATH)

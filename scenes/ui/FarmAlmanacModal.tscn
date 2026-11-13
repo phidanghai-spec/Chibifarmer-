@@ -90,7 +90,7 @@ mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_close")
-text = "✖"
+text = "X"
 
 [node name="AlmanacTabs" type="TabBar" parent="AlmanacVBox"]
 layout_mode = 2
