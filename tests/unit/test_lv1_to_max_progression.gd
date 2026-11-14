@@ -119,17 +119,17 @@ func test_playthrough_level_1_to_max_35() -> void:
 			assert_bool(sheep_pen.feed()).is_true()
 			assert_int(int(sheep_pen.state)).is_equal(int(AnimalPen.PenState.PRODUCING))
 
-		# Test Save & Load round-trip at Lv15 (below Lv20+ guaranteed_silo threshold)
-		if target_lvl == 15:
+		# Test Save & Load round-trip at Lv25 (verifying no Lv20+ item inflation!)
+		if target_lvl == 25:
 			var before_wheat: int = StorageManager.get_item_count("wheat")
 			var before_gold: int = StorageManager.gold
 			SaveManager.save_game()
 			StorageManager.gold = 0
 			assert_bool(SaveManager.load_game()).is_true()
-			assert_int(StorageManager.level).is_equal(15)
+			assert_int(StorageManager.level).is_equal(25)
 			assert_int(StorageManager.gold).is_equal(before_gold)
 			assert_int(StorageManager.get_item_count("wheat")).is_equal(before_wheat)
-			assert_int(StorageManager.silo_capacity).is_equal(100)
+			assert_int(StorageManager.silo_capacity).is_equal(150)
 
 	plot.queue_free()
 	machine.queue_free()

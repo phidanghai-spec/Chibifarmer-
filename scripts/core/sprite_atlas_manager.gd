@@ -455,6 +455,12 @@ func load_all_atlases() -> void:
 	_load_standalone_texture("mat_plank", "res://assets/sprites/mat_plank.png")
 	_load_standalone_texture("mat_bolt", "res://assets/sprites/mat_bolt.png")
 	_load_standalone_texture("mat_brick", "res://assets/sprites/mat_brick.png")
+	_load_standalone_texture("hedge_white", "res://assets/sprites/hedge_white.png")
+	_load_standalone_texture("wood_bridge", "res://assets/sprites/wood_bridge.png")
+	_load_standalone_texture("flower_arch", "res://assets/sprites/flower_arch.png")
+	_load_standalone_texture("honor_board", "res://assets/sprites/honor_board.png")
+	_load_standalone_texture("zoo_fastfood", "res://assets/sprites/zoo_fastfood.png")
+	_load_standalone_texture("golden_statue", "res://assets/sprites/golden_statue.png")
 func _load_standalone_texture(key: String, res_path: String) -> void:
 	if ResourceLoader.exists(res_path):
 		var loaded: Resource = ResourceLoader.load(res_path)

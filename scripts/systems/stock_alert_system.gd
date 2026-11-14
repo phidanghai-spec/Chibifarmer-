@@ -126,6 +126,10 @@ func _scan_stock_alerts() -> void:
 	var egg_pos: Vector2 = _get_resource_target_pos("egg", Vector2(240.0, 720.0))
 	var milk_pos: Vector2 = _get_resource_target_pos("milk", Vector2(300.0, 720.0))
 	
+	var cur_lv: int = StorageManager.level if StorageManager != null else 1
+	var corn_unlock_lv: int = int(DataManager.get_crop("corn").get("unlock_level", 2)) if DataManager != null else 2
+	var cow_unlock_lv: int = DataManager.get_building_unlock_level("cow_pasture", 6) if DataManager != null else 6
+
 	if wheat_count <= 4:
 		_active_alerts.append({
 			"item": "wheat",
@@ -136,7 +140,7 @@ func _scan_stock_alerts() -> void:
 	else:
 		_update_npc_bubble("baker", "Bánh Đã Sẵn!", false)
 	
-	if corn_count <= 4:
+	if cur_lv >= corn_unlock_lv and corn_count <= 4:
 		_active_alerts.append({
 			"item": "corn",
 			"text": "Thiếu Ngô (%d còn lại)! Bấm để gieo trồng" % corn_count,
@@ -156,15 +160,17 @@ func _scan_stock_alerts() -> void:
 	else:
 		_update_npc_bubble("pastry", "Bánh Kem Xong!", false)
 	
-	if milk_count <= 2:
+	if cur_lv >= cow_unlock_lv and milk_count <= 2:
 		_active_alerts.append({
 			"item": "milk",
 			"text": "Thiếu Sữa Bò (%d còn lại)! Bấm để vắt sữa" % milk_count,
 			"pos": milk_pos
 		})
 		_update_npc_bubble("barista", "Cần Sữa Tươi!", true)
-	else:
+	elif cur_lv >= cow_unlock_lv:
 		_update_npc_bubble("barista", "Nước Mát Lạnh!", false)
+	else:
+		_update_npc_bubble("barista", "", false)
 	
 	if npcs.has("keeper"):
 		_update_npc_bubble("keeper", "Kho Sẵn Sàng!", false)

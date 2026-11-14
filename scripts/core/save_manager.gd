@@ -643,49 +643,6 @@ func load_game() -> bool:
 		var b_items: Dictionary = econ.get("barn_items", {}) as Dictionary
 		if not b_items.is_empty():
 			StorageManager.barn_items = b_items
-
-		if StorageManager.level >= 20:
-			# Guarantee large stockpile of seeds, crops and flora
-			var guaranteed_silo: Dictionary = {
-				"wheat": 80,
-				"corn": 60,
-				"carrot": 50,
-				"tomato": 40,
-				"strawberry": 40,
-				"pumpkin": 35,
-				"soybean": 35,
-				"sugarcane": 35,
-				"apple": 25,
-				"mango": 25,
-				"sunflower": 20,
-				"rose": 20,
-				"lavender": 20,
-				"apple_seed": 15,
-				"mango_seed": 15
-			}
-			for k: String in guaranteed_silo:
-				if int(StorageManager.silo_items.get(k, 0)) < int(guaranteed_silo[k]):
-					StorageManager.silo_items[k] = int(guaranteed_silo[k])
-			
-			# Guarantee large stockpile of animal feeds and artisanal foods
-			var guaranteed_barn: Dictionary = {
-				"egg": 40,
-				"milk": 40,
-				"bacon": 30,
-				"bread": 30,
-				"cookie": 25,
-				"butter": 20,
-				"cheese": 20,
-				"chicken_feed": 35,
-				"cow_feed": 35,
-				"pig_feed": 30,
-				"sanctuary_feed": 20,
-				"fish_carp": 20,
-				"fish_bass": 15
-			}
-			for k: String in guaranteed_barn:
-				if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
-					StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
 		StorageManager.recalculate_capacities()
 		EventBus.coins_changed.emit(StorageManager.coins, 0)

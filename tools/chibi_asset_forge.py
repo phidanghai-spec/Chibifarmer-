@@ -239,7 +239,88 @@ def generate_procedural_chibi(sprite_id: str, prompt: str, width: int = 128, hei
         draw.ellipse([cx - 25, cy - 44, cx + 15, cy - 6], fill=(255, 235, 242, 255))
         return img
 
-    # D. Biểu tượng / Vật phẩm Chibi chung
+    # D. Cầu Gỗ Nhỏ (Wood Bridge)
+    if "bridge" in sprite_id.lower():
+        outline = (74, 44, 24, 255)
+        draw.ellipse([cx - 52, cy + 16, cx + 52, cy + 44], fill=(40, 65, 45, 70))
+        # Mặt cầu vòm gỗ ấm
+        for i in range(-4, 5):
+            px = cx + i * 11
+            arch_y = int((i * i) * 0.9)
+            draw.rounded_rectangle([px - 5, cy - 8 + arch_y, px + 5, cy + 24 + arch_y], radius=3, fill=(186, 126, 72, 255), outline=outline, width=2)
+            draw.line([(px - 3, cy - 5 + arch_y), (px - 3, cy + 20 + arch_y)], fill=(212, 155, 98, 255), width=2)
+        # Trụ và tay vịn hai bên
+        for post_x in [cx - 44, cx, cx + 44]:
+            post_ay = 14 if post_x != cx else 0
+            draw.rounded_rectangle([post_x - 5, cy - 34 + post_ay, post_x + 5, cy + 6 + post_ay], radius=3, fill=(150, 95, 48, 255), outline=outline, width=2)
+        draw.line([(cx - 44, cy - 26), (cx, cy - 38), (cx + 44, cy - 26)], fill=outline, width=6)
+        draw.line([(cx - 44, cy - 26), (cx, cy - 38), (cx + 44, cy - 26)], fill=(205, 145, 86, 255), width=3)
+        return img
+
+    # E. Cổng Vòm Hoa Hồng (Flower Arch)
+    if "arch" in sprite_id.lower():
+        outline = (74, 44, 24, 255)
+        draw.ellipse([cx - 48, cy + 34, cx + 48, cy + 54], fill=(40, 70, 40, 70))
+        # Hai cột gỗ trắng kem
+        draw.rounded_rectangle([cx - 38, cy - 24, cx - 26, cy + 44], radius=3, fill=(245, 236, 220, 255), outline=outline, width=2)
+        draw.rounded_rectangle([cx + 26, cy - 24, cx + 38, cy + 44], radius=3, fill=(245, 236, 220, 255), outline=outline, width=2)
+        # Vòm lá xanh
+        for ang_x, ang_y, r in [(-32, -22, 16), (-18, -36, 18), (0, -42, 20), (18, -36, 18), (32, -22, 16)]:
+            draw.ellipse([cx + ang_x - r, cy + ang_y - r, cx + ang_x + r, cy + ang_y + r], fill=(105, 182, 82, 255), outline=outline, width=2)
+        # Hoa hồng pastel trên vòm
+        for rx, ry, col in [(-30, -22, (255, 145, 175)), (-15, -36, (255, 185, 205)), (0, -42, (255, 130, 165)), (16, -35, (255, 185, 205)), (30, -22, (255, 145, 175))]:
+            draw.ellipse([cx + rx - 7, cy + ry - 7, cx + rx + 7, cy + ry + 7], fill=col + (255,), outline=outline, width=2)
+            draw.ellipse([cx + rx - 3, cy + ry - 3, cx + rx + 3, cy + ry + 3], fill=(255, 235, 150, 255))
+        return img
+
+    # F. Bảng Vinh Danh (Honor Board)
+    if "honor" in sprite_id.lower() or "board" in sprite_id.lower():
+        outline = (74, 44, 24, 255)
+        draw.ellipse([cx - 42, cy + 34, cx + 42, cy + 52], fill=(45, 65, 40, 70))
+        # Chân gỗ
+        draw.rounded_rectangle([cx - 28, cy + 6, cx - 18, cy + 44], radius=3, fill=(145, 92, 48, 255), outline=outline, width=2)
+        draw.rounded_rectangle([cx + 18, cy + 6, cx + 28, cy + 44], radius=3, fill=(145, 92, 48, 255), outline=outline, width=2)
+        # Khung bảng gỗ & mặt giấy kem
+        draw.rounded_rectangle([cx - 42, cy - 36, cx + 42, cy + 16], radius=8, fill=(178, 116, 62, 255), outline=outline, width=3)
+        draw.rounded_rectangle([cx - 34, cy - 28, cx + 34, cy + 8], radius=5, fill=(255, 246, 224, 255), outline=outline, width=2)
+        # Mái gỗ nhỏ & huy hiệu sao vàng
+        draw.polygon([(cx - 48, cy - 34), (cx, cy - 50), (cx + 48, cy - 34)], fill=(208, 92, 68, 255), outline=outline)
+        draw.ellipse([cx - 10, cy - 20, cx + 10, cy], fill=(255, 208, 64, 255), outline=outline, width=2)
+        return img
+
+    # G. Quầy Ăn Nhanh Sở Thú (Zoo Fastfood Kiosk)
+    if "fastfood" in sprite_id.lower() or "shop" in sprite_id.lower():
+        outline = (74, 44, 24, 255)
+        draw.ellipse([cx - 50, cy + 32, cx + 50, cy + 54], fill=(45, 65, 40, 75))
+        # Thân quầy gỗ ấm
+        draw.rounded_rectangle([cx - 40, cy - 10, cx + 40, cy + 42], radius=6, fill=(242, 212, 168, 255), outline=outline, width=3)
+        draw.rounded_rectangle([cx - 34, cy - 4, cx + 34, cy + 18], radius=4, fill=(92, 62, 42, 255), outline=outline, width=2)
+        draw.rounded_rectangle([cx - 44, cy + 14, cx + 44, cy + 24], radius=4, fill=(205, 138, 78, 255), outline=outline, width=2)
+        # Mái hiên sọc đỏ kem
+        for i in range(-3, 4):
+            sx = cx + i * 13
+            scol = (232, 84, 72, 255) if i % 2 == 0 else (255, 246, 228, 255)
+            draw.rounded_rectangle([sx - 7, cy - 34, sx + 7, cy - 8], radius=4, fill=scol, outline=outline, width=2)
+        # Biển burger nhỏ trên nóc
+        draw.ellipse([cx - 14, cy - 50, cx + 14, cy - 28], fill=(245, 182, 78, 255), outline=outline, width=2)
+        draw.line([(cx - 12, cy - 39), (cx + 12, cy - 39)], fill=(110, 185, 75, 255), width=4)
+        return img
+
+    # H. Tượng Cúp Vàng (Golden Statue)
+    if "statue" in sprite_id.lower() or "golden" in sprite_id.lower():
+        outline = (74, 44, 24, 255)
+        draw.ellipse([cx - 42, cy + 36, cx + 42, cy + 54], fill=(45, 65, 40, 75))
+        # Bệ đá xám kem 2 tầng
+        draw.rounded_rectangle([cx - 34, cy + 22, cx + 34, cy + 44], radius=5, fill=(210, 206, 198, 255), outline=outline, width=3)
+        draw.rounded_rectangle([cx - 26, cy + 8, cx + 26, cy + 26], radius=4, fill=(230, 226, 218, 255), outline=outline, width=2)
+        # Chân cúp & bầu cúp vàng óng
+        draw.rounded_rectangle([cx - 10, cy - 6, cx + 10, cy + 10], radius=3, fill=(245, 192, 48, 255), outline=outline, width=2)
+        draw.arc([cx - 32, cy - 38, cx + 32, cy - 4], start=0, end=360, fill=outline, width=4)
+        draw.rounded_rectangle([cx - 22, cy - 42, cx + 22, cy - 4], radius=12, fill=(255, 214, 68, 255), outline=outline, width=3)
+        draw.ellipse([cx - 12, cy - 34, cx - 2, cy - 16], fill=(255, 244, 175, 255))
+        return img
+
+    # I. Biểu tượng / Vật phẩm Chibi chung
     draw.ellipse([cx - 45, cy - 45, cx + 45, cy + 45], fill=(255, 200, 160, 255), outline=(160, 100, 60, 255), width=3)
     draw.ellipse([cx - 20, cy - 15, cx - 8, cy - 3], fill=(80, 50, 30, 255))
     draw.ellipse([cx + 8, cy - 15, cx + 20, cy - 3], fill=(80, 50, 30, 255))

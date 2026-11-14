@@ -210,6 +210,9 @@ func _ready() -> void:
 	var btn_close_shop: Button = get_node_or_null("PanelShop/VBox/Header/BtnCloseShop") as Button
 	if btn_close_shop != null:
 		_apply_dialog_close_button(btn_close_shop)
+	var btn_close_truck: Button = get_node_or_null("PanelTruck/VBox/Header/BtnCloseTruck") as Button
+	if btn_close_truck != null:
+		_apply_dialog_close_button(btn_close_truck)
 	pill_silo.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_barn.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_silo.gui_input.connect(func(event: InputEvent) -> void:
@@ -1163,6 +1166,18 @@ func open_settings_modal() -> void:
 			show_floating_notice("🚶 Đã bật chế độ Đi bộ tới đối tượng!")
 	)
 	vbox.add_child(btn_toggle_interact)
+	
+	var btn_fps_overlay: Button = Button.new()
+	btn_fps_overlay.custom_minimum_size = Vector2(0, 32)
+	btn_fps_overlay.text = "📊 Bật/Tắt FPS & Đồ Thị Hiệu Năng (F3)"
+	btn_fps_overlay.pressed.connect(func() -> void:
+		var dm: Node = get_node_or_null("/root/DebugMenu")
+		if dm != null:
+			var cur_style: int = int(dm.get("style"))
+			dm.set("style", (cur_style + 1) % 3)
+			AudioManager.play_sfx("click")
+	)
+	vbox.add_child(btn_fps_overlay)
 	
 	# --- 3. Web Testing Game Modes: Level 1 Story vs Level 33 Sandbox ---
 	var lbl_mode_sec: Label = Label.new()
