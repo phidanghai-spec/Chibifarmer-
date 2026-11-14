@@ -311,6 +311,8 @@ func reset_to_level_1() -> void:
 	StorageManager.diamonds = 15
 	StorageManager.silo_capacity = 100
 	StorageManager.barn_capacity = 100
+	StorageManager.purchased_silo_bonus = 0
+	StorageManager.purchased_barn_bonus = 0
 	
 	StorageManager.silo_items.clear()
 	StorageManager.silo_items["wheat"] = 10
@@ -348,12 +350,11 @@ func reset_to_level_1() -> void:
 	daily_chest_50_claimed = false
 	daily_chest_100_claimed = false
 	
+	StorageManager.recalculate_capacities()
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
 	EventBus.gold_changed.emit(StorageManager.gold, 0)
 	EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	zoo_updated.emit("")
 	puzzle_pieces_changed.emit(puzzle_pieces)
 
@@ -463,6 +464,8 @@ func save_game() -> void:
 			"level": StorageManager.level,
 			"silo_capacity": StorageManager.silo_capacity,
 			"barn_capacity": StorageManager.barn_capacity,
+			"purchased_silo_bonus": StorageManager.purchased_silo_bonus,
+			"purchased_barn_bonus": StorageManager.purchased_barn_bonus,
 			"silo_items": StorageManager.silo_items.duplicate(),
 			"barn_items": StorageManager.barn_items.duplicate()
 		},
@@ -618,8 +621,20 @@ func load_game() -> bool:
 		StorageManager.diamonds = int(econ.get("diamonds", StorageManager.diamonds))
 		StorageManager.xp = int(econ.get("xp", StorageManager.xp))
 		StorageManager.level = int(econ.get("level", StorageManager.level))
-		StorageManager.silo_capacity = maxi(100, int(econ.get("silo_capacity", 100)))
-		StorageManager.barn_capacity = maxi(100, int(econ.get("barn_capacity", 100)))
+		var saved_silo_cap: int = maxi(100, int(econ.get("silo_capacity", 100)))
+		var saved_barn_cap: int = maxi(100, int(econ.get("barn_capacity", 100)))
+		StorageManager.silo_capacity = saved_silo_cap
+		StorageManager.barn_capacity = saved_barn_cap
+
+		if econ.has("purchased_silo_bonus") and econ.has("purchased_barn_bonus"):
+			StorageManager.purchased_silo_bonus = maxi(0, int(econ.get("purchased_silo_bonus", 0)))
+			StorageManager.purchased_barn_bonus = maxi(0, int(econ.get("purchased_barn_bonus", 0)))
+		else:
+			StorageManager.purchased_silo_bonus = 0
+			StorageManager.purchased_barn_bonus = 0
+			StorageManager.recalculate_capacities()
+			StorageManager.purchased_silo_bonus = maxi(0, saved_silo_cap - StorageManager.silo_capacity)
+			StorageManager.purchased_barn_bonus = maxi(0, saved_barn_cap - StorageManager.barn_capacity)
 		
 		var s_items: Dictionary = econ.get("silo_items", {}) as Dictionary
 		if not s_items.is_empty():
@@ -672,12 +687,11 @@ func load_game() -> bool:
 				if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
 					StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
+		StorageManager.recalculate_capacities()
 		EventBus.coins_changed.emit(StorageManager.coins, 0)
 		EventBus.gold_changed.emit(StorageManager.gold, 0)
 		EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 		EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-		EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-		EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	
 	# Restore Building Custom Names
 	if data.has("building_custom_names"):
