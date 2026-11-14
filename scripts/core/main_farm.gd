@@ -34,6 +34,7 @@ var _truck_prop: Node2D = null
 var _barn_prop: Node2D = null
 var _silo_prop: Node2D = null
 var _roadside_shop_prop: Node2D = null
+var _mini_zoo_prop: Node2D = null
 
 const SpecializedNPCClass = preload("res://scripts/entities/specialized_npc.gd")
 const ChibiSceneryBuilderClass = preload("res://scripts/map/chibi_scenery_builder.gd")
@@ -62,6 +63,7 @@ var _specialized_npcs: Array[Node2D] = []
 var _pending_build_id: String = ""
 var _pending_build_cost: int = 0
 var _pending_build_materials: Dictionary = {}
+var _pending_build_start_msec: int = 0
 var _is_relocating_mode: bool = false
 
 var _relocating_node: Node2D = null
@@ -182,10 +184,13 @@ func _ready() -> void:
 	_ghost_sprite.position = Vector2.ZERO
 	_ghost_preview_node.add_child(_ghost_sprite)
 
-	# Initial Farm Build if Empty
-	if GridManager.occupied_cells.is_empty():
-		_setup_initial_farm()
+	# Always reset GridManager state before building the farm so re-entering MainFarm from TitleScreen works cleanly
+	GridManager.occupied_cells.clear()
+	GridManager.placed_buildings.clear()
+	_setup_initial_farm()
+	_setup_environment_decorations()
 	_apply_saved_structure_positions()
+	restore_from_save_manager()
 	_setup_road_tilemap_layer()
 	_sync_road_tilemap()
 	call_deferred("_sync_road_tilemap")
@@ -663,6 +668,9 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		btn_silo_reloc.pressed.connect(func() -> void: start_relocating_structure(node_wrapper))
 		node_wrapper.add_child(btn_silo_reloc)
 	elif sprite_id == "building_mini_zoo" or sprite_id == "mini_zoo":
+		_mini_zoo_prop = node_wrapper
+		_mini_zoo_prop.add_to_group("interactable")
+		_mini_zoo_prop.set_meta("interact_type", "zoo_entrance")
 		var lbl_zoo: Label = Label.new()
 		lbl_zoo.text = SaveManager.get_building_name("mini_zoo", "🎪 KHU SỞ THÚ")
 		lbl_zoo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1257,6 +1265,30 @@ func _input(event: InputEvent) -> void:
 			if ek.is_pressed() and (ek.keycode == KEY_ESCAPE or event.is_action_pressed("ui_cancel")):
 				_cancel_relocating_structure()
 				get_viewport().set_input_as_handled()
+		return
+
+	if _pending_build_id != "":
+		if event is InputEventMouseMotion:
+			_update_ghost_building_preview(get_global_mouse_position())
+		elif event is InputEventMouseButton:
+			var mb_build: InputEventMouseButton = event as InputEventMouseButton
+			if mb_build.is_pressed():
+				if mb_build.button_index == MOUSE_BUTTON_LEFT:
+					if Time.get_ticks_msec() - _pending_build_start_msec >= 180:
+						# Ignore clicks on top HUD or bottom toolbar so UI buttons still work
+						var scr_pos: Vector2 = mb_build.position
+						var vp_sz: Vector2 = get_viewport_rect().size
+						if scr_pos.y > 58.0 and scr_pos.y < vp_sz.y - 78.0:
+							_handle_building_placement_click(get_global_mouse_position())
+							get_viewport().set_input_as_handled()
+				elif mb_build.button_index == MOUSE_BUTTON_RIGHT:
+					cancel_pending_build()
+					get_viewport().set_input_as_handled()
+		elif event is InputEventKey:
+			var ek_build: InputEventKey = event as InputEventKey
+			if ek_build.is_pressed() and (ek_build.keycode == KEY_ESCAPE or event.is_action_pressed("ui_cancel")):
+				cancel_pending_build()
+				get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _relocating_node != null:
@@ -1432,10 +1464,22 @@ func _spawn_specialized_npcs() -> void:
 	
 	print("[MainFarm] Spawned 5 Specialized Functional NPCs at correct building positions!")
 
-func start_building_placement(building_id: String, cost: int, req_materials: Dictionary = {}) -> void:
+func start_building_placement(building_id: String, cost: int = 0, req_materials: Dictionary = {}) -> void:
 	_pending_build_id = building_id
-	_pending_build_cost = cost
-	_pending_build_materials = req_materials.duplicate()
+	var b_cfg: Dictionary = DataManager.get_building(building_id)
+	var resolved_cost: int = cost
+	if resolved_cost <= 0 and not b_cfg.is_empty():
+		var raw_c: Variant = b_cfg.get("cost_gold", 0)
+		if raw_c != null:
+			resolved_cost = int(raw_c)
+	_pending_build_cost = maxi(0, resolved_cost)
+	if not req_materials.is_empty():
+		_pending_build_materials = req_materials.duplicate()
+	elif not b_cfg.is_empty() and b_cfg.get("build_materials", null) is Dictionary:
+		_pending_build_materials = (b_cfg["build_materials"] as Dictionary).duplicate()
+	else:
+		_pending_build_materials = {}
+	_pending_build_start_msec = Time.get_ticks_msec()
 	
 	if drag_action_manager != null:
 		drag_action_manager.set_tool(DragActionManager.ToolType.NONE)
@@ -1446,6 +1490,21 @@ func start_building_placement(building_id: String, cost: int, req_materials: Dic
 		if building_id == "mini_zoo":
 			tex_key = "building_mini_zoo"
 			spr_sz = Vector2(96.0, 96.0)
+		elif building_id == "zoo_capybara":
+			tex_key = "zoo_enclosure_capybara"
+			spr_sz = Vector2(128.0, 96.0)
+		elif building_id == "zoo_panda":
+			tex_key = "zoo_enclosure_panda"
+			spr_sz = Vector2(128.0, 96.0)
+		elif building_id == "zoo_penguin":
+			tex_key = "zoo_enclosure_penguin"
+			spr_sz = Vector2(128.0, 96.0)
+		elif building_id == "zoo_giraffe":
+			tex_key = "zoo_enclosure_giraffe"
+			spr_sz = Vector2(128.0, 96.0)
+		elif building_id == "zoo_balloon":
+			tex_key = "hot_air_balloon"
+			spr_sz = Vector2(88.0, 100.0)
 		elif building_id == "feed_mill":
 			tex_key = "feed_mill"
 			spr_sz = Vector2(88.0, 88.0)
@@ -1504,9 +1563,9 @@ func start_building_placement(building_id: String, cost: int, req_materials: Dic
 		_update_ghost_building_preview(get_global_mouse_position())
 
 func _get_pending_build_tile_size(b_id: String) -> Vector2i:
-	if b_id in ["cow_pen", "cow_pasture", "cow", "pig_pen", "pig", "sheep_pen", "sheep_pasture", "sheep"]:
+	if b_id in ["cow_pen", "cow_pasture", "cow", "pig_pen", "pig", "sheep_pen", "sheep_pasture", "sheep", "zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]:
 		return Vector2i(4, 3)
-	if b_id in ["mini_zoo", "feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
+	if b_id in ["mini_zoo", "zoo_balloon", "feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
 		return Vector2i(3, 3)
 	if b_id in ["bee_hive", "beehive_tree", "fountain", "fountain_east", "poodle_house"]:
 		return Vector2i(2, 2)
@@ -1541,6 +1600,23 @@ func _update_ghost_building_preview(mouse_pos: Vector2) -> void:
 	else:
 		_ghost_preview_node.modulate = Color(1.0, 0.35, 0.35, 0.70)
 
+func _record_structure_position(save_key: String, cell: Vector2i, t_size: Vector2i) -> void:
+	if save_key == "":
+		return
+	var saved_positions: Dictionary = {}
+	if SaveManager != null and SaveManager.has_meta("custom_structure_positions"):
+		saved_positions = (SaveManager.get_meta("custom_structure_positions") as Dictionary).duplicate(true)
+	saved_positions[save_key] = {
+		"cell_x": cell.x,
+		"cell_y": cell.y,
+		"tile_w": t_size.x,
+		"tile_h": t_size.y
+	}
+	if SaveManager != null:
+		SaveManager.set_meta("custom_structure_positions", saved_positions)
+		SaveManager.custom_building_positions[save_key] = (saved_positions[save_key] as Dictionary).duplicate(true)
+	_save_structure_positions_to_disk(saved_positions)
+
 func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 	if _pending_build_id == "":
 		return
@@ -1548,6 +1624,10 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 	var cell: Vector2i = GridManager.world_to_grid(mouse_pos)
 	var snapped_pos: Vector2 = Vector2(float(cell.x) * 32.0 + 16.0, float(cell.y) * 32.0 + 16.0)
 	var t_size: Vector2i = _get_pending_build_tile_size(_pending_build_id)
+	var center_pos: Vector2 = Vector2(
+		(float(cell.x) + float(t_size.x) * 0.5) * 32.0,
+		(float(cell.y) + float(t_size.y) * 0.5) * 32.0
+	)
 	
 	var can_place: bool = true
 	for ox: int in range(t_size.x):
@@ -1565,8 +1645,16 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 			
 	if not can_place:
 		AudioManager.play_sfx("error")
+		if ui_hud != null and ui_hud.has_method("show_floating_notice"):
+			ui_hud.show_floating_notice("❌ Vị trí này đang vướng vật cản hoặc mặt nước!")
 		return
 	
+	var b_cfg: Dictionary = DataManager.get_building(_pending_build_id)
+	if _pending_build_cost <= 0 and not b_cfg.is_empty():
+		var raw_c: Variant = b_cfg.get("cost_gold", 0)
+		if raw_c != null:
+			_pending_build_cost = maxi(0, int(raw_c))
+
 	for mat_id: String in _pending_build_materials:
 		var req_cnt: int = int(_pending_build_materials[mat_id])
 		if req_cnt > 0 and StorageManager.get_item_count(mat_id) < req_cnt:
@@ -1576,55 +1664,112 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 			cancel_pending_build()
 			return
 		
-	if not StorageManager.spend_gold(_pending_build_cost):
+	if not StorageManager.has_gold(_pending_build_cost) or not StorageManager.spend_gold(_pending_build_cost):
 		AudioManager.play_sfx("error")
+		if ui_hud != null and ui_hud.has_method("show_floating_notice"):
+			ui_hud.show_floating_notice("❌ Không đủ Vàng để xây dựng!")
 		cancel_pending_build()
 		return
 	
+	var spent_gold: int = _pending_build_cost
+	var built_id: String = _pending_build_id
+	var b_name: String = String(b_cfg.get("name", built_id))
+
 	for mat_id: String in _pending_build_materials:
 		var req_cnt: int = int(_pending_build_materials[mat_id])
 		if req_cnt > 0:
 			StorageManager.remove_item(mat_id, req_cnt)
 	
-	EventBus.gold_changed.emit(StorageManager.gold, -_pending_build_cost)
-	SaveManager.mark_building_constructed(_pending_build_id)
+	for ox_clear: int in range(t_size.x):
+		for oy_clear: int in range(t_size.y):
+			auto_clear_decor_at_cell(cell + Vector2i(ox_clear, oy_clear))
+
+	SaveManager.mark_building_constructed(built_id)
 	
-	var activated_existing: bool = _try_activate_preplaced_building(_pending_build_id, cell, t_size)
+	var activated_existing: bool = _try_activate_preplaced_building(built_id, cell, t_size)
 	if not activated_existing:
-		if _pending_build_id == "mini_zoo":
-			_spawn_building_prop("building_mini_zoo", cell, Vector2i(3, 3), Vector2(96, 96))
-		elif _pending_build_id in ["feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
-			_spawn_production_machine(_pending_build_id, cell)
-		elif _pending_build_id in ["cow_pen", "cow_pasture", "cow"]:
+		if built_id == "mini_zoo":
+			if not SaveManager.is_animal_unlocked("zoo_capybara"):
+				SaveManager.unlock_animal("zoo_capybara")
+			if _mini_zoo_prop != null and is_instance_valid(_mini_zoo_prop):
+				var old_mz: Vector2i = _mini_zoo_prop.get_meta("grid_pos", cell) as Vector2i
+				for ox: int in range(3):
+					for oy: int in range(3):
+						var oc: Vector2i = old_mz + Vector2i(ox, oy)
+						GridManager.occupied_cells.erase(oc)
+						if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(oc.x, oc.y):
+							GridManager.astar_grid.set_point_solid(oc, false)
+				_mini_zoo_prop.position = center_pos
+				_mini_zoo_prop.set_meta("grid_pos", cell)
+				for ox2: int in range(3):
+					for oy2: int in range(3):
+						var nc: Vector2i = cell + Vector2i(ox2, oy2)
+						GridManager.occupied_cells[nc] = 999
+						if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(nc.x, nc.y):
+							GridManager.astar_grid.set_point_solid(nc, true)
+			else:
+				_spawn_building_prop("building_mini_zoo", cell, Vector2i(3, 3), Vector2(96, 96))
+			_record_structure_position("prop_mini_zoo", cell, Vector2i(3, 3))
+		elif built_id in ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]:
+			SaveManager.unlock_animal(built_id)
+			if zoo_manager != null and is_instance_valid(zoo_manager):
+				var enc_dict_var: Variant = zoo_manager.get("enclosures")
+				if enc_dict_var is Dictionary and (enc_dict_var as Dictionary).has(built_id):
+					var enc_node: Node2D = (enc_dict_var as Dictionary)[built_id] as Node2D
+					if enc_node != null and is_instance_valid(enc_node):
+						enc_node.position = center_pos
+						enc_node.visible = true
+						if enc_node.has_method("_refresh_state"):
+							enc_node.call("_refresh_state")
+			_record_structure_position("zoo_" + built_id, cell, Vector2i(4, 3))
+		elif built_id == "zoo_balloon":
+			if zoo_manager != null and is_instance_valid(zoo_manager):
+				var balloon_node: Node2D = zoo_manager.get("hot_air_balloon") as Node2D
+				if balloon_node != null and is_instance_valid(balloon_node):
+					balloon_node.position = center_pos
+					balloon_node.visible = true
+			_record_structure_position("zoo_balloon", cell, Vector2i(3, 3))
+		elif built_id in ["feed_mill", "bakery", "cake_oven", "juice_stand", "ice_cream"]:
+			_spawn_production_machine(built_id, cell)
+			_record_structure_position("machine_" + built_id, cell, Vector2i(3, 3))
+		elif built_id in ["cow_pen", "cow_pasture", "cow"]:
 			_spawn_animal_pen("cow", cell, 2)
-		elif _pending_build_id in ["pig_pen", "pig"]:
+			_record_structure_position("pen_cow", cell, Vector2i(4, 3))
+		elif built_id in ["pig_pen", "pig"]:
 			_spawn_animal_pen("pig", cell, 2)
-		elif _pending_build_id in ["sheep_pen", "sheep_pasture", "sheep"]:
+			_record_structure_position("pen_pig", cell, Vector2i(4, 3))
+		elif built_id in ["sheep_pen", "sheep_pasture", "sheep"]:
 			_spawn_animal_pen("sheep", cell, 2)
-		elif _pending_build_id in ["bee_hive", "beehive_tree"]:
+			_record_structure_position("pen_sheep", cell, Vector2i(4, 3))
+		elif built_id in ["bee_hive", "beehive_tree"]:
 			_spawn_building_prop("building_bee_hive", cell, Vector2i(2, 2), Vector2(70, 70))
-		elif _pending_build_id in ["fountain", "fountain_east"]:
+			_record_structure_position("prop_beehive_tree", cell, Vector2i(2, 2))
+		elif built_id in ["fountain", "fountain_east"]:
 			_spawn_building_prop("fountain", cell, Vector2i(2, 2), Vector2(70, 70))
-		elif _pending_build_id in ["flower_bed", "flower_arch"]:
+		elif built_id in ["flower_bed", "flower_arch"]:
 			_spawn_flowerbed("flowerbed_round", snapped_pos, Vector2(36, 26))
 			save_custom_decorations()
-		elif _pending_build_id in ["wooden_bench", "park_bench", "scarecrow", "zoo_shop", "lantern_park", "hedge_white", "wood_bridge", "honor_board", "zoo_fastfood", "golden_statue"]:
+		elif built_id in ["wooden_bench", "park_bench", "scarecrow", "zoo_shop", "lantern_park", "hedge_white", "wood_bridge", "honor_board", "zoo_fastfood", "golden_statue"]:
 			var spr_key: String = "wooden_bench"
-			var b_data: Dictionary = DataManager.get_building(_pending_build_id)
+			var b_data: Dictionary = DataManager.get_building(built_id)
 			var spr_str: String = String(b_data.get("sprite", ""))
 			if not spr_str.is_empty() and SpriteAtlasManager.has_texture(spr_str):
 				spr_key = spr_str
-			elif SpriteAtlasManager.has_texture(_pending_build_id):
-				spr_key = _pending_build_id
+			elif SpriteAtlasManager.has_texture(built_id):
+				spr_key = built_id
 			_spawn_movable_decor(spr_key, snapped_pos, Vector2(40, 30))
 			save_custom_decorations()
 	
 	_refresh_building_progression_visibility()
 	_update_specialized_npc_positions()
 	GridManager.add_attraction_score(15)
+	SaveManager.save_game()
 	AudioManager.play_sfx("plant")
 	if ui_hud != null and ui_hud.has_method("show_floating_notice"):
-		ui_hud.show_floating_notice("🔨 Đã xây dựng công trình mới thành công!")
+		if spent_gold > 0:
+			ui_hud.show_floating_notice("🔨 Đã xây dựng %s (-%d Vàng)!" % [b_name, spent_gold])
+		else:
+			ui_hud.show_floating_notice("🔨 Đã xây dựng %s thành công!" % b_name)
 	_pending_build_id = ""
 	_pending_build_materials.clear()
 	if _ghost_preview_node != null:
@@ -1638,6 +1783,14 @@ func _try_activate_preplaced_building(b_id: String, cell: Vector2i, t_size: Vect
 	if b_id in ["feed_mill", "bakery", "juice_stand", "cake_oven"]:
 		for m: ProductionMachine in _production_machines:
 			if is_instance_valid(m) and m.machine_id == b_id and not m.visible:
+				var old_m_cell: Vector2i = m.grid_pos
+				for ox_old: int in range(3):
+					for oy_old: int in range(3):
+						var oc: Vector2i = old_m_cell + Vector2i(ox_old, oy_old)
+						if int(GridManager.occupied_cells.get(oc, 0)) in [888, 1000]:
+							GridManager.occupied_cells.erase(oc)
+							if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(oc.x, oc.y):
+								GridManager.astar_grid.set_point_solid(oc, false)
 				m.grid_pos = cell
 				m.position = center_pos
 				m.visible = true
@@ -1648,11 +1801,20 @@ func _try_activate_preplaced_building(b_id: String, cell: Vector2i, t_size: Vect
 						GridManager.occupied_cells[c] = 888
 						if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(c.x, c.y):
 							GridManager.astar_grid.set_point_solid(c, true)
+				_record_structure_position("machine_" + b_id, cell, Vector2i(3, 3))
 				return true
 	elif b_id in ["cow_pen", "cow_pasture", "cow", "pig_pen", "pig", "sheep_pen", "sheep_pasture", "sheep"]:
 		var target_anim: String = SaveManager._normalize_building_id(b_id)
 		for pen: AnimalPen in _animal_pens:
 			if is_instance_valid(pen) and pen.animal_id == target_anim and not pen.visible:
+				var old_p_cell: Vector2i = pen.grid_pos
+				for ox_old: int in range(4):
+					for oy_old: int in range(3):
+						var oc: Vector2i = old_p_cell + Vector2i(ox_old, oy_old)
+						if int(GridManager.occupied_cells.get(oc, 0)) in [777, 2000]:
+							GridManager.occupied_cells.erase(oc)
+							if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(oc.x, oc.y):
+								GridManager.astar_grid.set_point_solid(oc, false)
 				pen.grid_pos = cell
 				pen.position = center_pos
 				pen.visible = true
@@ -1663,11 +1825,13 @@ func _try_activate_preplaced_building(b_id: String, cell: Vector2i, t_size: Vect
 						GridManager.occupied_cells[c] = 777
 						if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(c.x, c.y):
 							GridManager.astar_grid.set_point_solid(c, true)
+				_record_structure_position("pen_" + target_anim, cell, Vector2i(4, 3))
 				return true
 	elif b_id in ["bee_hive", "beehive_tree"] and beehive_tree != null and is_instance_valid(beehive_tree) and not beehive_tree.visible:
 		beehive_tree.position = center_pos
 		beehive_tree.visible = true
 		beehive_tree.process_mode = Node.PROCESS_MODE_INHERIT
+		_record_structure_position("prop_beehive_tree", cell, Vector2i(2, 2))
 		return true
 	elif b_id == "poodle_house" and pet_house_poodle != null and is_instance_valid(pet_house_poodle) and not pet_house_poodle.visible:
 		pet_house_poodle.position = center_pos
@@ -1677,6 +1841,7 @@ func _try_activate_preplaced_building(b_id: String, cell: Vector2i, t_size: Vect
 			pet_poodle.position = center_pos + Vector2(30.0, 15.0)
 			pet_poodle.visible = true
 			pet_poodle.process_mode = Node.PROCESS_MODE_INHERIT
+		_record_structure_position("prop_poodle_house", cell, Vector2i(2, 2))
 		return true
 	return false
 
@@ -1761,16 +1926,18 @@ func _refresh_building_progression_visibility() -> void:
 		elif nid == "barista":
 			npc.visible = SaveManager.is_building_constructed("juice_stand")
 
-	var zoo_unlocked: bool = (StorageManager.level >= 11)
-	if zoo_unlocked and not SaveManager.is_animal_unlocked("zoo_capybara"):
+	var zoo_constructed: bool = SaveManager.is_building_constructed("mini_zoo") or SaveManager.is_building_constructed("zoo_capybara") or SaveManager.is_building_constructed("zoo_panda") or SaveManager.is_building_constructed("zoo_penguin") or SaveManager.is_building_constructed("zoo_giraffe") or SaveManager.is_building_constructed("zoo_balloon") or SaveManager.is_animal_unlocked("zoo_capybara") or SaveManager.is_animal_unlocked("zoo_panda") or SaveManager.is_animal_unlocked("zoo_penguin") or SaveManager.is_animal_unlocked("zoo_giraffe")
+	if SaveManager.is_building_constructed("mini_zoo") and not SaveManager.is_animal_unlocked("zoo_capybara"):
 		SaveManager.unlock_animal("zoo_capybara")
 	if zoo_manager != null and is_instance_valid(zoo_manager):
-		zoo_manager.visible = zoo_unlocked
-		zoo_manager.process_mode = Node.PROCESS_MODE_INHERIT if zoo_unlocked else Node.PROCESS_MODE_DISABLED
+		zoo_manager.visible = zoo_constructed
+		zoo_manager.process_mode = Node.PROCESS_MODE_INHERIT if zoo_constructed else Node.PROCESS_MODE_DISABLED
+		if zoo_manager.has_method("refresh_zoo_grid_state"):
+			zoo_manager.call("refresh_zoo_grid_state")
 	var photo_booth: Node2D = get_node_or_null("ZooPhotoBooth") as Node2D
 	if photo_booth != null and is_instance_valid(photo_booth):
-		photo_booth.visible = zoo_unlocked
-		photo_booth.process_mode = Node.PROCESS_MODE_INHERIT if zoo_unlocked else Node.PROCESS_MODE_DISABLED
+		photo_booth.visible = zoo_constructed
+		photo_booth.process_mode = Node.PROCESS_MODE_INHERIT if zoo_constructed else Node.PROCESS_MODE_DISABLED
 
 func _on_player_level_up(_new_level: int) -> void:
 	_refresh_building_progression_visibility()
@@ -1877,9 +2044,6 @@ func _is_valid_structure_placement(cell: Vector2i, tile_size: Vector2i) -> bool:
 		return false
 	if cell.x + tile_size.x > GridManager.GRID_WIDTH or cell.y + tile_size.y > GridManager.GRID_HEIGHT:
 		return false
-	# Vùng đất chính trang trại (x < 840, không lấn sang sông / cầu / sở thú)
-	if float(cell.x + tile_size.x) * 32.0 > 840.0:
-		return false
 	# Tránh góc HUD ở trên bên trái
 	if cell.x < 4 and cell.y < 3:
 		return false
@@ -1955,18 +2119,8 @@ func _commit_relocating_structure(new_cell: Vector2i) -> void:
 
 	var save_key: String = _get_structure_save_key(_relocating_node)
 	if save_key != "":
-		var saved_positions: Dictionary = {}
-		if SaveManager != null and SaveManager.has_meta("custom_structure_positions"):
-			saved_positions = (SaveManager.get_meta("custom_structure_positions") as Dictionary).duplicate()
-		saved_positions[save_key] = {
-			"cell_x": new_cell.x,
-			"cell_y": new_cell.y,
-			"tile_w": _relocating_tile_size.x,
-			"tile_h": _relocating_tile_size.y
-		}
-		if SaveManager != null:
-			SaveManager.set_meta("custom_structure_positions", saved_positions)
-		_save_structure_positions_to_disk(saved_positions)
+		_record_structure_position(save_key, new_cell, _relocating_tile_size)
+	SaveManager.save_game()
 
 	_relocating_node.modulate = _relocating_initial_modulate
 	_relocating_node.z_index -= 50
@@ -2072,12 +2226,16 @@ func _load_structure_positions_from_disk() -> Dictionary:
 
 func _apply_saved_structure_positions() -> void:
 	var saved_dict: Dictionary = {}
-	if SaveManager != null and SaveManager.has_meta("custom_structure_positions"):
-		saved_dict = (SaveManager.get_meta("custom_structure_positions") as Dictionary).duplicate()
+	if SaveManager != null and not SaveManager.custom_building_positions.is_empty():
+		saved_dict = SaveManager.custom_building_positions.duplicate(true)
+	if saved_dict.is_empty() and SaveManager != null and SaveManager.has_meta("custom_structure_positions"):
+		saved_dict = (SaveManager.get_meta("custom_structure_positions") as Dictionary).duplicate(true)
 	if saved_dict.is_empty():
 		saved_dict = _load_structure_positions_from_disk()
-		if SaveManager != null and not saved_dict.is_empty():
-			SaveManager.set_meta("custom_structure_positions", saved_dict)
+
+	if SaveManager != null and not saved_dict.is_empty():
+		SaveManager.set_meta("custom_structure_positions", saved_dict.duplicate(true))
+		SaveManager.custom_building_positions = saved_dict.duplicate(true)
 
 	if saved_dict.is_empty():
 		return
@@ -2088,6 +2246,10 @@ func _apply_saved_structure_positions() -> void:
 			continue
 		var target_cell: Vector2i = Vector2i(int(pos_info["cell_x"]), int(pos_info["cell_y"]))
 		var t_size: Vector2i = Vector2i(int(pos_info.get("tile_w", 3)), int(pos_info.get("tile_h", 3)))
+		var center_pixel: Vector2 = Vector2(
+			(float(target_cell.x) + float(t_size.x) * 0.5) * 32.0,
+			(float(target_cell.y) + float(t_size.y) * 0.5) * 32.0
+		)
 		var target_node: Node2D = null
 		var old_cell: Vector2i = Vector2i.ZERO
 
@@ -2119,6 +2281,27 @@ func _apply_saved_structure_positions() -> void:
 			target_node = _roadside_shop_prop
 			old_cell = _roadside_shop_prop.get_meta("grid_pos", Vector2i(6, 17)) as Vector2i
 			t_size = Vector2i(3, 3)
+		elif key == "prop_beehive_tree" and beehive_tree != null and is_instance_valid(beehive_tree):
+			beehive_tree.position = center_pixel
+			continue
+		elif key == "prop_poodle_house" and pet_house_poodle != null and is_instance_valid(pet_house_poodle):
+			pet_house_poodle.position = center_pixel
+			if pet_poodle != null and is_instance_valid(pet_poodle):
+				pet_poodle.position = center_pixel + Vector2(30.0, 15.0)
+			continue
+		elif key == "zoo_balloon" and zoo_manager != null and is_instance_valid(zoo_manager):
+			var bal: Node2D = zoo_manager.get("hot_air_balloon") as Node2D
+			if bal != null and is_instance_valid(bal):
+				bal.position = center_pixel
+			continue
+		elif key.begins_with("zoo_") and zoo_manager != null and is_instance_valid(zoo_manager):
+			var zid: String = key.trim_prefix("zoo_")
+			var enc_map_var: Variant = zoo_manager.get("enclosures")
+			if enc_map_var is Dictionary and (enc_map_var as Dictionary).has(zid):
+				var enc_n: Node2D = (enc_map_var as Dictionary)[zid] as Node2D
+				if enc_n != null and is_instance_valid(enc_n):
+					enc_n.position = center_pixel
+			continue
 
 		if target_node != null:
 			# Xóa ô cũ
@@ -2130,10 +2313,6 @@ func _apply_saved_structure_positions() -> void:
 						GridManager.astar_grid.set_point_solid(c, false)
 
 			# Di chuyển đến ô mới
-			var center_pixel: Vector2 = Vector2(
-				(float(target_cell.x) + float(t_size.x) * 0.5) * 32.0,
-				(float(target_cell.y) + float(t_size.y) * 0.5) * 32.0
-			)
 			target_node.position = center_pixel
 			if target_node is ProductionMachine:
 				(target_node as ProductionMachine).grid_pos = target_cell
@@ -2158,6 +2337,200 @@ func _apply_saved_structure_positions() -> void:
 					auto_clear_decor_at_cell(c)
 
 	_update_specialized_npc_positions()
+
+func restore_from_save_manager() -> void:
+	if SaveManager == null:
+		return
+
+	# 1. Restore saved Path tiles if present
+	if not SaveManager.saved_paths_data.is_empty():
+		for old_path_var: Variant in GridManager.path_cells.keys():
+			var old_c: Vector2i = old_path_var as Vector2i
+			GridManager.remove_path(old_c)
+		for p_entry_var: Variant in SaveManager.saved_paths_data:
+			if p_entry_var is Dictionary:
+				var p_entry: Dictionary = p_entry_var as Dictionary
+				var pc: Vector2i = Vector2i(int(p_entry.get("x", -1)), int(p_entry.get("y", -1)))
+				if GridManager.is_within_bounds(pc):
+					GridManager.place_path(pc)
+
+	# 2. Apply saved structure positions first
+	_apply_saved_structure_positions()
+
+	# 3. Restore all FieldPlots (including player-built plots at custom coordinates and crop growth states)
+	if not SaveManager.saved_plots_data.is_empty():
+		var saved_coords: Dictionary = {}
+		for p_var: Variant in SaveManager.saved_plots_data:
+			if p_var is Dictionary:
+				var pd: Dictionary = p_var as Dictionary
+				var gx: int = int(pd.get("grid_x", -1))
+				var gy: int = int(pd.get("grid_y", -1))
+				if gx >= 0 and gy >= 0:
+					saved_coords[Vector2i(gx, gy)] = pd
+
+		# Remove any default initial plot that the player dismantled
+		var existing_coords: Array = field_plots.keys()
+		for ex_var: Variant in existing_coords:
+			var ex_c: Vector2i = ex_var as Vector2i
+			if not saved_coords.has(ex_c):
+				var old_plot: FieldPlot = field_plots[ex_c] as FieldPlot
+				if old_plot != null and is_instance_valid(old_plot):
+					old_plot.queue_free()
+				field_plots.erase(ex_c)
+				var inst_old: int = int(GridManager.occupied_cells.get(ex_c, 0))
+				if inst_old > 0 and inst_old < 500:
+					GridManager.remove_building(inst_old)
+				elif int(GridManager.occupied_cells.get(ex_c, 0)) == 0:
+					GridManager.occupied_cells.erase(ex_c)
+
+		# Spawn missing player-built plots and restore state for all plots
+		for coord_var: Variant in saved_coords:
+			var coord: Vector2i = coord_var as Vector2i
+			var p_data: Dictionary = saved_coords[coord] as Dictionary
+			var plot: FieldPlot = field_plots.get(coord, null) as FieldPlot
+			if plot == null or not is_instance_valid(plot):
+				if GridManager.occupied_cells.has(coord) and int(GridManager.occupied_cells[coord]) == 950:
+					GridManager.occupied_cells.erase(coord)
+					if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(coord.x, coord.y):
+						GridManager.astar_grid.set_point_solid(coord, false)
+				var inst_id: int = GridManager.place_building("field_plot", coord)
+				if inst_id == -1:
+					GridManager.occupied_cells.erase(coord)
+					GridManager.path_cells.erase(coord)
+					inst_id = GridManager.place_building("field_plot", coord)
+				if not field_plots.has(coord):
+					plot = _spawn_field_plot(coord, inst_id)
+				else:
+					plot = field_plots[coord] as FieldPlot
+
+			if plot != null and is_instance_valid(plot):
+				var saved_state: int = int(p_data.get("state", 0))
+				var saved_crop: String = String(p_data.get("crop_id", ""))
+				var saved_plant_ts: int = int(p_data.get("plant_timestamp", 0))
+				var saved_finish_ts: int = int(p_data.get("finish_timestamp", 0))
+				var saved_time_left: float = float(p_data.get("time_left", 0.0))
+				if saved_state == int(FieldPlot.PlotState.GROWING) and saved_crop != "":
+					plot.crop_id = saved_crop
+					plot.plant_timestamp = saved_plant_ts
+					plot.finish_timestamp = saved_finish_ts
+					plot.time_left = maxf(0.1, saved_time_left)
+					plot.state = FieldPlot.PlotState.GROWING
+					plot._on_second_ticked(TickManager.now())
+					plot._update_crop_visual()
+				elif saved_state == int(FieldPlot.PlotState.READY) and saved_crop != "":
+					plot.crop_id = saved_crop
+					plot.plant_timestamp = saved_plant_ts
+					plot.finish_timestamp = saved_finish_ts
+					plot.time_left = 0.0
+					plot.state = FieldPlot.PlotState.READY
+					plot._update_crop_visual()
+				else:
+					plot.crop_id = ""
+					plot.time_left = 0.0
+					plot.state = FieldPlot.PlotState.EMPTY
+					plot._update_crop_visual()
+
+	# 4. Restore AnimalPens (positions, extra pens, and production states)
+	if not SaveManager.saved_pens_data.is_empty():
+		var used_pens: Dictionary = {}
+		for pen_entry_var: Variant in SaveManager.saved_pens_data:
+			if not (pen_entry_var is Dictionary):
+				continue
+			var pen_d: Dictionary = pen_entry_var as Dictionary
+			var a_id: String = String(pen_d.get("animal_id", ""))
+			if a_id == "":
+				continue
+			var target_cell: Vector2i = Vector2i(int(pen_d.get("grid_x", 0)), int(pen_d.get("grid_y", 0)))
+			var matched_pen: AnimalPen = null
+			for existing_p: AnimalPen in _animal_pens:
+				if is_instance_valid(existing_p) and existing_p.animal_id == a_id and not used_pens.has(existing_p):
+					matched_pen = existing_p
+					used_pens[existing_p] = true
+					break
+			if matched_pen == null:
+				matched_pen = _spawn_animal_pen(a_id, target_cell, int(pen_d.get("animal_count", 2)))
+				used_pens[matched_pen] = true
+			else:
+				var old_pc: Vector2i = matched_pen.grid_pos
+				if old_pc != target_cell:
+					for ox: int in range(4):
+						for oy: int in range(3):
+							var oc: Vector2i = old_pc + Vector2i(ox, oy)
+							if int(GridManager.occupied_cells.get(oc, 0)) in [777, 2000]:
+								GridManager.occupied_cells.erase(oc)
+								if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(oc.x, oc.y):
+									GridManager.astar_grid.set_point_solid(oc, false)
+					matched_pen.grid_pos = target_cell
+					matched_pen.position = Vector2(
+						(float(target_cell.x) + 2.0) * 32.0,
+						(float(target_cell.y) + 1.5) * 32.0
+					)
+			if bool(pen_d.get("visible", false)):
+				SaveManager.mark_building_constructed(a_id)
+			matched_pen.animal_count = int(pen_d.get("animal_count", matched_pen.animal_count))
+			matched_pen.finish_timestamp = int(pen_d.get("finish_timestamp", 0))
+			matched_pen.state = int(pen_d.get("state", 0)) as AnimalPen.PenState
+			matched_pen._on_second_ticked(TickManager.now())
+
+	# 5. Restore ProductionMachines (positions, extra machines, queues, and completed items)
+	if not SaveManager.saved_machines_data.is_empty():
+		var used_machines: Dictionary = {}
+		for m_entry_var: Variant in SaveManager.saved_machines_data:
+			if not (m_entry_var is Dictionary):
+				continue
+			var m_d: Dictionary = m_entry_var as Dictionary
+			var m_id: String = String(m_d.get("machine_id", ""))
+			if m_id == "":
+				continue
+			var target_m_cell: Vector2i = Vector2i(int(m_d.get("grid_x", 0)), int(m_d.get("grid_y", 0)))
+			var matched_m: ProductionMachine = null
+			for existing_m: ProductionMachine in _production_machines:
+				if is_instance_valid(existing_m) and existing_m.machine_id == m_id and not used_machines.has(existing_m):
+					matched_m = existing_m
+					used_machines[existing_m] = true
+					break
+			if matched_m == null:
+				matched_m = _spawn_production_machine(m_id, target_m_cell)
+				used_machines[matched_m] = true
+			else:
+				var old_mc: Vector2i = matched_m.grid_pos
+				if old_mc != target_m_cell:
+					for ox: int in range(3):
+						for oy: int in range(3):
+							var oc: Vector2i = old_mc + Vector2i(ox, oy)
+							if int(GridManager.occupied_cells.get(oc, 0)) in [888, 1000]:
+								GridManager.occupied_cells.erase(oc)
+								if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(oc.x, oc.y):
+									GridManager.astar_grid.set_point_solid(oc, false)
+					matched_m.grid_pos = target_m_cell
+					matched_m.position = Vector2(
+						(float(target_m_cell.x) + 1.5) * 32.0,
+						(float(target_m_cell.y) + 1.5) * 32.0
+					)
+			if bool(m_d.get("visible", false)):
+				SaveManager.mark_building_constructed(m_id)
+			if m_d.has("queue") and m_d["queue"] is Array:
+				matched_m.queue.clear()
+				for q_it: Variant in (m_d["queue"] as Array):
+					if q_it is Dictionary:
+						matched_m.queue.append((q_it as Dictionary).duplicate())
+			if m_d.has("completed_items") and m_d["completed_items"] is Array:
+				matched_m.completed_items.clear()
+				for c_it: Variant in (m_d["completed_items"] as Array):
+					matched_m.completed_items.append(String(c_it))
+			matched_m._on_second_ticked(TickManager.now())
+
+	# 6. Restore Mini Zoo Prop if constructed
+	if SaveManager.is_building_constructed("mini_zoo") and (_mini_zoo_prop == null or not is_instance_valid(_mini_zoo_prop)):
+		var mz_cell: Vector2i = Vector2i(36, 9)
+		var mz_saved: Dictionary = SaveManager.get_building_custom_position("prop_mini_zoo")
+		if mz_saved.has("cell_x") and mz_saved.has("cell_y"):
+			mz_cell = Vector2i(int(mz_saved["cell_x"]), int(mz_saved["cell_y"]))
+		_spawn_building_prop("building_mini_zoo", mz_cell, Vector2i(3, 3), Vector2(96, 96))
+
+	_refresh_building_progression_visibility()
+	_update_specialized_npc_positions()
+	_sync_road_tilemap()
 
 func _update_specialized_npc_positions() -> void:
 	for npc: Node2D in _specialized_npcs:

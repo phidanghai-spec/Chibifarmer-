@@ -285,3 +285,40 @@ func test_crop_and_item_data_synced() -> void:
 		var i_dict: Dictionary = DataManager.items[cid] as Dictionary
 		assert_int(int(c_dict.get("growth_time_seconds", -1))).is_equal(int(i_dict.get("growth_time_seconds", -2)))
 		assert_int(int(c_dict.get("base_price", -1))).is_equal(int(i_dict.get("base_price", -2)))
+
+func test_user_reported_6_gameplay_fixes() -> void:
+	SaveManager.set_test_mode(true)
+	SaveManager.reset_to_level_1()
+
+	# 1. Emoji fallback font must be bound on DataManager and ThemeDB
+	assert_object(DataManager.main_font).is_not_null()
+	assert_object(DataManager.emoji_font).is_not_null()
+	assert_bool(DataManager.main_font.fallbacks.size() > 0).is_true()
+
+	# 2. Wheat & Corn must NOT be unlimited: deducts 1 seed when planted, fails when 0 in Silo (with gold >= 10)
+	StorageManager.gold = 200
+	StorageManager.silo_items.clear()
+	StorageManager.add_item("wheat", 1)
+	var p1: FieldPlot = auto_free(FieldPlot.new()) as FieldPlot
+	add_child(p1)
+	assert_bool(p1.plant("wheat")).is_true()
+	assert_int(StorageManager.get_item_count("wheat")).is_equal(0)
+
+	var p2: FieldPlot = auto_free(FieldPlot.new()) as FieldPlot
+	add_child(p2)
+	assert_bool(p2.plant("wheat")).is_false()
+	assert_bool(p2.plant("corn")).is_false()
+
+	# 3. Leveling up to Level 2 unlocks corn and grants +3 starter corn seeds
+	assert_int(StorageManager.get_item_count("corn")).is_equal(0)
+	var xp_needed_lv2: int = StorageManager.get_required_xp(1)
+	StorageManager.add_xp(xp_needed_lv2)
+	assert_int(StorageManager.level).is_equal(2)
+	assert_int(StorageManager.get_item_count("corn")).is_equal(3)
+
+	# 4. East Bank (Zoo area) cells are unlocked when Zoo is not constructed
+	GridManager.occupied_cells.clear()
+	GridManager.path_cells.clear()
+	assert_bool(SaveManager.is_building_constructed("mini_zoo")).is_false()
+	assert_bool(GridManager.can_place_building("field_plot", Vector2i(36, 15))).is_true()
+

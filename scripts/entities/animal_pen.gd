@@ -156,6 +156,7 @@ func _ready() -> void:
 	add_child(_status_panel)
 
 	_timer_label = Label.new()
+	DataManager.apply_emoji_font(_timer_label)
 	_timer_label.text = _get_hungry_text()
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -170,7 +171,8 @@ func _ready() -> void:
 
 	# 3b. Relocate / Quy Hoạch button
 	_btn_relocate = Button.new()
-	_btn_relocate.text = "✥"
+	DataManager.apply_emoji_font(_btn_relocate)
+	_btn_relocate.text = "↔"
 	_btn_relocate.tooltip_text = "Di chuyển / Quy hoạch chuồng thú"
 	_btn_relocate.position = Vector2(58, -68)
 	_btn_relocate.size = Vector2(24, 24)

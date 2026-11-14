@@ -563,6 +563,10 @@
     "title": "Hồ Capybara 🍊",
     "category": "zoo_enclosure",
     "type": "zoo",
+    "size": [
+      4,
+      3
+    ],
     "unlock_level": 11,
     "puzzle_piece_cost": 1,
     "cost_gold": 200,
@@ -575,6 +579,7 @@
       1340.0,
       210.0
     ],
+    "build_materials": {},
     "sprite": "zoo_enclosure_capybara",
     "description": "Chuồng nuôi Capybara thân thiện tại Sở Thú Bờ Đông."
   },
@@ -585,6 +590,10 @@
     "title": "Rừng Trúc Gấu Trúc 🐼",
     "category": "zoo_enclosure",
     "type": "zoo",
+    "size": [
+      4,
+      3
+    ],
     "unlock_level": 15,
     "puzzle_piece_cost": 2,
     "cost_gold": 350,
@@ -598,6 +607,7 @@
       1610.0,
       210.0
     ],
+    "build_materials": {},
     "sprite": "zoo_enclosure_panda",
     "description": "Khu rừng trúc cho những chú Gấu Trúc Chibi đáng yêu."
   },
@@ -608,6 +618,10 @@
     "title": "Bờ Đá Chim Cánh Cụt 🐧",
     "category": "zoo_enclosure",
     "type": "zoo",
+    "size": [
+      4,
+      3
+    ],
     "unlock_level": 19,
     "puzzle_piece_cost": 2,
     "cost_gold": 400,
@@ -621,6 +635,7 @@
       1340.0,
       410.0
     ],
+    "build_materials": {},
     "sprite": "zoo_enclosure_penguin",
     "description": "Bờ đá băng mát mẻ cho đàn Chim Cánh Cụt bơi lội."
   },
@@ -631,6 +646,10 @@
     "title": "Thảo Nguyên Hươu Cao Cổ 🦒",
     "category": "zoo_enclosure",
     "type": "zoo",
+    "size": [
+      4,
+      3
+    ],
     "unlock_level": 24,
     "puzzle_piece_cost": 3,
     "cost_gold": 500,
@@ -643,6 +662,7 @@
       1610.0,
       410.0
     ],
+    "build_materials": {},
     "sprite": "zoo_enclosure_giraffe",
     "description": "Thảo nguyên rộng lớn cho Hươu Cao Cổ kiêu hãnh."
   },
@@ -653,14 +673,19 @@
     "title": "Khinh Khí Cầu Rực Rỡ 🎈",
     "category": "zoo_enclosure",
     "type": "zoo",
+    "size": [
+      3,
+      3
+    ],
     "unlock_level": 28,
     "puzzle_piece_cost": null,
-    "cost_gold": null,
+    "cost_gold": 450,
     "attraction_score": 10,
     "pos": [
       1475.0,
       310.0
     ],
+    "build_materials": {},
     "sprite": "hot_air_balloon",
     "description": "Khinh khí cầu ngắm toàn cảnh Sở Thú Bờ Đông và đón khách VIP."
   }

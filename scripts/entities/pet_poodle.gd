@@ -75,6 +75,7 @@ func _setup_visuals() -> void:
 
 	# 3. Overhead Name & Mood Tag
 	_label_status = Label.new()
+	DataManager.apply_emoji_font(_label_status)
 	_label_status.text = "🐩 Poodle Bông"
 	_label_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -215,7 +216,7 @@ func feed_and_dig_treasure() -> void:
 	if not has_milk and not has_gold:
 		AudioManager.play_sfx("error")
 		if hud != null:
-			hud.show_floating_notice("⚠️ Cần 1 Sữa Bò tươi 🥛 hoặc 40 Vàng 🪙 để cho Poodle ăn!")
+			hud.show_floating_notice("⚠ Cần 1 Sữa Bò tươi 🥛 hoặc 40 Vàng 💰 để cho Poodle ăn!")
 		return
 
 	_is_interacting = true
@@ -251,7 +252,7 @@ func feed_and_dig_treasure() -> void:
 		_spawn_floating_heart()
 
 	if _label_status != null:
-		_label_status.text = "❤️ Gâu Gâu! (Đào đất...)"
+		_label_status.text = "❤ Gâu Gâu! (Đào đất...)"
 
 	if is_inside_tree() and get_tree() != null:
 		await get_tree().create_timer(0.60).timeout

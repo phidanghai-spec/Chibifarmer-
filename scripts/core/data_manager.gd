@@ -9,6 +9,8 @@ var fishes: Dictionary = {}
 var visitors: Dictionary = {}
 var avatar_catalog: Dictionary = {}
 var level_rewards: Dictionary = {}
+var main_font: FontFile = null
+var emoji_font: FontFile = null
 
 const ITEMS_PATH: String = "res://data/items.json"
 const CROPS_PATH: String = "res://data/crops.json"
@@ -26,11 +28,32 @@ func _ready() -> void:
 
 func _setup_emoji_fallback() -> void:
 	if ResourceLoader.exists("res://assets/fonts/Nunito-Bold.ttf") and ResourceLoader.exists("res://assets/fonts/emoji_fallback.ttf"):
-		var main_font: FontFile = load("res://assets/fonts/Nunito-Bold.ttf") as FontFile
-		var emoji_font: FontFile = load("res://assets/fonts/emoji_fallback.ttf") as FontFile
+		main_font = load("res://assets/fonts/Nunito-Bold.ttf") as FontFile
+		emoji_font = load("res://assets/fonts/emoji_fallback.ttf") as FontFile
 		if main_font != null and emoji_font != null:
-			main_font.fallbacks = [emoji_font]
-			print("[DataManager] Successfully configured emoji font fallback!")
+			var sys_emoji_font: SystemFont = SystemFont.new()
+			sys_emoji_font.font_names = PackedStringArray([
+				"Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", "Arial Unicode MS", "sans-serif"
+			])
+			emoji_font.fallbacks = [sys_emoji_font]
+			main_font.fallbacks = [emoji_font, sys_emoji_font]
+			if ThemeDB.fallback_font != null:
+				ThemeDB.fallback_font.fallbacks = [emoji_font, main_font, sys_emoji_font]
+			var proj_theme: Theme = ThemeDB.get_project_theme()
+			if proj_theme != null:
+				proj_theme.default_font = main_font
+			var def_theme: Theme = ThemeDB.get_default_theme()
+			if def_theme != null:
+				def_theme.default_font = main_font
+			print("[DataManager] Successfully configured emoji font fallback on main_font and ThemeDB!")
+
+func apply_emoji_font(ctrl: Control) -> void:
+	if ctrl == null:
+		return
+	if main_font == null:
+		_setup_emoji_fallback()
+	if main_font != null:
+		ctrl.add_theme_font_override("font", main_font)
 
 func load_all_data() -> void:
 	items = _load_json(ITEMS_PATH)

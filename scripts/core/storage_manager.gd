@@ -29,8 +29,6 @@ func _ready() -> void:
 func _init_starter_inventory() -> void:
 	silo_items.clear()
 	silo_items["wheat"] = 10
-	silo_items["corn"] = 5
-	silo_items["carrot"] = 5
 	silo_items["apple_seed"] = 2
 	silo_items["mango_seed"] = 2
 	
@@ -140,6 +138,7 @@ func add_xp(amount: int) -> void:
 		xp -= needed
 		level += 1
 		recalculate_capacities()
+		_grant_starter_seeds_for_level(level)
 		var u_info: Dictionary = LevelProgressionManager.get_unlock_info(level)
 		var gold_reward: int = int(u_info.get("gold_reward", 100 + level * 25))
 		var dia_reward: int = int(u_info.get("diamonds_reward", 1))
@@ -152,6 +151,27 @@ func add_xp(amount: int) -> void:
 		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng, +", dia_reward, " Kim Cương, +", coins_reward, " Xu thưởng!)")
 	
 	EventBus.xp_changed.emit(xp, needed, level)
+
+func _grant_starter_seeds_for_level(unlocked_level: int) -> void:
+	if DataManager == null or DataManager.crops.is_empty():
+		return
+	var granted_any: bool = false
+	for crop_key: Variant in DataManager.crops.keys():
+		var crop_id: String = String(crop_key)
+		var crop_data: Dictionary = DataManager.crops[crop_id] as Dictionary
+		if int(crop_data.get("unlock_level", 1)) == unlocked_level:
+			if not add_item(crop_id, 3):
+				silo_items[crop_id] = int(silo_items.get(crop_id, 0)) + 3
+				EventBus.item_added.emit(crop_id, 3, "silo")
+			granted_any = true
+			var seed_id: String = crop_id + "_seed"
+			if DataManager.items.has(seed_id) and not DataManager.crops.has(seed_id):
+				if not add_item(seed_id, 3):
+					silo_items[seed_id] = int(silo_items.get(seed_id, 0)) + 3
+					EventBus.item_added.emit(seed_id, 3, "silo")
+			print("[StorageManager] Granted +3 starter seeds for unlocked crop: ", crop_id, " at Lv", unlocked_level)
+	if granted_any:
+		_emit_storage_updated("silo")
 
 # --- Dual Storage (Silo & Barn) ---
 

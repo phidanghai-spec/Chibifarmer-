@@ -148,6 +148,31 @@ func _play_ready_pop_fx() -> void:
 	tw.tween_property(_crop_sprite, "scale", _base_crop_scale * 1.18, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_crop_sprite, "scale", _base_crop_scale, 0.10).set_trans(Tween.TRANS_SINE)
 
+func _has_any_active_wheat_plot() -> bool:
+	var tree_ref: SceneTree = get_tree()
+	if tree_ref != null:
+		for node: Node in tree_ref.get_nodes_in_group("interactable"):
+			if node is FieldPlot:
+				var fp: FieldPlot = node as FieldPlot
+				if fp != self and fp.state != PlotState.EMPTY and fp.crop_id == "wheat":
+					return true
+		var cur_scene: Node = tree_ref.current_scene
+		if cur_scene != null and cur_scene.get("field_plots") is Dictionary:
+			var plots_dict: Dictionary = cur_scene.get("field_plots") as Dictionary
+			for val: Variant in plots_dict.values():
+				if val is FieldPlot:
+					var fp2: FieldPlot = val as FieldPlot
+					if fp2 != self and fp2.state != PlotState.EMPTY and fp2.crop_id == "wheat":
+						return true
+	var parent_node: Node = get_parent()
+	if parent_node != null:
+		for child: Node in parent_node.get_children():
+			if child is FieldPlot:
+				var fp3: FieldPlot = child as FieldPlot
+				if fp3 != self and fp3.state != PlotState.EMPTY and fp3.crop_id == "wheat":
+					return true
+	return false
+
 func plant(new_crop_id: String) -> bool:
 	if state != PlotState.EMPTY:
 		return false
@@ -158,11 +183,18 @@ func plant(new_crop_id: String) -> bool:
 	
 	if StorageManager.has_item(new_crop_id, 1):
 		StorageManager.remove_item(new_crop_id, 1)
-	elif new_crop_id in ["wheat", "corn"] or (StorageManager.get_item_count("wheat") == 0 and StorageManager.gold < 10):
-		# Anti-Softlock: basic crops can always be planted when empty to prevent player being stuck
-		print("[FieldPlot] Anti-Softlock: Cấp hạt giống khẩn cấp cho ", new_crop_id)
+	elif new_crop_id == "wheat" and not StorageManager.has_item("wheat", 1) and StorageManager.get_item_count("wheat") == 0 and StorageManager.gold < 10 and not _has_any_active_wheat_plot():
+		# Anti-Softlock: only grant 1 emergency wheat if 0 wheat in Silo, gold < 10, and 0 active wheat plots
+		print("[FieldPlot] Anti-Softlock: Cấp 1 hạt giống lúa mì khẩn cấp!")
 	else:
+		var crop_name: String = String(crop_data.get("name", new_crop_id))
 		print("[FieldPlot] Thiếu hạt giống ", new_crop_id, " trong kho Silo!")
+		AudioManager.play_sfx("error")
+		var tree_ref: SceneTree = get_tree()
+		var farm: Node = tree_ref.current_scene if tree_ref != null else null
+		var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
+		if hud != null:
+			hud.show_floating_notice("🌾 Hết hạt giống %s trong kho Silo!" % crop_name)
 		return false
 	
 	crop_id = new_crop_id
