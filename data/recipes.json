@@ -4,8 +4,7 @@
     "name": "Cám Gà",
     "building_id": "feed_mill",
     "ingredients": {
-      "wheat": 2,
-      "corn": 1
+      "wheat": 2
     },
     "produce_item_id": "chicken_feed",
     "produce_count": 3,
@@ -14,7 +13,7 @@
     "base_price": 7,
     "unlock_level": 1,
     "storage_type": "barn",
-    "description": "Thức ăn nghiền mịn từ lúa mì và ngô dành cho gà."
+    "description": "Thức ăn nghiền mịn từ lúa mì dành cho gà."
   },
   "bread": {
     "id": "bread",
@@ -163,7 +162,7 @@
     "craft_time_seconds": 1800,
     "xp_reward": 6,
     "base_price": 38,
-    "unlock_level": 6,
+    "unlock_level": 7,
     "storage_type": "barn",
     "description": "Ly nước mía giải khát mát lạnh mùa hè."
   },
@@ -179,7 +178,7 @@
     "craft_time_seconds": 2400,
     "xp_reward": 10,
     "base_price": 65,
-    "unlock_level": 6,
+    "unlock_level": 12,
     "storage_type": "barn",
     "description": "Nước ép táo đỏ ngọt thanh tự nhiên giàu vitamin."
   },
@@ -196,7 +195,7 @@
     "craft_time_seconds": 3000,
     "xp_reward": 15,
     "base_price": 110,
-    "unlock_level": 6,
+    "unlock_level": 12,
     "storage_type": "barn",
     "description": "Sinh tố xoài chín xay nhuyễn cùng sữa tươi béo thơm."
   },
