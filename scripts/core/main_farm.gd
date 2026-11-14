@@ -73,11 +73,13 @@ var _relocating_old_pos: Vector2 = Vector2.ZERO
 var _relocating_initial_modulate: Color = Color.WHITE
 var _relocating_initial_scale: Vector2 = Vector2.ONE
 var _relocating_start_msec: int = 0
+var _is_ready_complete: bool = false
 
 func get_scenic_elements_count() -> int:
 	return _scenic_elements.size()
 
 func _ready() -> void:
+	add_to_group("main_farm")
 	# Center camera around the vibrant central farm plaza immediately
 	var center_world_pos: Vector2 = Vector2(580, 540)
 	camera_2d.position = center_world_pos
@@ -204,9 +206,10 @@ func _ready() -> void:
 	# Spawn Pet Poodle, Kennel & Daily Newspaper Mailbox
 	_spawn_new_props_and_pets()
 
-	# Hide all ✥ relocate buttons outside Layout Mode and apply Level 1->7+ building progression
+	# Hide all ↔ relocate buttons outside Layout Mode and apply Level 1->7+ building progression
 	_set_all_relocate_buttons_visible(false)
 	_refresh_building_progression_visibility()
+	_is_ready_complete = true
 
 	# Position Player Avatar at saved position or default farm gate
 	if player_avatar != null:
@@ -373,7 +376,7 @@ func _setup_environment_decorations() -> void:
 						decor.set_growth_stage(int(d.get("stage", MovableDecor.TreeGrowthStage.STAGE_RIPE)))
 	else:
 		_spawn_default_decorations()
-		save_custom_decorations()
+		save_custom_decorations(false)
 
 func _spawn_default_decorations() -> void:
 	# 1. Blooming Pastel Cherry Trees along North boundary (soft wind sway)
@@ -490,7 +493,7 @@ func remove_movable_decor(decor: MovableDecor) -> void:
 func on_decor_moved(_decor: MovableDecor) -> void:
 	save_custom_decorations()
 
-func save_custom_decorations() -> void:
+func save_custom_decorations(persist_to_disk: bool = true) -> void:
 	var list: Array = []
 	_flower_targets.clear()
 	for decor: MovableDecor in _movable_decors:
@@ -512,7 +515,8 @@ func save_custom_decorations() -> void:
 			if "flower" in decor.decor_id or "tree" in decor.decor_id:
 				_flower_targets.append(decor.position)
 	SaveManager.custom_decorations = list
-	SaveManager.save_game()
+	if persist_to_disk:
+		SaveManager.save_game()
 
 func auto_clear_decor_at_cell(cell: Vector2i) -> void:
 	var cell_pos: Vector2 = GridManager.grid_to_world(cell)
@@ -532,7 +536,7 @@ func auto_clear_decor_at_cell(cell: Vector2i) -> void:
 				decor.queue_free()
 				moved_any = true
 	if moved_any:
-		save_custom_decorations()
+		save_custom_decorations(_is_ready_complete)
 
 func _find_nearest_empty_grass_pos(from_cell: Vector2i) -> Vector2:
 	for radius: int in range(1, 6):
@@ -613,7 +617,7 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		node_wrapper.add_child(lbl_barn)
 		var btn_barn_reloc: Button = Button.new()
 		btn_barn_reloc.name = "RelocateBtn"
-		btn_barn_reloc.text = "✥"
+		btn_barn_reloc.text = "↔"
 		btn_barn_reloc.tooltip_text = "Di chuyển / Quy hoạch Nhà Kho"
 		btn_barn_reloc.position = Vector2(40.0, -max_size.y * 0.65)
 		btn_barn_reloc.size = Vector2(22.0, 22.0)
@@ -649,7 +653,7 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		node_wrapper.add_child(lbl_silo)
 		var btn_silo_reloc: Button = Button.new()
 		btn_silo_reloc.name = "RelocateBtn"
-		btn_silo_reloc.text = "✥"
+		btn_silo_reloc.text = "↔"
 		btn_silo_reloc.tooltip_text = "Di chuyển / Quy hoạch Kho Silo"
 		btn_silo_reloc.position = Vector2(40.0, -max_size.y * 0.65)
 		btn_silo_reloc.size = Vector2(22.0, 22.0)
@@ -716,7 +720,7 @@ func _spawn_building_prop(sprite_id: String, cell: Vector2i, tile_size: Vector2i
 		_roadside_shop_prop.set_meta("interact_type", "roadside_shop")
 		var btn_shop_reloc: Button = Button.new()
 		btn_shop_reloc.name = "RelocateBtn"
-		btn_shop_reloc.text = "✥"
+		btn_shop_reloc.text = "↔"
 		btn_shop_reloc.tooltip_text = "Di chuyển / Quy hoạch Sạp Hàng"
 		btn_shop_reloc.position = Vector2(28.0, -max_size.y * 0.65)
 		btn_shop_reloc.size = Vector2(22.0, 22.0)
@@ -1860,7 +1864,7 @@ func _set_all_relocate_buttons_visible(vis: bool) -> void:
 	if buildings_container != null:
 		for child: Node in buildings_container.get_children():
 			for sub: Node in child.get_children():
-				if sub is Button and ((sub as Button).text == "✥" or sub.name == "RelocateBtn"):
+				if sub is Button and ((sub as Button).text == "↔" or sub.name == "RelocateBtn"):
 					(sub as Button).visible = vis
 
 func _refresh_building_progression_visibility() -> void:
@@ -2014,7 +2018,7 @@ func start_relocating_structure(target: Node2D) -> void:
 	_update_relocating_structure_preview(get_global_mouse_position())
 
 	if ui_hud != null and ui_hud.has_method("show_floating_notice"):
-		ui_hud.show_floating_notice("✥ Đang di chuyển công trình: Click Trái để đặt xuống, Click Phải / ESC để hủy")
+		ui_hud.show_floating_notice("↔ Đang di chuyển công trình: Click Trái để đặt xuống, Click Phải / ESC để hủy")
 
 	if walk_grid != null:
 		queue_redraw()
@@ -2465,8 +2469,8 @@ func restore_from_save_manager() -> void:
 						(float(target_cell.x) + 2.0) * 32.0,
 						(float(target_cell.y) + 1.5) * 32.0
 					)
-			if bool(pen_d.get("visible", false)):
-				SaveManager.mark_building_constructed(a_id)
+			if bool(pen_d.get("visible", false)) and not SaveManager.unlocked_buildings.has(a_id):
+				SaveManager.unlocked_buildings.append(a_id)
 			matched_pen.animal_count = int(pen_d.get("animal_count", matched_pen.animal_count))
 			matched_pen.finish_timestamp = int(pen_d.get("finish_timestamp", 0))
 			matched_pen.state = int(pen_d.get("state", 0)) as AnimalPen.PenState
@@ -2507,8 +2511,8 @@ func restore_from_save_manager() -> void:
 						(float(target_m_cell.x) + 1.5) * 32.0,
 						(float(target_m_cell.y) + 1.5) * 32.0
 					)
-			if bool(m_d.get("visible", false)):
-				SaveManager.mark_building_constructed(m_id)
+			if bool(m_d.get("visible", false)) and not SaveManager.unlocked_buildings.has(m_id):
+				SaveManager.unlocked_buildings.append(m_id)
 			if m_d.has("queue") and m_d["queue"] is Array:
 				matched_m.queue.clear()
 				for q_it: Variant in (m_d["queue"] as Array):

@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	vbox.add_child(hbox_btns)
 	
 	_btn_catch = Button.new()
-	_btn_catch.text = "🪝 GIẬT CẦN CÂU!"
+	_btn_catch.text = "🎣 GIẬT CẦN CÂU!"
 	_btn_catch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_btn_catch.custom_minimum_size = Vector2(0, 46)
 	_btn_catch.add_theme_font_size_override("font_size", 16)

@@ -295,12 +295,12 @@ func reset_to_level_1() -> void:
 	var active_p: String = get_active_save_path()
 	if FileAccess.file_exists(active_p):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(active_p))
+	var custom_pos_path: String = "user://custom_structure_positions.json"
+	if FileAccess.file_exists(custom_pos_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
 	if not (is_test_mode or _detect_test_mode()):
 		if FileAccess.file_exists(SAVE_PATH):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
-		var custom_pos_path: String = "user://custom_structure_positions.json"
-		if FileAccess.file_exists(custom_pos_path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
 	print("[SaveManager] Reset and removed save files for Level 1 fresh start: ", active_p)
 
 	custom_decorations.clear()
@@ -326,8 +326,6 @@ func reset_to_level_1() -> void:
 	
 	StorageManager.silo_items.clear()
 	StorageManager.silo_items["wheat"] = 10
-	StorageManager.silo_items["corn"] = 5
-	StorageManager.silo_items["carrot"] = 5
 	StorageManager.silo_items["apple_seed"] = 2
 	StorageManager.silo_items["mango_seed"] = 2
 	
@@ -467,6 +465,9 @@ func _find_active_farm() -> Node2D:
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return null
+	var grouped: Node = tree.get_first_node_in_group("main_farm")
+	if grouped is Node2D and is_instance_valid(grouped) and grouped.get("field_plots") != null:
+		return grouped as Node2D
 	if tree.current_scene != null and tree.current_scene.get("field_plots") != null:
 		return tree.current_scene as Node2D
 	if tree.root != null:
@@ -483,6 +484,8 @@ func _collect_live_farm_state() -> void:
 
 	var farm: Node2D = _find_active_farm()
 	if farm == null:
+		return
+	if farm.get("_is_ready_complete") == false:
 		return
 
 	# 1. Collect all FieldPlots (including player-placed plots and crop states)

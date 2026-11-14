@@ -190,10 +190,20 @@ static func build_farm(farm: Node2D) -> void:
 							crop_info = sub_plots[plot_idx] as Dictionary
 						var crop: String = String(crop_info.get("crop", "empty"))
 						if crop != "empty":
-							plot.plant(crop)
+							var c_data: Dictionary = DataManager.get_crop(crop)
+							var grow_sec: int = int(c_data.get("growth_time_seconds", 10))
+							plot.crop_id = crop
+							plot.plant_timestamp = TickManager.now()
 							if bool(crop_info.get("ready", false)):
+								plot.finish_timestamp = plot.plant_timestamp
+								plot.time_left = 0.0
 								plot.state = FieldPlot.PlotState.READY
 								plot._show_ready_crop()
+							else:
+								plot.finish_timestamp = TickManager.calculate_finish_timestamp(grow_sec)
+								plot.time_left = float(grow_sec)
+								plot.state = FieldPlot.PlotState.GROWING
+								plot._update_crop_visual()
 					plot_idx += 1
 
 	# 3. Phân vùng 5: Khu Đồng Cỏ Chăn Nuôi (Gà, Bò, Heo, Cừu thẳng hàng tại y=820)
