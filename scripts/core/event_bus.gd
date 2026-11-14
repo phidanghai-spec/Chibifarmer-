@@ -12,6 +12,7 @@ signal xp_changed(current_xp: int, target_xp: int, current_level: int)
 signal leveled_up(new_level: int)
 signal level_up(new_level: int)
 signal storage_updated(storage_type: String, current_used: int, max_capacity: int)
+signal storage_full(storage_type: String)
 signal item_added(item_id: String, count: int, storage_type: String)
 signal item_removed(item_id: String, count: int, storage_type: String)
 

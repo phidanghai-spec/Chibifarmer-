@@ -17,6 +17,8 @@ var _config_loaded: bool = false
 func _ready() -> void:
 	_load_truck_config()
 	generate_initial_orders()
+	if not EventBus.second_ticked.is_connected(_on_second_ticked):
+		EventBus.second_ticked.connect(_on_second_ticked)
 
 func _load_truck_config() -> void:
 	_config_loaded = true
@@ -193,14 +195,35 @@ func fulfill_order(order_index: int) -> bool:
 func trash_order(order_index: int) -> void:
 	if order_index >= 0 and order_index < active_orders.size():
 		var ord: Dictionary = active_orders[order_index]
+		if bool(ord.get("is_refreshing", false)):
+			return
 		ord["is_refreshing"] = true
 		ord["refresh_seconds"] = 15
+		ord["refresh_time_left"] = 15
 		orders_updated.emit()
 		print("[TruckOrderSystem] Discarded order, finding new order in 15s...")
-		
-		var timer: SceneTreeTimer = get_tree().create_timer(15.0)
-		timer.timeout.connect(func() -> void:
-			if order_index >= 0 and order_index < active_orders.size():
-				active_orders[order_index] = _create_random_order()
-				orders_updated.emit()
-		)
+
+func _on_second_ticked(_current_unix: int) -> void:
+	var updated: bool = false
+	for i: int in range(active_orders.size()):
+		var ord: Dictionary = active_orders[i]
+		if bool(ord.get("is_refreshing", false)):
+			var sec: int = int(ord.get("refresh_seconds", 0)) - 1
+			ord["refresh_seconds"] = sec
+			ord["refresh_time_left"] = sec
+			if sec <= 0:
+				active_orders[i] = _create_random_order()
+				updated = true
+	if updated:
+		orders_updated.emit()
+
+func export_state() -> Array:
+	return active_orders.duplicate(true)
+
+func import_state(saved_orders: Array) -> void:
+	if not saved_orders.is_empty():
+		active_orders.clear()
+		for item: Variant in saved_orders:
+			if item is Dictionary:
+				active_orders.append((item as Dictionary).duplicate(true))
+	orders_updated.emit()

@@ -378,21 +378,33 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
-			var farm_node: Node = get_tree().current_scene
-			var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
-			if drag_mgr != null and (drag_mgr.current_tool == DragActionManager.ToolType.DISMANTLE or int(drag_mgr.current_tool) == 9):
-				return
-			var mpos: Vector2 = get_global_mouse_position()
-			if mpos.distance_to(global_position) <= 95.0:
-				if not SaveManager.instant_interact:
-					var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
-					if p_input != null:
-						p_input.call("interact_with", self)
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.is_pressed():
+				var mpos_down: Vector2 = get_global_mouse_position()
+				if mpos_down.distance_to(global_position) <= 95.0:
+					set_meta("_press_active", true)
+					set_meta("_press_screen_pos", mb.global_position)
+				else:
+					set_meta("_press_active", false)
+			elif bool(get_meta("_press_active", false)):
+				set_meta("_press_active", false)
+				var start_pos: Vector2 = get_meta("_press_screen_pos", mb.global_position) as Vector2
+				if mb.global_position.distance_to(start_pos) > 8.0:
+					return
+				var farm_node: Node = get_tree().current_scene
+				var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
+				if drag_mgr != null and drag_mgr.current_tool != DragActionManager.ToolType.NONE:
+					return
+				var mpos: Vector2 = get_global_mouse_position()
+				if mpos.distance_to(global_position) <= 95.0:
+					if not SaveManager.instant_interact:
+						var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+						if p_input != null:
+							p_input.call("interact_with", self)
+							get_viewport().set_input_as_handled()
+							return
+					if handle_pen_click():
 						get_viewport().set_input_as_handled()
-						return
-				if handle_pen_click():
-					get_viewport().set_input_as_handled()
 
 func handle_pen_click() -> bool:
 	if state == PenState.HUNGRY:
@@ -461,6 +473,7 @@ func collect() -> bool:
 	if not StorageManager.can_store_item(product_id, count):
 		print("[AnimalPen] Kho Barn đã đầy!")
 		AudioManager.play_sfx("error")
+		EventBus.storage_full.emit("barn")
 		return false
 	
 	StorageManager.add_item(product_id, count)

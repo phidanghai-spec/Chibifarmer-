@@ -197,6 +197,7 @@ func _ready() -> void:
 	EventBus.storage_updated.connect(_on_storage_updated)
 	EventBus.attraction_score_changed.connect(_on_attraction_score_changed)
 	EventBus.loot_collected.connect(_on_loot_collected)
+	EventBus.storage_full.connect(_on_storage_full)
 	
 	# Stock Alert System
 	stock_alert_system = StockAlertSystemClass.new() as Control
@@ -852,6 +853,16 @@ func _on_leveled_up(new_level: int) -> void:
 	if label_level != null:
 		label_level.text = "%d" % new_level
 	_show_level_up_modal(new_level)
+
+var _last_storage_full_msec: int = 0
+
+func _on_storage_full(storage_type: String) -> void:
+	var now_msec: int = Time.get_ticks_msec()
+	if now_msec - _last_storage_full_msec < 1500:
+		return
+	_last_storage_full_msec = now_msec
+	var label_name: String = "Kho Silo" if storage_type == "silo" else "Kho Barn"
+	show_floating_notice("⚠️ %s đã đầy! Hãy bán bớt ở Sạp Hàng hoặc giao Xe Tải." % label_name)
 
 func show_floating_notice(msg: String) -> void:
 	var notice_box: PanelContainer = PanelContainer.new()

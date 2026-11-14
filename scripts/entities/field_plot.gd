@@ -24,6 +24,8 @@ var _collision_shape: CollisionShape2D
 var _crop_sprite: Sprite2D
 var _base_crop_scale: Vector2 = Vector2.ONE
 var _weather_growth_mult: float = 1.0
+var _last_soil_key: String = ""
+var _last_crop_tex_key: String = ""
 
 func _ready() -> void:
 	y_sort_enabled = true
@@ -203,6 +205,7 @@ func harvest() -> bool:
 	if not StorageManager.can_store_item(crop_id, harvest_yield):
 		print("[FieldPlot] Kho Silo đã đầy!")
 		AudioManager.play_sfx("error")
+		EventBus.storage_full.emit("silo")
 		return false
 	
 	StorageManager.add_item(crop_id, harvest_yield)
@@ -228,12 +231,14 @@ func _update_crop_visual() -> void:
 		if state == PlotState.GROWING or state == PlotState.READY:
 			if SpriteAtlasManager.has_texture("plot_soil"):
 				soil_key = "plot_soil"
-		if SpriteAtlasManager.has_texture(soil_key):
+		if soil_key != _last_soil_key and SpriteAtlasManager.has_texture(soil_key):
+			_last_soil_key = soil_key
 			_soil_sprite.texture = SpriteAtlasManager.get_texture(soil_key)
 			SpriteAtlasManager.set_sprite_pixel_size(_soil_sprite, plot_size * 1.45)
 	
 	if state == PlotState.EMPTY:
 		_crop_sprite.visible = false
+		_last_crop_tex_key = ""
 		return
 	
 	_crop_sprite.visible = true
@@ -260,7 +265,8 @@ func _update_crop_visual() -> void:
 	if not SpriteAtlasManager.has_texture(tex_key):
 		tex_key = "item_%s" % crop_id
 	
-	if SpriteAtlasManager.has_texture(tex_key):
+	if tex_key != _last_crop_tex_key and SpriteAtlasManager.has_texture(tex_key):
+		_last_crop_tex_key = tex_key
 		_crop_sprite.texture = SpriteAtlasManager.get_texture(tex_key)
 		SpriteAtlasManager.set_sprite_pixel_size(_crop_sprite, Vector2(26.0, 26.0))
 		_base_crop_scale = _crop_sprite.scale

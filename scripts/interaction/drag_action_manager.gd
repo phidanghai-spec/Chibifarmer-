@@ -22,6 +22,7 @@ signal tool_changed(new_tool: ToolType)
 var current_tool: ToolType = ToolType.NONE
 var selected_crop_id: String = ""
 var _is_dragging: bool = false
+var _error_played_this_drag: bool = false
 var _touched_plots: Dictionary = {} # FieldPlot -> bool
 var _last_drag_cell: Vector2i = Vector2i(-999, -999)
 
@@ -62,6 +63,7 @@ func _process(delta: float) -> void:
 func set_tool(new_tool: ToolType) -> void:
 	current_tool = new_tool
 	_is_dragging = false
+	_error_played_this_drag = false
 	_touched_plots.clear()
 	_last_drag_cell = Vector2i(-999, -999)
 	
@@ -187,11 +189,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			
 			if mb.is_pressed():
 				_is_dragging = true
+				_error_played_this_drag = false
 				_touched_plots.clear()
 				_apply_action_at_world_pos(mpos)
 				get_viewport().set_input_as_handled()
 			else:
 				_is_dragging = false
+				_error_played_this_drag = false
 				_touched_plots.clear()
 				_last_drag_cell = Vector2i(-999, -999)
 	
@@ -298,7 +302,9 @@ func _handle_build_field(cell: Vector2i) -> void:
 		cost = int(b_info.get("cost_gold", 1))
 	
 	if not StorageManager.has_gold(cost):
-		AudioManager.play_sfx("error")
+		if not _error_played_this_drag:
+			AudioManager.play_sfx("error")
+			_error_played_this_drag = true
 		return
 	
 	if GridManager.can_place_building("field_plot", cell):
@@ -310,7 +316,9 @@ func _handle_build_field(cell: Vector2i) -> void:
 			_bump_cursor_fx()
 			print("[DragActionManager] Built new field plot at cell: ", cell, " (inst_id: ", inst_id, ")")
 	else:
-		AudioManager.play_sfx("error")
+		if not _error_played_this_drag:
+			AudioManager.play_sfx("error")
+			_error_played_this_drag = true
 
 func _handle_build_path(cell: Vector2i) -> void:
 	if cell == _last_drag_cell:
@@ -323,7 +331,9 @@ func _handle_build_path(cell: Vector2i) -> void:
 		cost = int(p_info.get("cost_gold", 5))
 	
 	if not StorageManager.has_gold(cost):
-		AudioManager.play_sfx("error")
+		if not _error_played_this_drag:
+			AudioManager.play_sfx("error")
+			_error_played_this_drag = true
 		return
 	
 	if not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell):
@@ -335,7 +345,9 @@ func _handle_build_path(cell: Vector2i) -> void:
 			_bump_cursor_fx()
 			print("[DragActionManager] Built path tile at cell: ", cell)
 	else:
-		AudioManager.play_sfx("error")
+		if not _error_played_this_drag:
+			AudioManager.play_sfx("error")
+			_error_played_this_drag = true
 
 func _handle_dismantle(cell: Vector2i) -> void:
 	if cell == _last_drag_cell:

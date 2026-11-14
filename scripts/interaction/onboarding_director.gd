@@ -161,6 +161,8 @@ func _play_steamboat_intro() -> void:
 		var boat_tween: Tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		boat_tween.tween_property(steamboat_node, "position", _initial_dock_pos, 2.4)
 		boat_tween.tween_callback(func() -> void:
+			if current_step == Step.COMPLETED or current_step == Step.NONE:
+				return
 			EventBus.intro_cutscene_finished.emit()
 			_advance_to_step(Step.STEP_1_SWIPE_WHEAT)
 		)
@@ -237,19 +239,9 @@ func _animate_hand_pointer() -> void:
 	hand_pointer.scale = Vector2(pulse, pulse)
 
 func _connect_gameplay_events() -> void:
-	EventBus.crop_harvested.connect(func(_crop_id: String, _pos: Vector2i) -> void:
-		if current_step == Step.STEP_1_SWIPE_WHEAT:
-			_harvested_count += 1
-			_check_step_1_completion()
-	)
 	EventBus.field_harvested.connect(func(_inst_id: int, _crop_id: String) -> void:
 		if current_step == Step.STEP_1_SWIPE_WHEAT:
 			_harvested_count += 1
-			_check_step_1_completion()
-	)
-	EventBus.crop_planted.connect(func(_crop_id: String, _pos: Vector2i) -> void:
-		if current_step == Step.STEP_1_SWIPE_WHEAT:
-			_planted_count += 1
 			_check_step_1_completion()
 	)
 	EventBus.field_planted.connect(func(_inst_id: int, _crop_id: String, _finish: int) -> void:

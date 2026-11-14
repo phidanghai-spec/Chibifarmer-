@@ -25,6 +25,8 @@ var _dove_nodes: Array[Sprite2D] = []
 var _dove_base_y: Array[float] = []
 
 func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		ResourceLoader.load_threaded_request(TITLE_SCENE_PATH)
 	SaveSlotService.ensure_save_directory()
 	progress_bar.value = 0.0
 	status_label.text = "Đang nạp dữ liệu nông trại..."
@@ -62,7 +64,7 @@ func _process(delta: float) -> void:
 		return
 		
 	_step_timer += delta
-	if _step_timer >= 0.35:
+	if _step_timer >= 0.08:
 		_step_timer = 0.0
 		_execute_preload_step()
 
@@ -122,7 +124,10 @@ func _execute_preload_step() -> void:
 func _transition_to_title() -> void:
 	_is_transitioning = true
 	var tween: Tween = create_tween()
-	tween.tween_property(fade_overlay, "modulate:a", 1.0, 0.4)
+	tween.tween_property(fade_overlay, "modulate:a", 1.0, 0.15)
 	tween.tween_callback(func() -> void:
-		get_tree().change_scene_to_file(TITLE_SCENE_PATH)
+		if ResourceLoader.load_threaded_get_status(TITLE_SCENE_PATH) == ResourceLoader.THREAD_LOAD_LOADED:
+			get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(TITLE_SCENE_PATH) as PackedScene)
+		else:
+			get_tree().change_scene_to_file(TITLE_SCENE_PATH)
 	)

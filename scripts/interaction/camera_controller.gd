@@ -15,6 +15,7 @@ var _pan_start_mouse_pos: Vector2 = Vector2.ZERO
 var _pan_start_camera_pos: Vector2 = Vector2.ZERO
 var _lmb_down: bool = false
 var _lmb_start_pos: Vector2 = Vector2.ZERO
+var _touches: Dictionary = {}
 
 const MAP_MIN: Vector2 = Vector2(0.0, 0.0)
 const MAP_MAX: Vector2 = Vector2(2048.0, 2048.0)
@@ -58,7 +59,47 @@ func _process(delta: float) -> void:
 		_clamp_camera_position()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
+	if event is InputEventMagnifyGesture:
+		var gesture: InputEventMagnifyGesture = event as InputEventMagnifyGesture
+		_adjust_zoom((gesture.factor - 1.0) * 1.5)
+		get_viewport().set_input_as_handled()
+		return
+	
+	elif event is InputEventScreenTouch:
+		var st: InputEventScreenTouch = event as InputEventScreenTouch
+		if st.is_pressed():
+			_touches[st.index] = st.position
+		else:
+			_touches.erase(st.index)
+	
+	elif event is InputEventScreenDrag:
+		var sd: InputEventScreenDrag = event as InputEventScreenDrag
+		if _touches.size() >= 2:
+			var touch_indices: Array = _touches.keys()
+			var other_index: int = -1
+			for idx in touch_indices:
+				if int(idx) != sd.index:
+					other_index = int(idx)
+					break
+			if other_index != -1:
+				var prev_pos: Vector2 = _touches.get(sd.index, sd.position - sd.relative)
+				var other_pos: Vector2 = _touches[other_index]
+				var prev_dist: float = prev_pos.distance_to(other_pos)
+				var curr_dist: float = sd.position.distance_to(other_pos)
+				if prev_dist > 0.001 and curr_dist > 0.001:
+					var scale_ratio: float = curr_dist / prev_dist
+					var new_zoom_val: float = clampf(target_zoom.x * scale_ratio, zoom_min, zoom_max)
+					target_zoom = Vector2(new_zoom_val, new_zoom_val)
+			_touches[sd.index] = sd.position
+			get_viewport().set_input_as_handled()
+		else:
+			_touches[sd.index] = sd.position
+			if not is_pan_locked:
+				position -= sd.relative / zoom
+				_clamp_camera_position()
+				get_viewport().set_input_as_handled()
+	
+	elif event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		
 		# Zoom In / Out with Mouse Wheel

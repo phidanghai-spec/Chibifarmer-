@@ -17,7 +17,7 @@ var _combo_count: int = 0
 var _last_combo_time: float = 0.0
 
 # BGM Manager
-const BGM_PATH: String = "res://assets/audio/bgm_cozy_farm.wav"
+const BGM_PATH: String = "res://assets/audio/bgm_cozy_farm.ogg"
 var _bgm_player: AudioStreamPlayer = null
 const DEFAULT_BGM_VOLUME: float = -22.0
 
@@ -65,7 +65,7 @@ const SFX_MAP: Dictionary = {
 	"sfx_whistle": "res://assets/audio/sfx_steamboat_whistle.wav",
 	"place_building": "res://assets/audio/sfx_ui_wood_click.wav",
 	"sfx_place_building": "res://assets/audio/sfx_ui_wood_click.wav",
-	"bgm_cozy_farm": "res://assets/audio/bgm_cozy_farm.wav"
+	"bgm_cozy_farm": "res://assets/audio/bgm_cozy_farm.ogg"
 }
 
 func _ready() -> void:

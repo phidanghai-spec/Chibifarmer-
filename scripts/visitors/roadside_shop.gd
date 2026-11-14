@@ -73,6 +73,8 @@ func get_suggested_price(item_id: String, count: int) -> int:
 	return int(base * count * 1.2) # Hay Day default max suggested price
 
 func list_item(slot_index: int, item_id: String, count: int, price: int) -> bool:
+	if count <= 0 or price <= 0:
+		return false
 	if slot_index < 0 or slot_index >= slots.size():
 		return false
 	if not is_slot_empty(slot_index):

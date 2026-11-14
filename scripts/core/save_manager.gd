@@ -73,6 +73,7 @@ var _accum_save: float = 0.0
 const AUTO_SAVE_INTERVAL: float = 30.0
 var current_slot: int = 1
 var is_test_mode: bool = false
+var world_state: Dictionary = {}
 
 func set_test_mode(enabled: bool) -> void:
 	is_test_mode = enabled
@@ -347,6 +348,7 @@ func reset_to_level_1() -> void:
 	daily_activity_points = 0
 	daily_chest_50_claimed = false
 	daily_chest_100_claimed = false
+	world_state.clear()
 	
 	StorageManager.recalculate_capacities()
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
@@ -523,8 +525,20 @@ func save_game() -> void:
 		"chest_100": daily_chest_100_claimed,
 		"vip_requests": vip_requests.duplicate(true)
 	}
+
+	# Save Live World State (field plots, animal pens, production machines, path tiles)
+	var tree: SceneTree = get_tree()
+	var farm: Node = tree.current_scene if tree != null else null
+	if farm != null and farm.has_method("export_world_state"):
+		world_state = farm.call("export_world_state") as Dictionary
+	if not world_state.is_empty():
+		save_data["world_state"] = world_state.duplicate(true)
+
+	# Save Truck Orders
+	if TruckOrderSystem != null and TruckOrderSystem.has_method("export_state"):
+		save_data["truck_orders"] = TruckOrderSystem.call("export_state")
 	
-	var json_str: String = JSON.stringify(save_data, "\t")
+	var json_str: String = JSON.stringify(save_data) if OS.has_feature("web") else JSON.stringify(save_data, "\t")
 	var target_path: String = get_active_save_path()
 	if OS.has_feature("web"):
 		var web_file: FileAccess = FileAccess.open(target_path, FileAccess.WRITE)
@@ -627,49 +641,6 @@ func load_game() -> bool:
 		var b_items: Dictionary = econ.get("barn_items", {}) as Dictionary
 		if not b_items.is_empty():
 			StorageManager.barn_items = b_items
-
-		if StorageManager.level >= 20:
-			# Guarantee large stockpile of seeds, crops and flora
-			var guaranteed_silo: Dictionary = {
-				"wheat": 80,
-				"corn": 60,
-				"carrot": 50,
-				"tomato": 40,
-				"strawberry": 40,
-				"pumpkin": 35,
-				"soybean": 35,
-				"sugarcane": 35,
-				"apple": 25,
-				"mango": 25,
-				"sunflower": 20,
-				"rose": 20,
-				"lavender": 20,
-				"apple_seed": 15,
-				"mango_seed": 15
-			}
-			for k: String in guaranteed_silo:
-				if int(StorageManager.silo_items.get(k, 0)) < int(guaranteed_silo[k]):
-					StorageManager.silo_items[k] = int(guaranteed_silo[k])
-			
-			# Guarantee large stockpile of animal feeds and artisanal foods
-			var guaranteed_barn: Dictionary = {
-				"egg": 40,
-				"milk": 40,
-				"bacon": 30,
-				"bread": 30,
-				"cookie": 25,
-				"butter": 20,
-				"cheese": 20,
-				"chicken_feed": 35,
-				"cow_feed": 35,
-				"pig_feed": 30,
-				"sanctuary_feed": 20,
-				"fish_carp": 20,
-				"fish_bass": 15
-			}
-			for k: String in guaranteed_barn:
-				if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
-					StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
 		StorageManager.recalculate_capacities()
 		EventBus.coins_changed.emit(StorageManager.coins, 0)
@@ -782,6 +753,15 @@ func load_game() -> bool:
 		daily_chest_100_claimed = bool(q_data.get("chest_100", false))
 		if q_data.has("vip_requests"):
 			vip_requests = (q_data["vip_requests"] as Array).duplicate(true)
+
+	if data.has("world_state") and typeof(data["world_state"]) == TYPE_DICTIONARY:
+		world_state = (data["world_state"] as Dictionary).duplicate(true)
+	else:
+		world_state.clear()
+
+	if data.has("truck_orders") and typeof(data["truck_orders"]) == TYPE_ARRAY:
+		if TruckOrderSystem != null and TruckOrderSystem.has_method("import_state"):
+			TruckOrderSystem.call("import_state", data["truck_orders"] as Array)
 	
 	return true
 
@@ -863,10 +843,12 @@ func claim_daily_chest(tier: int) -> bool:
 			return true
 	elif tier == 100:
 		if daily_activity_points >= 100 and not daily_chest_100_claimed:
+			if not StorageManager.can_store_item("sanctuary_feed", 2):
+				EventBus.storage_full.emit("barn")
+				return false
 			daily_chest_100_claimed = true
 			add_puzzle_pieces(2)
-			StorageManager.diamonds += 3
-			EventBus.diamonds_changed.emit(StorageManager.diamonds, 3)
+			StorageManager.add_diamonds(3)
 			StorageManager.add_item("sanctuary_feed", 2)
 			save_game()
 			return true

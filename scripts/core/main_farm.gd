@@ -186,6 +186,8 @@ func _ready() -> void:
 	if GridManager.occupied_cells.is_empty():
 		_setup_initial_farm()
 	_apply_saved_structure_positions()
+	if not SaveManager.world_state.is_empty():
+		apply_saved_world_state(SaveManager.world_state)
 	_setup_road_tilemap_layer()
 	_sync_road_tilemap()
 	call_deferred("_sync_road_tilemap")
@@ -2179,3 +2181,180 @@ func _update_specialized_npc_positions() -> void:
 				if is_instance_valid(m) and m.machine_id == "juice_stand":
 					npc.position = m.position + Vector2(0.0, 45.0)
 					break
+
+func export_world_state() -> Dictionary:
+	var plots_arr: Array = []
+	for cell: Vector2i in field_plots:
+		var plot: FieldPlot = field_plots[cell] as FieldPlot
+		if not is_instance_valid(plot):
+			continue
+		plots_arr.append({
+			"gx": cell.x,
+			"gy": cell.y,
+			"state": int(plot.state),
+			"crop_id": plot.crop_id,
+			"plant_ts": plot.plant_timestamp,
+			"finish_ts": plot.finish_timestamp
+		})
+
+	var pens_arr: Array = []
+	for pen: AnimalPen in _animal_pens:
+		if not is_instance_valid(pen):
+			continue
+		pens_arr.append({
+			"animal_id": pen.animal_id,
+			"gx": pen.grid_pos.x,
+			"gy": pen.grid_pos.y,
+			"count": pen.animal_count,
+			"state": int(pen.state),
+			"finish_ts": pen.finish_timestamp
+		})
+
+	var machines_arr: Array = []
+	for m: ProductionMachine in _production_machines:
+		if not is_instance_valid(m):
+			continue
+		machines_arr.append({
+			"machine_id": m.machine_id,
+			"queue": m.queue.duplicate(true),
+			"completed_items": m.completed_items.duplicate(),
+			"completed_xp": m._completed_xp_rewards.duplicate()
+		})
+
+	var paths_arr: Array = []
+	for p_cell: Vector2i in GridManager.path_tiles:
+		paths_arr.append([p_cell.x, p_cell.y])
+
+	return {
+		"field_plots": plots_arr,
+		"animal_pens": pens_arr,
+		"production_machines": machines_arr,
+		"path_tiles": paths_arr
+	}
+
+func apply_saved_world_state(ws: Dictionary) -> void:
+	if ws.is_empty():
+		return
+
+	# 1. Restore custom path tiles
+	var saved_paths: Array = ws.get("path_tiles", []) as Array
+	for p_var: Variant in saved_paths:
+		if p_var is Array and (p_var as Array).size() >= 2:
+			var arr: Array = p_var as Array
+			var cell: Vector2i = Vector2i(int(arr[0]), int(arr[1]))
+			if not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell):
+				GridManager.place_path(cell)
+
+	# 2. Restore Field Plots (and spawn any player-built plots)
+	var saved_plots: Array = ws.get("field_plots", []) as Array
+	for p_var: Variant in saved_plots:
+		if typeof(p_var) != TYPE_DICTIONARY:
+			continue
+		var p_dict: Dictionary = p_var as Dictionary
+		var cell: Vector2i = Vector2i(int(p_dict.get("gx", 0)), int(p_dict.get("gy", 0)))
+		var plot: FieldPlot = get_field_plot_at(cell)
+		if plot == null and GridManager.can_place_building("field_plot", cell):
+			GridManager.place_building("field_plot", cell)
+			plot = get_field_plot_at(cell)
+		if plot == null:
+			continue
+		var st: int = int(p_dict.get("state", 0))
+		plot.crop_id = String(p_dict.get("crop_id", ""))
+		plot.plant_timestamp = int(p_dict.get("plant_ts", 0))
+		plot.finish_timestamp = int(p_dict.get("finish_ts", 0))
+		if st == FieldPlot.PlotState.GROWING and plot.crop_id != "":
+			if TickManager.is_finished(plot.finish_timestamp):
+				plot.state = FieldPlot.PlotState.READY
+				plot.time_left = 0.0
+			else:
+				plot.state = FieldPlot.PlotState.GROWING
+				plot.time_left = float(TickManager.get_time_remaining(plot.finish_timestamp))
+		elif st == FieldPlot.PlotState.READY and plot.crop_id != "":
+			plot.state = FieldPlot.PlotState.READY
+			plot.time_left = 0.0
+		else:
+			plot.state = FieldPlot.PlotState.EMPTY
+			plot.crop_id = ""
+			plot.time_left = 0.0
+		plot._update_crop_visual()
+
+	# 3. Restore Animal Pens
+	var saved_pens: Array = ws.get("animal_pens", []) as Array
+	for pen_var: Variant in saved_pens:
+		if typeof(pen_var) != TYPE_DICTIONARY:
+			continue
+		var pen_dict: Dictionary = pen_var as Dictionary
+		var a_id: String = String(pen_dict.get("animal_id", ""))
+		if a_id == "":
+			continue
+		var target_pen: AnimalPen = null
+		for existing: AnimalPen in _animal_pens:
+			if is_instance_valid(existing) and existing.animal_id == a_id:
+				target_pen = existing
+				break
+		if target_pen == null:
+			var cell: Vector2i = Vector2i(int(pen_dict.get("gx", 10)), int(pen_dict.get("gy", 10)))
+			var cnt: int = maxi(1, int(pen_dict.get("count", 2)))
+			target_pen = _spawn_animal_pen(a_id, cell, cnt)
+		if target_pen == null:
+			continue
+		var st: int = int(pen_dict.get("state", 0))
+		target_pen.finish_timestamp = int(pen_dict.get("finish_ts", 0))
+		if st == AnimalPen.PenState.PRODUCING:
+			if TickManager.is_finished(target_pen.finish_timestamp):
+				target_pen.state = AnimalPen.PenState.READY_TO_COLLECT
+			else:
+				target_pen.state = AnimalPen.PenState.PRODUCING
+		elif st == AnimalPen.PenState.READY_TO_COLLECT:
+			target_pen.state = AnimalPen.PenState.READY_TO_COLLECT
+		else:
+			target_pen.state = AnimalPen.PenState.HUNGRY
+		target_pen._on_second_ticked(TickManager.now())
+
+	# 4. Restore Production Machines & Advance Offline Queue
+	var saved_machines: Array = ws.get("production_machines", []) as Array
+	for m_var: Variant in saved_machines:
+		if typeof(m_var) != TYPE_DICTIONARY:
+			continue
+		var m_dict: Dictionary = m_var as Dictionary
+		var m_id: String = String(m_dict.get("machine_id", ""))
+		if m_id == "":
+			continue
+		var target_m: ProductionMachine = null
+		for existing_m: ProductionMachine in _production_machines:
+			if is_instance_valid(existing_m) and existing_m.machine_id == m_id:
+				target_m = existing_m
+				break
+		if target_m == null:
+			continue
+		target_m.queue.clear()
+		for q_item: Variant in (m_dict.get("queue", []) as Array):
+			if typeof(q_item) == TYPE_DICTIONARY:
+				target_m.queue.append((q_item as Dictionary).duplicate(true))
+		target_m.completed_items.clear()
+		for c_item: Variant in (m_dict.get("completed_items", []) as Array):
+			target_m.completed_items.append(String(c_item))
+		target_m._completed_xp_rewards.clear()
+		for x_item: Variant in (m_dict.get("completed_xp", []) as Array):
+			target_m._completed_xp_rewards.append(int(x_item))
+
+		# Advance any jobs that finished while player was offline
+		while not target_m.queue.is_empty():
+			var job: Dictionary = target_m.queue[0]
+			var finish_ts: int = int(job.get("finish_timestamp", 0))
+			if finish_ts > 0 and TickManager.is_finished(finish_ts):
+				var prod_item: String = String(job.get("produce_item_id", ""))
+				var prod_count: int = maxi(1, int(job.get("produce_count", 1)))
+				var job_xp: int = int(job.get("xp_reward", 2))
+				for i: int in range(prod_count):
+					target_m.completed_items.append(prod_item)
+					target_m._completed_xp_rewards.append(job_xp if i == 0 else 0)
+				target_m.queue.remove_at(0)
+				if not target_m.queue.is_empty():
+					var next_job: Dictionary = target_m.queue[0]
+					var rec: Dictionary = DataManager.get_recipe(String(next_job.get("recipe_id", "")))
+					var craft_time: int = int(rec.get("craft_time_seconds", 30))
+					next_job["finish_timestamp"] = finish_ts + craft_time
+			else:
+				break
+		target_m._on_second_ticked(TickManager.now())

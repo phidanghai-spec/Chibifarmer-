@@ -19,6 +19,9 @@ var _label_status: Label
 var _label_title: Label
 var _btn_rename: Button
 var _btn_relocate: Button
+var _press_screen_pos: Vector2 = Vector2.ZERO
+var _press_active: bool = false
+var _last_status_mode: int = -1 # 0=empty, 1=working, 2=ready
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -190,15 +193,22 @@ func _on_second_ticked(_current_unix: int) -> void:
 			var remaining: int = TickManager.get_time_remaining(finish_ts)
 			if _label_status != null:
 				_label_status.text = "ĐANG LÀM: %s" % TickManager.format_duration(remaining)
-				_label_status.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+				if _last_status_mode != 1:
+					_last_status_mode = 1
+					_label_status.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 
 	if queue.is_empty() and _label_status != null:
 		if not completed_items.is_empty():
-			_label_status.text = "CHỜ THU (%d)" % completed_items.size()
-			_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
-			_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
-			_label_status.add_theme_constant_override("outline_size", 4)
-		else:
+			var next_text: String = "CHỜ THU (%d)" % completed_items.size()
+			if _label_status.text != next_text:
+				_label_status.text = next_text
+			if _last_status_mode != 2:
+				_last_status_mode = 2
+				_label_status.add_theme_color_override("font_color", Color(1.0, 0.95, 0.3))
+				_label_status.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.02, 0.95))
+				_label_status.add_theme_constant_override("outline_size", 4)
+		elif _last_status_mode != 0:
+			_last_status_mode = 0
 			_label_status.text = ""
 
 func handle_machine_click() -> bool:
@@ -332,21 +342,32 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.is_pressed():
-			var farm_node: Node = get_tree().current_scene
-			var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
-			if drag_mgr != null and (drag_mgr.current_tool == DragActionManager.ToolType.DISMANTLE or int(drag_mgr.current_tool) == 9):
-				return
-			var mpos: Vector2 = get_global_mouse_position()
-			if mpos.distance_to(global_position) <= 75.0:
-				if not SaveManager.instant_interact:
-					var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
-					if p_input != null and p_input.has_method("interact_with"):
-						p_input.call("interact_with", self)
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.is_pressed():
+				var mpos_down: Vector2 = get_global_mouse_position()
+				if mpos_down.distance_to(global_position) <= 75.0:
+					_press_active = true
+					_press_screen_pos = mb.global_position
+				else:
+					_press_active = false
+			elif _press_active:
+				_press_active = false
+				if mb.global_position.distance_to(_press_screen_pos) > 8.0:
+					return
+				var farm_node: Node = get_tree().current_scene
+				var drag_mgr: DragActionManager = farm_node.find_child("DragActionManager", true, false) as DragActionManager if farm_node != null else null
+				if drag_mgr != null and drag_mgr.current_tool != DragActionManager.ToolType.NONE:
+					return
+				var mpos: Vector2 = get_global_mouse_position()
+				if mpos.distance_to(global_position) <= 75.0:
+					if not SaveManager.instant_interact:
+						var p_input: Node = get_tree().current_scene.find_child("PlayerInput", true, false)
+						if p_input != null and p_input.has_method("interact_with"):
+							p_input.call("interact_with", self)
+							get_viewport().set_input_as_handled()
+							return
+					if handle_machine_click():
 						get_viewport().set_input_as_handled()
-						return
-				if handle_machine_click():
-					get_viewport().set_input_as_handled()
 
 func start_recipe(recipe_id: String) -> bool:
 	var rec: Dictionary = DataManager.get_recipe(recipe_id)
@@ -402,10 +423,14 @@ func collect_all() -> bool:
 			EventBus.loot_collected.emit(item_id, 1, global_position)
 			_spawn_local_harvest_fx(item_id)
 		else:
-			completed_items.append(item_id)
-			_completed_xp_rewards.append(xp_reward)
+			for rem_idx: int in range(i, items_to_collect.size()):
+				completed_items.append(items_to_collect[rem_idx])
+				var rem_xp: int = xp_to_collect[rem_idx] if rem_idx < xp_to_collect.size() else int(DataManager.get_recipe(items_to_collect[rem_idx]).get("xp_reward", 2))
+				_completed_xp_rewards.append(rem_xp)
 			success_all = false
 			print("[ProductionMachine] Kho Barn đã đầy!")
 			AudioManager.play_sfx("error")
+			EventBus.storage_full.emit("barn")
+			break
 	
 	return success_all
