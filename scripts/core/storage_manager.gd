@@ -8,6 +8,8 @@ var level: int = 1
 
 var silo_capacity: int = 100
 var barn_capacity: int = 100
+var purchased_silo_bonus: int = 0
+var purchased_barn_bonus: int = 0
 
 var silo_items: Dictionary = {}
 var barn_items: Dictionary = {}
@@ -278,8 +280,8 @@ func get_item_count_in_storage(storage_type: String, item_id: String) -> int:
 
 func recalculate_capacities() -> void:
 	var rewards: Dictionary = DataManager.get_level_rewards() if DataManager != null else {}
-	var new_silo_cap: int = 100
-	var new_barn_cap: int = 100
+	var new_silo_cap: int = 100 + purchased_silo_bonus
+	var new_barn_cap: int = 100 + purchased_barn_bonus
 
 	var cap_entries: Array = rewards.get("silo_barn_capacity", []) as Array
 	for entry_var: Variant in cap_entries:
@@ -309,10 +311,10 @@ func upgrade_storage(storage_type: String, capacity_increase: int) -> void:
 	if capacity_increase <= 0:
 		return
 	if storage_type == "silo":
-		silo_capacity += capacity_increase
+		purchased_silo_bonus += capacity_increase
 	else:
-		barn_capacity += capacity_increase
-	_emit_storage_updated(storage_type)
+		purchased_barn_bonus += capacity_increase
+	recalculate_capacities()
 
 func _emit_storage_updated(storage_type: String) -> void:
 	var used: int = get_storage_used(storage_type)
