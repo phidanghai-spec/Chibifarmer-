@@ -272,3 +272,16 @@ func test_tutorial_close_hidden_machine_and_level_1_zoo_lock() -> void:
 	SaveManager.puzzle_pieces = prev_puzzle
 	SaveManager.unlocked_buildings = prev_buildings
 	SaveManager.zoo_data = prev_zoo
+
+func test_crop_and_item_data_synced() -> void:
+	for crop_key: Variant in DataManager.crops.keys():
+		var cid: String = String(crop_key)
+		if cid.ends_with("_seed"):
+			continue
+		assert_bool(DataManager.items.has(cid)).is_true()
+		if not DataManager.items.has(cid):
+			continue
+		var c_dict: Dictionary = DataManager.crops[cid] as Dictionary
+		var i_dict: Dictionary = DataManager.items[cid] as Dictionary
+		assert_int(int(c_dict.get("growth_time_seconds", -1))).is_equal(int(i_dict.get("growth_time_seconds", -2)))
+		assert_int(int(c_dict.get("base_price", -1))).is_equal(int(i_dict.get("base_price", -2)))
