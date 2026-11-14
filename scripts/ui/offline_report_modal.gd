@@ -60,9 +60,10 @@ func _rebuild_summary_rows(crops_ready: int, honey_count: int, zoo_gold: int) ->
 		
 	var lines: Array[String] = [
 		"🌾 Ruộng đất & Cây ăn quả (Táo, Xoài) đã chín: +%d ô" % crops_ready,
-		"🍯 Đàn ong mật chăm chỉ thu hoạch: +%d Hũ mật ong" % honey_count,
-		"🎟️ Vé tham quan Vườn Thú Bờ Tây (Capybara, Panda): +%d Vàng" % zoo_gold
+		"🍯 Đàn ong mật chăm chỉ thu hoạch: +%d Hũ mật ong" % honey_count
 	]
+	if zoo_gold > 0:
+		lines.append("🎟️ Vé tham quan Vườn Thú Bờ Tây (Capybara, Panda): +%d Vàng" % zoo_gold)
 	
 	for line_text: String in lines:
 		var panel: PanelContainer = PanelContainer.new()
