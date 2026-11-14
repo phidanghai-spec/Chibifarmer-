@@ -2,7 +2,7 @@
   "wheat": {
     "id": "wheat",
     "name": "Lúa Mì",
-    "growth_time_seconds": 180,
+    "growth_time_seconds": 60,
     "harvest_yield": 2,
     "xp_reward": 1,
     "base_price": 3,
@@ -13,7 +13,7 @@
   "corn": {
     "id": "corn",
     "name": "Ngô",
-    "growth_time_seconds": 480,
+    "growth_time_seconds": 180,
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 7,
@@ -24,7 +24,7 @@
   "tomato": {
     "id": "tomato",
     "name": "Cà Chua",
-    "growth_time_seconds": 240,
+    "growth_time_seconds": 150,
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 9,
@@ -35,7 +35,7 @@
   "carrot": {
     "id": "carrot",
     "name": "Cà Rốt",
-    "growth_time_seconds": 300,
+    "growth_time_seconds": 240,
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 8,
@@ -46,7 +46,7 @@
   "strawberry": {
     "id": "strawberry",
     "name": "Dâu Tây",
-    "growth_time_seconds": 360,
+    "growth_time_seconds": 300,
     "harvest_yield": 2,
     "xp_reward": 3,
     "base_price": 12,
@@ -57,7 +57,7 @@
   "pumpkin": {
     "id": "pumpkin",
     "name": "Bí Đỏ",
-    "growth_time_seconds": 600,
+    "growth_time_seconds": 420,
     "harvest_yield": 2,
     "xp_reward": 3,
     "base_price": 15,
@@ -68,7 +68,7 @@
   "soybean": {
     "id": "soybean",
     "name": "Đậu Nành",
-    "growth_time_seconds": 1200,
+    "growth_time_seconds": 480,
     "harvest_yield": 2,
     "xp_reward": 3,
     "base_price": 10,
@@ -79,7 +79,7 @@
   "sugarcane": {
     "id": "sugarcane",
     "name": "Mía Đường",
-    "growth_time_seconds": 1800,
+    "growth_time_seconds": 600,
     "harvest_yield": 2,
     "xp_reward": 4,
     "base_price": 14,
@@ -90,7 +90,7 @@
   "apple": {
     "id": "apple",
     "name": "Táo Đỏ",
-    "growth_time_seconds": 900,
+    "growth_time_seconds": 720,
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 15,
@@ -101,7 +101,7 @@
   "mango": {
     "id": "mango",
     "name": "Xoài Chín",
-    "growth_time_seconds": 1200,
+    "growth_time_seconds": 900,
     "harvest_yield": 2,
     "xp_reward": 5,
     "base_price": 22,
@@ -134,7 +134,7 @@
   "sunflower": {
     "id": "sunflower",
     "name": "Hoa Hướng Dương",
-    "growth_time_seconds": 240,
+    "growth_time_seconds": 180,
     "harvest_yield": 2,
     "xp_reward": 2,
     "base_price": 12,
@@ -145,7 +145,7 @@
   "rose": {
     "id": "rose",
     "name": "Hoa Hồng Đỏ",
-    "growth_time_seconds": 360,
+    "growth_time_seconds": 300,
     "harvest_yield": 2,
     "xp_reward": 3,
     "base_price": 16,
@@ -156,7 +156,7 @@
   "lavender": {
     "id": "lavender",
     "name": "Hoa Oải Hương",
-    "growth_time_seconds": 480,
+    "growth_time_seconds": 420,
     "harvest_yield": 2,
     "xp_reward": 4,
     "base_price": 20,
