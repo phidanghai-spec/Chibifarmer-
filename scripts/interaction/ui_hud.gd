@@ -987,7 +987,7 @@ func _show_level_up_modal(new_level: int) -> void:
 		vbox.add_child(lbl_unlock)
 	
 	var lbl_rewards: Label = Label.new()
-	lbl_rewards.text = " Phần thưởng: +%d 💰 Vàng  +%d Kim Cương Kim Cương  +%d  Xu" % [gold_reward, dia_reward, coins_reward]
+	lbl_rewards.text = " Phần thưởng: +%d 💰 Vàng  +%d Kim Cương  +%d Xu" % [gold_reward, dia_reward, coins_reward]
 	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_rewards.add_theme_font_size_override("font_size", 12)
 	lbl_rewards.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
