@@ -353,7 +353,7 @@
       1,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 80,
     "build_time_seconds": 0,
     "unlock_level": 7,
     "attraction_score": 5,
@@ -370,7 +370,7 @@
       3,
       2
     ],
-    "cost_gold": null,
+    "cost_gold": 150,
     "build_time_seconds": 0,
     "unlock_level": 11,
     "attraction_score": 15,
@@ -387,7 +387,7 @@
       1,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 100,
     "build_time_seconds": 0,
     "unlock_level": 14,
     "attraction_score": 6,
@@ -404,7 +404,7 @@
       1,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 140,
     "build_time_seconds": 0,
     "unlock_level": 16,
     "attraction_score": 12,
@@ -421,7 +421,7 @@
       2,
       2
     ],
-    "cost_gold": null,
+    "cost_gold": 250,
     "build_time_seconds": 0,
     "unlock_level": 18,
     "attraction_score": 18,
@@ -438,7 +438,7 @@
       2,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 180,
     "build_time_seconds": 0,
     "unlock_level": 20,
     "attraction_score": 25,
@@ -455,7 +455,7 @@
       1,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 200,
     "build_time_seconds": 0,
     "unlock_level": 22,
     "attraction_score": 15,
@@ -492,7 +492,7 @@
       2,
       1
     ],
-    "cost_gold": null,
+    "cost_gold": 300,
     "build_time_seconds": 0,
     "unlock_level": 25,
     "attraction_score": 30,
@@ -509,7 +509,7 @@
       2,
       2
     ],
-    "cost_gold": null,
+    "cost_gold": 380,
     "build_time_seconds": 0,
     "unlock_level": 29,
     "attraction_score": 25,
@@ -526,7 +526,7 @@
       2,
       2
     ],
-    "cost_gold": null,
+    "cost_gold": 600,
     "build_time_seconds": 0,
     "unlock_level": 30,
     "attraction_score": 50,
