@@ -203,7 +203,13 @@ func _ready() -> void:
 	stock_alert_system.name = "StockAlertSystem"
 	add_child(stock_alert_system)
 	
-	# Enable clicking on Silo and Barn progress pills to open Storage Management
+	# Enable tooltips on currency & attraction pills + clicking Silo/Barn pills
+	for pill_node: Control in [get_node_or_null("%PillCoins") as Control, get_node_or_null("%PillDiamonds") as Control, get_node_or_null("%PillGold") as Control, get_node_or_null("%PillAttraction") as Control]:
+		if pill_node != null:
+			pill_node.mouse_filter = Control.MOUSE_FILTER_STOP
+	var btn_close_shop: Button = get_node_or_null("PanelShop/VBox/Header/BtnCloseShop") as Button
+	if btn_close_shop != null:
+		_apply_dialog_close_button(btn_close_shop)
 	pill_silo.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_barn.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_silo.gui_input.connect(func(event: InputEvent) -> void:
