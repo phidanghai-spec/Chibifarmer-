@@ -146,7 +146,7 @@ func _normalize_building_id(b_id: String) -> String:
 		"chicken_pen": return "chicken"
 		"cow_pen", "cow_pasture": return "cow"
 		"pig_pen": return "pig"
-		"sheep_pen": return "sheep"
+		"sheep_pen", "sheep_pasture": return "sheep"
 		"bee_hive": return "beehive_tree"
 		"pet_house_poodle", "pet_poodle": return "poodle_house"
 	return b_id
