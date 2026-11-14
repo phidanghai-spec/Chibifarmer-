@@ -169,7 +169,11 @@ func _scan_stock_alerts() -> void:
 	if npcs.has("keeper"):
 		_update_npc_bubble("keeper", "Kho Sẵn Sàng!", false)
 	if npcs.has("fisher"):
-		_update_npc_bubble("fisher", "Bến Cá Sẵn Sàng!", false)
+		var fish_unlock_lv: int = DataManager.get_building_unlock_level("fishing_spot", 4) if DataManager != null else 4
+		if StorageManager != null and StorageManager.level >= fish_unlock_lv:
+			_update_npc_bubble("fisher", "Bến Cá Sẵn Sàng!", false)
+		else:
+			_update_npc_bubble("fisher", "", false)
 	
 	if not _active_alerts.is_empty():
 		_current_alert_idx = _current_alert_idx % _active_alerts.size()
