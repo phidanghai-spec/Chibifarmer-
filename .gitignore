@@ -33,8 +33,7 @@ desktop.ini
 *.tmp
 
 # Builds, reports & audits
-build/*
-!build/web/
+build/
 reports/
 _sprite_backups/
 _asset_audit/
