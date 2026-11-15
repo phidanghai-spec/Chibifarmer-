@@ -25,6 +25,10 @@ var _dove_nodes: Array[Sprite2D] = []
 var _dove_base_y: Array[float] = []
 
 func _ready() -> void:
+	if not OS.is_debug_build():
+		var dbg_menu: Node = get_node_or_null("/root/DebugMenu")
+		if dbg_menu != null:
+			dbg_menu.queue_free()
 	SaveSlotService.ensure_save_directory()
 	progress_bar.value = 0.0
 	status_label.text = "Đang nạp dữ liệu nông trại..."
