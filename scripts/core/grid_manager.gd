@@ -154,7 +154,81 @@ func is_cell_walkable(cell: Vector2i) -> bool:
 
 # --- Placement Logic ---
 
-func can_place_building(building_id: String, grid_pos: Vector2i) -> bool:
+# --- Zoo Reserved Footprint Logic ---
+
+func get_zoo_reserved_cells_for_enclosure(enclosure_id: String) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var cfg: Dictionary = DataManager.get_building(enclosure_id)
+	if cfg.is_empty():
+		return cells
+	var pos_var: Variant = cfg.get("pos", null)
+	if not (pos_var is Array) or (pos_var as Array).size() < 2:
+		return cells
+	var pos_arr: Array = pos_var as Array
+	var center_pos: Vector2 = Vector2(float(pos_arr[0]), float(pos_arr[1]))
+	# Balloon footprint matches zoo_manager.gd sprite/plaza size (88x100), animal enclosures are 192x128
+	var rect_size: Vector2 = Vector2(88.0, 100.0) if enclosure_id == "zoo_balloon" else Vector2(192.0, 128.0)
+	var rect_pos: Vector2 = center_pos - rect_size * 0.5
+	var min_c: Vector2i = world_to_grid(rect_pos)
+	var max_c: Vector2i = world_to_grid(rect_pos + rect_size - Vector2(1.0, 1.0))
+	for cx: int in range(min_c.x, max_c.x + 1):
+		for cy: int in range(min_c.y, max_c.y + 1):
+			var c: Vector2i = Vector2i(cx, cy)
+			if is_within_bounds(c):
+				cells.append(c)
+	return cells
+
+func get_zoo_reserved_cells() -> Dictionary:
+	var reserved: Dictionary = {}
+	var enclosures: Array[Dictionary] = DataManager.get_zoo_enclosures()
+	for cfg: Dictionary in enclosures:
+		var enc_id: String = String(cfg.get("id", ""))
+		if enc_id.is_empty():
+			continue
+		for c: Vector2i in get_zoo_reserved_cells_for_enclosure(enc_id):
+			reserved[c] = enc_id
+	return reserved
+
+func is_zoo_reserved_cell(cell: Vector2i) -> bool:
+	return get_zoo_reserved_cells().has(cell)
+
+func find_obstacles_in_zoo_zone(enclosure_id: String) -> Array[String]:
+	var found: Array[String] = []
+	var zone_cells: Array[Vector2i] = get_zoo_reserved_cells_for_enclosure(enclosure_id)
+	for c: Vector2i in zone_cells:
+		if is_path_tile(c) and not found.has("Đường đi"):
+			found.append("Đường đi")
+		if occupied_cells.has(c):
+			var occ_val: int = int(occupied_cells[c])
+			if occ_val == 950:
+				continue
+			var label: String = "Vật cản"
+			if occ_val == 777 or occ_val == 2000:
+				label = "Chuồng thú"
+			elif occ_val == 888 or occ_val == 1000 or occ_val == 999 or occ_val == 666:
+				label = "Công trình"
+			elif placed_buildings.has(occ_val):
+				var b_info: Dictionary = placed_buildings[occ_val] as Dictionary
+				var b_id: String = String(b_info.get("building_id", ""))
+				if b_id == "field_plot":
+					label = "Ruộng"
+				else:
+					label = "Công trình"
+			if not found.has(label):
+				found.append(label)
+	return found
+
+func can_unlock_zoo_zone(enclosure_id: String) -> Dictionary:
+	var obstacles: Array[String] = find_obstacles_in_zoo_zone(enclosure_id)
+	if obstacles.is_empty():
+		return {"ok": true, "obstacles": obstacles, "message": ""}
+	var cfg: Dictionary = DataManager.get_building(enclosure_id)
+	var zone_name: String = String(cfg.get("name", cfg.get("animal_name", enclosure_id)))
+	var obs_text: String = ", ".join(obstacles)
+	var msg: String = "⚠️ %s đang vướng %s! Hãy dùng nút Tháo Dỡ để dọn rồi thử lại." % [zone_name, obs_text]
+	return {"ok": false, "obstacles": obstacles, "message": msg}
+
+func can_place_building(building_id: String, grid_pos: Vector2i, ignore_zoo_reserve: bool = false) -> bool:
 	var b_data: Dictionary = DataManager.get_building(building_id)
 	if b_data.is_empty():
 		return false
@@ -171,7 +245,7 @@ func can_place_building(building_id: String, grid_pos: Vector2i) -> bool:
 	for x: int in range(grid_pos.x, grid_pos.x + size_x):
 		for y: int in range(grid_pos.y, grid_pos.y + size_y):
 			var check_cell: Vector2i = Vector2i(x, y)
-			if occupied_cells.has(check_cell):
+			if occupied_cells.has(check_cell) or ((not ignore_zoo_reserve) and (not building_id.begins_with("zoo_")) and building_id != "mini_zoo" and is_zoo_reserved_cell(check_cell)):
 				return false
 			var w_pos: Vector2 = grid_to_world(check_cell)
 			if is_in_water_or_sand(w_pos):
@@ -179,8 +253,8 @@ func can_place_building(building_id: String, grid_pos: Vector2i) -> bool:
 	
 	return true
 
-func place_building(building_id: String, grid_pos: Vector2i) -> int:
-	if not can_place_building(building_id, grid_pos):
+func place_building(building_id: String, grid_pos: Vector2i, ignore_zoo_reserve: bool = false) -> int:
+	if not can_place_building(building_id, grid_pos, ignore_zoo_reserve):
 		return -1
 	
 	var b_data: Dictionary = DataManager.get_building(building_id)

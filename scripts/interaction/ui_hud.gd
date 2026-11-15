@@ -3579,6 +3579,11 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 		btn_unlock_p.tooltip_text = "Mở khóa bằng Mảnh Ghép"
 		btn_unlock_p.disabled = (SaveManager.puzzle_pieces < p_cost)
 		btn_unlock_p.pressed.connect(func() -> void:
+			var zone_chk_p: Dictionary = GridManager.can_unlock_zoo_zone(a_id)
+			if not bool(zone_chk_p.get("ok", true)):
+				AudioManager.play_sfx("error")
+				show_floating_notice(String(zone_chk_p.get("message", "")))
+				return
 			if SaveManager.spend_puzzle_pieces(p_cost):
 				SaveManager.unlock_animal(a_id)
 				AudioManager.play_sfx("level_up")
@@ -3595,6 +3600,11 @@ func _build_zoo_card(z: Dictionary, zoo_mgr: ZooManager, vbox_cards: VBoxContain
 		btn_unlock_g.tooltip_text = "Mở khóa bằng Vàng"
 		btn_unlock_g.disabled = not StorageManager.has_gold(g_cost)
 		btn_unlock_g.pressed.connect(func() -> void:
+			var zone_chk_g: Dictionary = GridManager.can_unlock_zoo_zone(a_id)
+			if not bool(zone_chk_g.get("ok", true)):
+				AudioManager.play_sfx("error")
+				show_floating_notice(String(zone_chk_g.get("message", "")))
+				return
 			if StorageManager.spend_gold(g_cost):
 				EventBus.gold_changed.emit(StorageManager.gold, -g_cost)
 				SaveManager.unlock_animal(a_id)
