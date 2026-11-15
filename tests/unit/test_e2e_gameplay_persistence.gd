@@ -139,3 +139,57 @@ func test_e2e_build_gold_crop_seeds_east_bank_and_save_reload() -> void:
 
 	_cleanup_farm(farm2)
 	await get_tree().process_frame
+
+func test_seed_softlock_rescue_wheat_and_corn() -> void:
+	SaveManager.set_test_mode(true)
+	SaveManager.reset_to_level_1()
+
+	var main_farm_scene: PackedScene = load("res://scenes/main/MainFarm.tscn") as PackedScene
+	var farm: MainFarm = main_farm_scene.instantiate() as MainFarm
+	get_tree().root.add_child(farm)
+	await get_tree().process_frame
+
+	# Clear all plots to EMPTY so we control active plot state deterministically
+	for p_var: Variant in farm.field_plots.values():
+		var p: FieldPlot = p_var as FieldPlot
+		if p != null and is_instance_valid(p):
+			p.state = FieldPlot.PlotState.EMPTY
+			p.crop_id = ""
+
+	var plots: Array = farm.field_plots.values()
+	assert_int(plots.size()).is_greater_equal(2)
+	var p1: FieldPlot = plots[0] as FieldPlot
+	var p2: FieldPlot = plots[1] as FieldPlot
+
+	# Case (d): corn = 0, level = 1 -> planting corn rejected (not unlocked)
+	StorageManager.level = 1
+	StorageManager.silo_items["corn"] = 0
+	assert_bool(p1.plant("corn")).is_false()
+	assert_int(StorageManager.get_item_count("corn")).is_equal(0)
+
+	# Case (a): wheat = 0, gold = 500, all plots empty -> planting wheat succeeds, silo stays 0
+	StorageManager.gold = 500
+	StorageManager.silo_items["wheat"] = 0
+	assert_bool(p1.plant("wheat")).is_true()
+	assert_int(StorageManager.get_item_count("wheat")).is_equal(0)
+
+	# Case (b): wheat = 0, 1 wheat plot already growing -> planting 2nd plot rejected
+	assert_bool(p2.plant("wheat")).is_false()
+
+	# Reset p1 to EMPTY for next cases
+	p1.state = FieldPlot.PlotState.EMPTY
+	p1.crop_id = ""
+
+	# Case (c): corn = 0, level = 2, no active corn plots -> planting corn succeeds, silo stays 0
+	StorageManager.level = 2
+	StorageManager.silo_items["corn"] = 0
+	assert_bool(p1.plant("corn")).is_true()
+	assert_int(StorageManager.get_item_count("corn")).is_equal(0)
+
+	# Case (e): wheat = 5 -> planting wheat succeeds and consumes 1 (leaves 4)
+	StorageManager.silo_items["wheat"] = 5
+	assert_bool(p2.plant("wheat")).is_true()
+	assert_int(StorageManager.get_item_count("wheat")).is_equal(4)
+
+	_cleanup_farm(farm)
+	await get_tree().process_frame
