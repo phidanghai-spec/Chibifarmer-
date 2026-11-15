@@ -2,8 +2,6 @@ name: "🌐 Deploy Web (HTML5) to GitHub Pages"
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main", "master" ]
 
 permissions:
   contents: read
