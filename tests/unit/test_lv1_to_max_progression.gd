@@ -26,9 +26,19 @@ func test_playthrough_level_1_to_max_35() -> void:
 	assert_bool(sheep_feed.is_empty()).is_false()
 	assert_int(int(sheep_feed.get("unlock_level", 99))).is_equal(16)
 
-	# 3. Verify RoadsideShop rejects invalid count/price
+	# 3. Verify RoadsideShop rejects invalid count/price on an EMPTY slot and preserves storage
+	RoadsideShop.reset_for_test()
+	var wheat_before_shop: int = StorageManager.get_item_count("wheat")
+	assert_bool(RoadsideShop.is_slot_empty(5)).is_true()
 	assert_bool(RoadsideShop.list_item(5, "wheat", 0, 10)).is_false()
+	assert_bool(RoadsideShop.list_item(5, "wheat", -3, 10)).is_false()
 	assert_bool(RoadsideShop.list_item(5, "wheat", 2, 0)).is_false()
+	assert_bool(RoadsideShop.list_item(5, "wheat", 2, -5)).is_false()
+	assert_bool(RoadsideShop.is_slot_empty(5)).is_true()
+	assert_int(StorageManager.get_item_count("wheat")).is_equal(wheat_before_shop)
+	assert_bool(RoadsideShop.list_item(5, "wheat", 2, 10)).is_true()
+	assert_bool(RoadsideShop.is_slot_empty(5)).is_false()
+	assert_int(StorageManager.get_item_count("wheat")).is_equal(wheat_before_shop - 2)
 
 	# 4. Simulate Level 1 -> Level 35 progression
 	var plot: FieldPlot = FieldPlot.new()
