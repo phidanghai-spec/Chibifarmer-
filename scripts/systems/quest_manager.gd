@@ -122,7 +122,7 @@ var story_quests: Array[Dictionary] = [
 		"id": "main_07",
 		"chapter": 2,
 		"chapter_title": "Chương 2: Mở Rộng Nông Trại & Sở Thú",
-		"icon": "🦫",
+		"icon": "🐾",
 		"title": "Chăm Sóc Khu Bảo Tồn",
 		"desc": "Cho các loài thú ở Sở Thú ăn tổng cộng 3 lần.",
 		"target": 3,

@@ -90,7 +90,7 @@ func _ready() -> void:
 
 	# 3b. Relocate / Quy Hoạch button
 	_btn_relocate = Button.new()
-	_btn_relocate.text = "✥"
+	_btn_relocate.text = "↔"
 	_btn_relocate.tooltip_text = "Di chuyển / Quy hoạch công trình"
 	_btn_relocate.position = Vector2(82, -94)
 	_btn_relocate.size = Vector2(22, 22)

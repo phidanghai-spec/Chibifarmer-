@@ -203,7 +203,16 @@ func _ready() -> void:
 	stock_alert_system.name = "StockAlertSystem"
 	add_child(stock_alert_system)
 	
-	# Enable clicking on Silo and Barn progress pills to open Storage Management
+	# Enable tooltips on currency & attraction pills + clicking Silo/Barn pills
+	for pill_node: Control in [get_node_or_null("%PillCoins") as Control, get_node_or_null("%PillDiamonds") as Control, get_node_or_null("%PillGold") as Control, get_node_or_null("%PillAttraction") as Control]:
+		if pill_node != null:
+			pill_node.mouse_filter = Control.MOUSE_FILTER_STOP
+	var btn_close_shop: Button = get_node_or_null("PanelShop/VBox/Header/BtnCloseShop") as Button
+	if btn_close_shop != null:
+		_apply_dialog_close_button(btn_close_shop)
+	var btn_close_truck: Button = get_node_or_null("PanelTruck/VBox/Header/BtnCloseTruck") as Button
+	if btn_close_truck != null:
+		_apply_dialog_close_button(btn_close_truck)
 	pill_silo.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_barn.mouse_filter = Control.MOUSE_FILTER_STOP
 	pill_silo.gui_input.connect(func(event: InputEvent) -> void:
@@ -952,7 +961,7 @@ func _show_level_up_modal(new_level: int) -> void:
 	vbox.add_child(lbl_title)
 	
 	var lbl_level_badge: Label = Label.new()
-	lbl_level_badge.text = "★ CẤP ĐỘ %d: %s ★" % [new_level, title_str]
+	lbl_level_badge.text = "⭐ CẤP ĐỘ %d: %s ⭐" % [new_level, title_str]
 	lbl_level_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_level_badge.add_theme_font_size_override("font_size", 18)
 	lbl_level_badge.add_theme_color_override("font_color", Color(0.25, 0.15, 0.10))
@@ -987,7 +996,7 @@ func _show_level_up_modal(new_level: int) -> void:
 		vbox.add_child(lbl_unlock)
 	
 	var lbl_rewards: Label = Label.new()
-	lbl_rewards.text = " Phần thưởng: +%d 💰 Vàng  +%d Kim Cương Kim Cương  +%d  Xu" % [gold_reward, dia_reward, coins_reward]
+	lbl_rewards.text = " Phần thưởng: +%d 💰 Vàng  +%d Kim Cương  +%d Xu" % [gold_reward, dia_reward, coins_reward]
 	lbl_rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_rewards.add_theme_font_size_override("font_size", 12)
 	lbl_rewards.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
@@ -1157,6 +1166,18 @@ func open_settings_modal() -> void:
 			show_floating_notice("🚶 Đã bật chế độ Đi bộ tới đối tượng!")
 	)
 	vbox.add_child(btn_toggle_interact)
+	
+	var btn_fps_overlay: Button = Button.new()
+	btn_fps_overlay.custom_minimum_size = Vector2(0, 32)
+	btn_fps_overlay.text = "📊 Bật/Tắt FPS & Đồ Thị Hiệu Năng (F3)"
+	btn_fps_overlay.pressed.connect(func() -> void:
+		var dm: Node = get_node_or_null("/root/DebugMenu")
+		if dm != null:
+			var cur_style: int = int(dm.get("style"))
+			dm.set("style", (cur_style + 1) % 3)
+			AudioManager.play_sfx("click")
+	)
+	vbox.add_child(btn_fps_overlay)
 	
 	# --- 3. Web Testing Game Modes: Level 1 Story vs Level 33 Sandbox ---
 	var lbl_mode_sec: Label = Label.new()
@@ -1528,12 +1549,12 @@ func open_sell_item_picker(slot_index: int) -> void:
 			hbox_row.add_child(btn_sell_norm)
 			
 			var btn_sell_max: Button = Button.new()
-			btn_sell_max.text = "★ %d" % max_price
+			btn_sell_max.text = "⭐ %d" % max_price
 			btn_sell_max.tooltip_text = "Đăng bán giá tối đa"
 			btn_sell_max.pressed.connect(func() -> void:
 				if RoadsideShop.list_item(slot_index, i_id, sell_qty, max_price):
 					AudioManager.play_sfx("coin")
-					show_floating_notice("★ Đã đăng bán %dx %s giá tối đa (%d Vàng)!" % [sell_qty, i_name, max_price])
+					show_floating_notice("⭐ Đã đăng bán %dx %s giá tối đa (%d Vàng)!" % [sell_qty, i_name, max_price])
 					_sell_picker_modal.queue_free()
 					_refresh_shop_ui()
 			)
@@ -1613,7 +1634,7 @@ func _create_truck_order_card(order_index: int, order: Dictionary) -> PanelConta
 	var gold: int = int(order.get("reward_gold", 0))
 	var xp: int = int(order.get("reward_xp", 0))
 	var lbl_rew: Label = Label.new()
-	lbl_rew.text = "+%d Vàng  +%d ★" % [gold, xp]
+	lbl_rew.text = "+%d Vàng  +%d ⭐" % [gold, xp]
 	lbl_rew.add_theme_font_size_override("font_size", 12)
 	lbl_rew.add_theme_color_override("font_color", Color(0.85, 0.55, 0.10))
 	hbox_header.add_child(lbl_rew)
@@ -2148,10 +2169,12 @@ func open_build_modal() -> void:
 	hbox_head.add_child(btn_close)
 	
 	var shop_ids: Array[String] = [
-		"field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven",
+		"field_plot", "feed_mill", "bakery", "cow_pasture", "pig_pen", "sheep_pasture",
+		"juice_stand", "cake_oven",
 		"wooden_bench", "flower_bed", "fountain", "hedge_white", "wood_bridge", "park_bench",
 		"scarecrow", "zoo_shop", "flower_arch", "lantern_park", "fountain_east", "honor_board",
-		"zoo_fastfood", "golden_statue"
+		"zoo_fastfood", "golden_statue",
+		"mini_zoo", "zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe", "zoo_balloon"
 	]
 	
 	var catalog: Array[Dictionary] = []
@@ -2170,6 +2193,8 @@ func open_build_modal() -> void:
 			match b_id:
 				"field_plot": icon_key = "wheat"
 				"cow_pasture": icon_key = "cow"
+				"pig_pen": icon_key = "pig"
+				"sheep_pasture": icon_key = "sheep"
 				"juice_stand": icon_key = "building_juice_stand"
 				"cake_oven": icon_key = "building_cake_oven"
 				"flower_bed": icon_key = "flowerbed_round"
@@ -2179,18 +2204,33 @@ func open_build_modal() -> void:
 				"honor_board": icon_key = "decor_wooden_bench"
 				"zoo_fastfood": icon_key = "zoo_feed_shop"
 				"golden_statue": icon_key = "fountain"
+				"mini_zoo": icon_key = "building_mini_zoo"
+				"zoo_capybara": icon_key = "zoo_enclosure_capybara"
+				"zoo_panda": icon_key = "zoo_enclosure_panda"
+				"zoo_penguin": icon_key = "zoo_enclosure_penguin"
+				"zoo_giraffe": icon_key = "zoo_enclosure_giraffe"
+				"zoo_balloon": icon_key = "hot_air_balloon"
 				_: icon_key = "decor_wooden_bench"
 		
-		var is_prod: bool = (b_id in ["field_plot", "feed_mill", "bakery", "cow_pasture", "juice_stand", "cake_oven"])
+		var is_prod: bool = (b_id in ["field_plot", "feed_mill", "bakery", "cow_pasture", "pig_pen", "sheep_pasture", "juice_stand", "cake_oven"])
+		var is_zoo: bool = (b_id in ["mini_zoo", "zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe", "zoo_balloon", "zoo_shop", "zoo_fastfood"])
+		var raw_cost_gold: Variant = b_data.get("cost_gold", null)
+		if raw_cost_gold == null and b_id == "zoo_balloon":
+			raw_cost_gold = 550
+		var item_cat: String = "decor"
+		if is_prod:
+			item_cat = "production"
+		elif is_zoo:
+			item_cat = "zoo"
 		catalog.append({
 			"id": b_id,
 			"name": String(b_data.get("name", b_id.capitalize())),
 			"desc": String(b_data.get("description", "")),
-			"cost_gold": b_data.get("cost_gold", null),
+			"cost_gold": raw_cost_gold,
 			"unlock_level": int(b_data.get("unlock_level", 1)),
 			"build_materials": b_data.get("build_materials", {}) as Dictionary,
 			"icon": icon_key,
-			"category": "production" if is_prod else "decor"
+			"category": item_cat
 		})
 	
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -2221,7 +2261,10 @@ func open_build_modal() -> void:
 		for c: Node in grid.get_children():
 			c.queue_free()
 		for item: Dictionary in catalog:
-			if filter_cat != "all" and String(item.get("category", "")) != filter_cat:
+			var item_c: String = String(item.get("category", ""))
+			if filter_cat == "decor" and item_c not in ["decor", "zoo"]:
+				continue
+			elif filter_cat not in ["all", "decor"] and item_c != filter_cat:
 				continue
 			var card: PanelContainer = _create_build_card(item)
 			grid.add_child(card)
@@ -2243,6 +2286,12 @@ func open_build_modal() -> void:
 	_apply_dialog_action_button(btn_decor, true)
 	btn_decor.pressed.connect(func() -> void: populate_grid.call("decor"))
 	hbox_tabs.add_child(btn_decor)
+	
+	var btn_zoo_tab: Button = Button.new()
+	btn_zoo_tab.text = "Sở Thú"
+	_apply_dialog_action_button(btn_zoo_tab, true)
+	btn_zoo_tab.pressed.connect(func() -> void: populate_grid.call("zoo"))
+	hbox_tabs.add_child(btn_zoo_tab)
 	
 	populate_grid.call("all")
 	add_child(_build_modal)
@@ -2877,7 +2926,7 @@ func _render_quests_list(vbox_list: VBoxContainer) -> void:
 		var cur_lvl: int = StorageManager.level
 		var next_lvl: int = cur_lvl + 1
 		var rm_title: Label = Label.new()
-		rm_title.text = "🌟 LỘ TRÌNH MỞ KHÓA: CẤP %d ➔ CẤP %d" % [cur_lvl, next_lvl]
+		rm_title.text = "🌟 LỘ TRÌNH MỞ KHÓA: CẤP %d → CẤP %d" % [cur_lvl, next_lvl]
 		rm_title.add_theme_font_size_override("font_size", 12)
 		rm_title.add_theme_color_override("font_color", Color(0.68, 0.35, 0.05))
 		rm_vbox.add_child(rm_title)
@@ -4085,12 +4134,12 @@ func open_hot_air_balloon_modal() -> void:
 		vbox_cards.add_child(card2)
 	else:
 		var card_max: PanelContainer = _create_feed_shop_card(
-			"★ Khinh Khí Cầu Đạt Cấp Tối Đa (Lv.5)",
+			"⭐ Khinh Khí Cầu Đạt Cấp Tối Đa (Lv.5)",
 			"Đã mở khóa toàn bộ hiệu suất! Tip du khách tại Sở Thú tăng tối đa +50% vĩnh viễn.",
 			"Trạng thái: Tối đa (Level 5)",
-			"★ Đã Tối Đa",
+			"⭐ Đã Tối Đa",
 			func() -> void:
-				show_floating_notice("★ Khinh Khí Cầu đã đạt cấp độ tối đa!")
+				show_floating_notice("⭐ Khinh Khí Cầu đã đạt cấp độ tối đa!")
 		)
 		vbox_cards.add_child(card_max)
 	

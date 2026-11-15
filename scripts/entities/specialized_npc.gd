@@ -76,6 +76,7 @@ func _ready() -> void:
 	
 	_lbl_message = Label.new()
 	_lbl_message.name = "LabelMessage"
+	DataManager.apply_emoji_font(_lbl_message)
 	_lbl_message.text = "✨ Sẵn Sàng!"
 	_lbl_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lbl_message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

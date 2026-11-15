@@ -107,10 +107,12 @@ func _ready() -> void:
 	# 4. Name Tag (Hidden to remove text clutter)
 	_label_name = Label.new()
 	_label_name.visible = false
+	DataManager.apply_emoji_font(_label_name)
 	add_child(_label_name)
 
 	# 5. Overhead Tourism Demand Bubble (Single clean line)
 	_label_demand = Label.new()
+	DataManager.apply_emoji_font(_label_demand)
 	_label_demand.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_demand.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label_demand.position = Vector2(-75, -52)
@@ -124,6 +126,7 @@ func _ready() -> void:
 
 	# 6. Overhead Short Dialogue Bubble (Only for walking tourists)
 	_chat_label = Label.new()
+	DataManager.apply_emoji_font(_chat_label)
 	_chat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_chat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_chat_label.position = Vector2(-95, -52)
@@ -255,7 +258,7 @@ func handle_visitor_click() -> bool:
 		_label_demand.text = "😍 +%dV +%dXu! ✨" % [final_gold, tip_coins]
 		_label_demand.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 		_show_emote()
-		_show_chat_dialogue("Đã nhận %s! Cảm ơn bạn rất nhiều! ❤️" % requested_name)
+		_show_chat_dialogue("Đã nhận %s! Cảm ơn bạn rất nhiều! ❤" % requested_name)
 		AudioManager.play_sfx("sell")
 		
 		var tw: Tween = create_tween()
@@ -272,7 +275,7 @@ func handle_visitor_click() -> bool:
 		var farm: Node = get_tree().current_scene
 		var hud: UIHud = farm.find_child("UIHud", true, false) as UIHud if farm != null else null
 		if hud != null:
-			hud.show_floating_notice("⚠️ Thiếu %s trong kho để bán cho khách!" % requested_name)
+			hud.show_floating_notice("⚠ Thiếu %s trong kho để bán cho khách!" % requested_name)
 		AudioManager.play_sfx("error")
 		
 		# Visual shake on demand label

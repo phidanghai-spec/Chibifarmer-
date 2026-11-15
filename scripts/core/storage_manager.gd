@@ -8,6 +8,8 @@ var level: int = 1
 
 var silo_capacity: int = 100
 var barn_capacity: int = 100
+var purchased_silo_bonus: int = 0
+var purchased_barn_bonus: int = 0
 
 var silo_items: Dictionary = {}
 var barn_items: Dictionary = {}
@@ -22,12 +24,11 @@ const CONSTRUCTION_MATERIALS: Array[String] = ["mat_plank", "mat_bolt", "mat_bri
 
 func _ready() -> void:
 	_init_starter_inventory()
+	recalculate_capacities()
 
 func _init_starter_inventory() -> void:
 	silo_items.clear()
 	silo_items["wheat"] = 10
-	silo_items["corn"] = 5
-	silo_items["carrot"] = 5
 	silo_items["apple_seed"] = 2
 	silo_items["mango_seed"] = 2
 	
@@ -105,27 +106,27 @@ func spend_diamonds(amount: int) -> bool:
 
 const LEVEL_XP_TABLE: Dictionary = {
 	1: 20,
-	2: 30,
-	3: 45,
+	2: 35,
+	3: 50,
 	4: 75,
-	5: 170,
-	6: 250,
-	7: 380,
-	8: 520,
-	9: 720,
-	10: 950,
-	11: 1250,
-	12: 1650,
-	13: 2100,
-	14: 2600,
-	15: 3200,
-	16: 3800
+	5: 110,
+	6: 150,
+	7: 200,
+	8: 260,
+	9: 330,
+	10: 420,
+	11: 500,
+	12: 600,
+	13: 720,
+	14: 860,
+	15: 1000,
+	16: 1150
 }
 
 func get_required_xp(target_level: int) -> int:
-	if LEVEL_XP_TABLE.has(target_level):
-		return int(LEVEL_XP_TABLE[target_level])
-	return int(3800 + (target_level - 16) * 800)
+	if target_level <= 16:
+		return int(LEVEL_XP_TABLE.get(target_level, 20))
+	return int(1150 + (target_level - 16) * 300)
 
 func add_xp(amount: int) -> void:
 	if amount <= 0:
@@ -136,15 +137,41 @@ func add_xp(amount: int) -> void:
 	while xp >= needed:
 		xp -= needed
 		level += 1
-		var gold_reward: int = 150 + level * 25
-		var dia_reward: int = 2
+		recalculate_capacities()
+		_grant_starter_seeds_for_level(level)
+		var u_info: Dictionary = LevelProgressionManager.get_unlock_info(level)
+		var gold_reward: int = int(u_info.get("gold_reward", 100 + level * 25))
+		var dia_reward: int = int(u_info.get("diamonds_reward", 1))
+		var coins_reward: int = int(u_info.get("coins_reward", 10 + level * 5))
 		add_gold(gold_reward)
 		add_diamonds(dia_reward)
+		add_coins(coins_reward)
 		EventBus.leveled_up.emit(level)
 		needed = get_required_xp(level)
-		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng, +", dia_reward, " Kim Cương thưởng!)")
+		print("[StorageManager] Level up! New level: ", level, " (+", gold_reward, " Vàng, +", dia_reward, " Kim Cương, +", coins_reward, " Xu thưởng!)")
 	
 	EventBus.xp_changed.emit(xp, needed, level)
+
+func _grant_starter_seeds_for_level(unlocked_level: int) -> void:
+	if DataManager == null or DataManager.crops.is_empty():
+		return
+	var granted_any: bool = false
+	for crop_key: Variant in DataManager.crops.keys():
+		var crop_id: String = String(crop_key)
+		var crop_data: Dictionary = DataManager.crops[crop_id] as Dictionary
+		if int(crop_data.get("unlock_level", 1)) == unlocked_level:
+			if not add_item(crop_id, 3):
+				silo_items[crop_id] = int(silo_items.get(crop_id, 0)) + 3
+				EventBus.item_added.emit(crop_id, 3, "silo")
+			granted_any = true
+			var seed_id: String = crop_id + "_seed"
+			if DataManager.items.has(seed_id) and not DataManager.crops.has(seed_id):
+				if not add_item(seed_id, 3):
+					silo_items[seed_id] = int(silo_items.get(seed_id, 0)) + 3
+					EventBus.item_added.emit(seed_id, 3, "silo")
+			print("[StorageManager] Granted +3 starter seeds for unlocked crop: ", crop_id, " at Lv", unlocked_level)
+	if granted_any:
+		_emit_storage_updated("silo")
 
 # --- Dual Storage (Silo & Barn) ---
 
@@ -274,14 +301,43 @@ func get_item_count_in_storage(storage_type: String, item_id: String) -> int:
 		return int(silo_items.get(item_id, 0))
 	return int(barn_items.get(item_id, 0))
 
+func recalculate_capacities() -> void:
+	var rewards: Dictionary = DataManager.get_level_rewards() if DataManager != null else {}
+	var new_silo_cap: int = 100 + purchased_silo_bonus
+	var new_barn_cap: int = 100 + purchased_barn_bonus
+
+	var cap_entries: Array = rewards.get("silo_barn_capacity", []) as Array
+	for entry_var: Variant in cap_entries:
+		if typeof(entry_var) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_var as Dictionary
+		if int(entry.get("level", 999999)) <= level:
+			var add_val: int = int(entry.get("add", 0))
+			new_silo_cap += add_val
+			new_barn_cap += add_val
+
+	var double_entries: Array = rewards.get("barn_capacity_double", []) as Array
+	for entry_var: Variant in double_entries:
+		if typeof(entry_var) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_var as Dictionary
+		if int(entry.get("level", 999999)) <= level:
+			new_barn_cap *= 2
+			break
+
+	silo_capacity = new_silo_cap
+	barn_capacity = new_barn_cap
+	EventBus.storage_updated.emit("silo", get_silo_used(), silo_capacity)
+	EventBus.storage_updated.emit("barn", get_barn_used(), barn_capacity)
+
 func upgrade_storage(storage_type: String, capacity_increase: int) -> void:
 	if capacity_increase <= 0:
 		return
 	if storage_type == "silo":
-		silo_capacity += capacity_increase
+		purchased_silo_bonus += capacity_increase
 	else:
-		barn_capacity += capacity_increase
-	_emit_storage_updated(storage_type)
+		purchased_barn_bonus += capacity_increase
+	recalculate_capacities()
 
 func _emit_storage_updated(storage_type: String) -> void:
 	var used: int = get_storage_used(storage_type)

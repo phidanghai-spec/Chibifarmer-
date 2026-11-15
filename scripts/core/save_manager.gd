@@ -18,6 +18,10 @@ var custom_decorations: Array = []
 var building_custom_names: Dictionary = {} # building_id -> String
 var custom_building_positions: Dictionary = {} # building_id / instance_id -> Dictionary
 var unlocked_buildings: Array = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen", "feed_mill"]
+var saved_plots_data: Array = []
+var saved_paths_data: Array = []
+var saved_pens_data: Array = []
+var saved_machines_data: Array = []
 
 var selected_character: String = "minh" # "minh"/"male" or "mai"/"female"
 var player_name: String = "Nông Dân"
@@ -146,13 +150,13 @@ func _normalize_building_id(b_id: String) -> String:
 		"chicken_pen": return "chicken"
 		"cow_pen", "cow_pasture": return "cow"
 		"pig_pen": return "pig"
-		"sheep_pen": return "sheep"
+		"sheep_pen", "sheep_pasture": return "sheep"
 		"bee_hive": return "beehive_tree"
 		"pet_house_poodle", "pet_poodle": return "poodle_house"
 	return b_id
 
 func is_building_constructed(b_id: String) -> bool:
-	if is_test_mode or _detect_test_mode():
+	if (is_test_mode or _detect_test_mode()) and StorageManager.level >= 20:
 		return true
 	var norm: String = _normalize_building_id(b_id)
 	if norm in ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "feed_mill"]:
@@ -291,17 +295,23 @@ func reset_to_level_1() -> void:
 	var active_p: String = get_active_save_path()
 	if FileAccess.file_exists(active_p):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(active_p))
+	var custom_pos_path: String = "user://custom_structure_positions.json"
+	if FileAccess.file_exists(custom_pos_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
 	if not (is_test_mode or _detect_test_mode()):
 		if FileAccess.file_exists(SAVE_PATH):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
-		var custom_pos_path: String = "user://custom_structure_positions.json"
-		if FileAccess.file_exists(custom_pos_path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(custom_pos_path))
 	print("[SaveManager] Reset and removed save files for Level 1 fresh start: ", active_p)
 
 	custom_decorations.clear()
 	building_custom_names.clear()
 	custom_building_positions.clear()
+	saved_plots_data.clear()
+	saved_paths_data.clear()
+	saved_pens_data.clear()
+	saved_machines_data.clear()
+	if has_meta("custom_structure_positions"):
+		remove_meta("custom_structure_positions")
 	unlocked_buildings = ["farmhouse", "silo", "barn", "roadside_shop", "truck", "chicken", "chicken_pen", "feed_mill"]
 	
 	StorageManager.level = 1
@@ -311,11 +321,11 @@ func reset_to_level_1() -> void:
 	StorageManager.diamonds = 15
 	StorageManager.silo_capacity = 100
 	StorageManager.barn_capacity = 100
+	StorageManager.purchased_silo_bonus = 0
+	StorageManager.purchased_barn_bonus = 0
 	
 	StorageManager.silo_items.clear()
 	StorageManager.silo_items["wheat"] = 10
-	StorageManager.silo_items["corn"] = 5
-	StorageManager.silo_items["carrot"] = 5
 	StorageManager.silo_items["apple_seed"] = 2
 	StorageManager.silo_items["mango_seed"] = 2
 	
@@ -348,12 +358,11 @@ func reset_to_level_1() -> void:
 	daily_chest_50_claimed = false
 	daily_chest_100_claimed = false
 	
+	StorageManager.recalculate_capacities()
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
 	EventBus.gold_changed.emit(StorageManager.gold, 0)
 	EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 	EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-	EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-	EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	zoo_updated.emit("")
 	puzzle_pieces_changed.emit(puzzle_pieces)
 
@@ -434,7 +443,8 @@ func set_sandbox_level_33() -> void:
 	unlocked_buildings = [
 		"farmhouse", "silo", "barn", "roadside_shop", "truck",
 		"chicken", "chicken_pen", "cow", "cow_pen", "pig", "pig_pen", "sheep", "sheep_pen",
-		"feed_mill", "bakery", "juice_stand", "cake_oven", "beehive_tree", "bee_hive", "poodle_house"
+		"feed_mill", "bakery", "juice_stand", "cake_oven", "beehive_tree", "bee_hive", "poodle_house",
+		"mini_zoo", "zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe", "zoo_balloon"
 	]
 	
 	EventBus.coins_changed.emit(StorageManager.coins, 0)
@@ -451,7 +461,109 @@ func set_sandbox_level_33() -> void:
 func set_sandbox_level_32() -> void:
 	set_sandbox_level_33()
 
+func _find_active_farm() -> Node2D:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return null
+	var grouped: Node = tree.get_first_node_in_group("main_farm")
+	if grouped is Node2D and is_instance_valid(grouped) and grouped.get("field_plots") != null:
+		return grouped as Node2D
+	if tree.current_scene != null and tree.current_scene.get("field_plots") != null:
+		return tree.current_scene as Node2D
+	if tree.root != null:
+		var found: Node = tree.root.find_child("MainFarm", true, false)
+		if found is Node2D and found.get("field_plots") != null:
+			return found as Node2D
+	return null
+
+func _collect_live_farm_state() -> void:
+	if has_meta("custom_structure_positions"):
+		var meta_pos: Dictionary = get_meta("custom_structure_positions") as Dictionary
+		for k: String in meta_pos:
+			custom_building_positions[k] = (meta_pos[k] as Dictionary).duplicate(true)
+
+	var farm: Node2D = _find_active_farm()
+	if farm == null:
+		return
+	if farm.get("_is_ready_complete") == false:
+		return
+
+	# 1. Collect all FieldPlots (including player-placed plots and crop states)
+	var plots_dict_var: Variant = farm.get("field_plots")
+	if plots_dict_var is Dictionary:
+		var plots_dict: Dictionary = plots_dict_var as Dictionary
+		var new_plots: Array = []
+		for coord_var: Variant in plots_dict:
+			var coord: Vector2i = coord_var as Vector2i
+			var plot: Node2D = plots_dict[coord] as Node2D
+			if plot != null and is_instance_valid(plot):
+				new_plots.append({
+					"grid_x": coord.x,
+					"grid_y": coord.y,
+					"state": int(plot.get("state")),
+					"crop_id": String(plot.get("crop_id")),
+					"plant_timestamp": int(plot.get("plant_timestamp")),
+					"finish_timestamp": int(plot.get("finish_timestamp")),
+					"time_left": float(plot.get("time_left"))
+				})
+		saved_plots_data = new_plots
+
+	# 2. Collect all Path tiles
+	if GridManager != null and not GridManager.path_cells.is_empty():
+		var new_paths: Array = []
+		for c_var: Variant in GridManager.path_cells:
+			if bool(GridManager.path_cells[c_var]):
+				var c: Vector2i = c_var as Vector2i
+				new_paths.append({"x": c.x, "y": c.y})
+		saved_paths_data = new_paths
+
+	# 3. Collect all AnimalPens (including pig_pen, cow_pen, sheep_pen, and extra pens)
+	var pens_var: Variant = farm.get("_animal_pens")
+	if pens_var is Array:
+		var pens_arr: Array = pens_var as Array
+		var new_pens: Array = []
+		for p_var: Variant in pens_arr:
+			var pen: Node2D = p_var as Node2D
+			if pen != null and is_instance_valid(pen):
+				var g_pos: Vector2i = pen.get("grid_pos") as Vector2i
+				new_pens.append({
+					"animal_id": String(pen.get("animal_id")),
+					"grid_x": g_pos.x,
+					"grid_y": g_pos.y,
+					"pos_x": pen.position.x,
+					"pos_y": pen.position.y,
+					"state": int(pen.get("state")),
+					"finish_timestamp": int(pen.get("finish_timestamp")),
+					"animal_count": int(pen.get("animal_count")),
+					"visible": pen.visible
+				})
+		saved_pens_data = new_pens
+
+	# 4. Collect all ProductionMachines
+	var machines_var: Variant = farm.get("_production_machines")
+	if machines_var is Array:
+		var machines_arr: Array = machines_var as Array
+		var new_machines: Array = []
+		for m_var: Variant in machines_arr:
+			var m: Node2D = m_var as Node2D
+			if m != null and is_instance_valid(m):
+				var mg_pos: Vector2i = m.get("grid_pos") as Vector2i
+				var q_arr: Array = (m.get("queue") as Array).duplicate(true)
+				var comp_arr: Array = (m.get("completed_items") as Array).duplicate()
+				new_machines.append({
+					"machine_id": String(m.get("machine_id")),
+					"grid_x": mg_pos.x,
+					"grid_y": mg_pos.y,
+					"pos_x": m.position.x,
+					"pos_y": m.position.y,
+					"queue": q_arr,
+					"completed_items": comp_arr,
+					"visible": m.visible
+				})
+		saved_machines_data = new_machines
+
 func save_game() -> void:
+	_collect_live_farm_state()
 	var save_data: Dictionary = {
 		"version": SAVE_VERSION,
 		"save_timestamp": TickManager.now(),
@@ -463,12 +575,18 @@ func save_game() -> void:
 			"level": StorageManager.level,
 			"silo_capacity": StorageManager.silo_capacity,
 			"barn_capacity": StorageManager.barn_capacity,
+			"purchased_silo_bonus": StorageManager.purchased_silo_bonus,
+			"purchased_barn_bonus": StorageManager.purchased_barn_bonus,
 			"silo_items": StorageManager.silo_items.duplicate(),
 			"barn_items": StorageManager.barn_items.duplicate()
 		},
 		"building_custom_names": building_custom_names.duplicate(),
 		"custom_building_positions": custom_building_positions.duplicate(true),
 		"unlocked_buildings": unlocked_buildings.duplicate(),
+		"plots_data": saved_plots_data.duplicate(true),
+		"paths_data": saved_paths_data.duplicate(true),
+		"pens_data": saved_pens_data.duplicate(true),
+		"machines_data": saved_machines_data.duplicate(true),
 		"attraction_score": GridManager.total_attraction_score
 	}
 	
@@ -618,8 +736,20 @@ func load_game() -> bool:
 		StorageManager.diamonds = int(econ.get("diamonds", StorageManager.diamonds))
 		StorageManager.xp = int(econ.get("xp", StorageManager.xp))
 		StorageManager.level = int(econ.get("level", StorageManager.level))
-		StorageManager.silo_capacity = maxi(100, int(econ.get("silo_capacity", 100)))
-		StorageManager.barn_capacity = maxi(100, int(econ.get("barn_capacity", 100)))
+		var saved_silo_cap: int = maxi(100, int(econ.get("silo_capacity", 100)))
+		var saved_barn_cap: int = maxi(100, int(econ.get("barn_capacity", 100)))
+		StorageManager.silo_capacity = saved_silo_cap
+		StorageManager.barn_capacity = saved_barn_cap
+
+		if econ.has("purchased_silo_bonus") and econ.has("purchased_barn_bonus"):
+			StorageManager.purchased_silo_bonus = maxi(0, int(econ.get("purchased_silo_bonus", 0)))
+			StorageManager.purchased_barn_bonus = maxi(0, int(econ.get("purchased_barn_bonus", 0)))
+		else:
+			StorageManager.purchased_silo_bonus = 0
+			StorageManager.purchased_barn_bonus = 0
+			StorageManager.recalculate_capacities()
+			StorageManager.purchased_silo_bonus = maxi(0, saved_silo_cap - StorageManager.silo_capacity)
+			StorageManager.purchased_barn_bonus = maxi(0, saved_barn_cap - StorageManager.barn_capacity)
 		
 		var s_items: Dictionary = econ.get("silo_items", {}) as Dictionary
 		if not s_items.is_empty():
@@ -628,56 +758,12 @@ func load_game() -> bool:
 		var b_items: Dictionary = econ.get("barn_items", {}) as Dictionary
 		if not b_items.is_empty():
 			StorageManager.barn_items = b_items
-
-		if StorageManager.level >= 20:
-			# Guarantee large stockpile of seeds, crops and flora
-			var guaranteed_silo: Dictionary = {
-				"wheat": 80,
-				"corn": 60,
-				"carrot": 50,
-				"tomato": 40,
-				"strawberry": 40,
-				"pumpkin": 35,
-				"soybean": 35,
-				"sugarcane": 35,
-				"apple": 25,
-				"mango": 25,
-				"sunflower": 20,
-				"rose": 20,
-				"lavender": 20,
-				"apple_seed": 15,
-				"mango_seed": 15
-			}
-			for k: String in guaranteed_silo:
-				if int(StorageManager.silo_items.get(k, 0)) < int(guaranteed_silo[k]):
-					StorageManager.silo_items[k] = int(guaranteed_silo[k])
-			
-			# Guarantee large stockpile of animal feeds and artisanal foods
-			var guaranteed_barn: Dictionary = {
-				"egg": 40,
-				"milk": 40,
-				"bacon": 30,
-				"bread": 30,
-				"cookie": 25,
-				"butter": 20,
-				"cheese": 20,
-				"chicken_feed": 35,
-				"cow_feed": 35,
-				"pig_feed": 30,
-				"sanctuary_feed": 20,
-				"fish_carp": 20,
-				"fish_bass": 15
-			}
-			for k: String in guaranteed_barn:
-				if int(StorageManager.barn_items.get(k, 0)) < int(guaranteed_barn[k]):
-					StorageManager.barn_items[k] = int(guaranteed_barn[k])
 		
+		StorageManager.recalculate_capacities()
 		EventBus.coins_changed.emit(StorageManager.coins, 0)
 		EventBus.gold_changed.emit(StorageManager.gold, 0)
 		EventBus.diamonds_changed.emit(StorageManager.diamonds, 0)
 		EventBus.xp_changed.emit(StorageManager.xp, StorageManager.get_required_xp(StorageManager.level), StorageManager.level)
-		EventBus.storage_updated.emit("silo", StorageManager.get_silo_used(), StorageManager.silo_capacity)
-		EventBus.storage_updated.emit("barn", StorageManager.get_barn_used(), StorageManager.barn_capacity)
 	
 	# Restore Building Custom Names
 	if data.has("building_custom_names"):
@@ -690,6 +776,45 @@ func load_game() -> bool:
 		custom_building_positions = (data["custom_building_positions"] as Dictionary).duplicate(true)
 	else:
 		custom_building_positions = {}
+	set_meta("custom_structure_positions", custom_building_positions.duplicate(true))
+
+	# Restore Plots, Paths, Animal Pens, and Production Machines
+	if data.has("plots_data") and data["plots_data"] is Array:
+		saved_plots_data = (data["plots_data"] as Array).duplicate(true)
+		for p_item: Variant in saved_plots_data:
+			if p_item is Dictionary:
+				var pd: Dictionary = p_item as Dictionary
+				if int(pd.get("state", 0)) == 1: # GROWING
+					var rem: float = float(pd.get("time_left", 0.0)) - float(offline_elapsed)
+					if rem <= 0.0 or (int(pd.get("finish_timestamp", 0)) > 0 and TickManager.now() >= int(pd.get("finish_timestamp", 0))):
+						pd["state"] = 2 # READY
+						pd["time_left"] = 0.0
+					else:
+						pd["time_left"] = rem
+	else:
+		saved_plots_data = []
+
+	if data.has("paths_data") and data["paths_data"] is Array:
+		saved_paths_data = (data["paths_data"] as Array).duplicate(true)
+	else:
+		saved_paths_data = []
+
+	if data.has("pens_data") and data["pens_data"] is Array:
+		saved_pens_data = (data["pens_data"] as Array).duplicate(true)
+		for pen_item: Variant in saved_pens_data:
+			if pen_item is Dictionary:
+				var pend: Dictionary = pen_item as Dictionary
+				if int(pend.get("state", 0)) == 1: # PRODUCING
+					var f_ts: int = int(pend.get("finish_timestamp", 0))
+					if f_ts > 0 and TickManager.now() >= f_ts:
+						pend["state"] = 2 # READY
+	else:
+		saved_pens_data = []
+
+	if data.has("machines_data") and data["machines_data"] is Array:
+		saved_machines_data = (data["machines_data"] as Array).duplicate(true)
+	else:
+		saved_machines_data = []
 	
 	# Restore Unlocked Buildings
 	if data.has("unlocked_buildings"):
@@ -785,6 +910,10 @@ func load_game() -> bool:
 		if q_data.has("vip_requests"):
 			vip_requests = (q_data["vip_requests"] as Array).duplicate(true)
 	
+	var active_farm: Node2D = _find_active_farm()
+	if active_farm != null and active_farm.has_method("restore_from_save_manager"):
+		active_farm.call("restore_from_save_manager")
+
 	return true
 
 func set_player_character(char_key: String) -> void:

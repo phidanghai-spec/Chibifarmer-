@@ -19,17 +19,20 @@ static func evaluate_offline_progress(save_data: Dictionary) -> Dictionary:
 		
 	var elapsed_minutes: int = elapsed / 60
 	var attraction_score: int = int(save_data.get("attraction_score", 10))
+	var economy: Dictionary = save_data.get("economy", {}) as Dictionary
+	var level: int = int(save_data.get("level", economy.get("level", 1)))
 	
 	# Đếm số chuồng thú đã mở khóa từ save_data
-	var unlocked_zoo_animals: int = int(save_data.get("zoo_animals_count", 1))
+	var unlocked_zoo_animals: int = int(save_data.get("zoo_animals_count", 0))
 	if save_data.has("zoo_enclosures"):
 		var enclosures: Dictionary = save_data.get("zoo_enclosures", {}) as Dictionary
-		if not enclosures.is_empty():
-			unlocked_zoo_animals = maxi(1, enclosures.size())
+		unlocked_zoo_animals = enclosures.size()
 	
-	# Tính doanh thu thụ động từ du khách mua vé Vườn Thú Bờ Đông
-	var passive_zoo_gold: int = elapsed_minutes * BASE_ZOO_TICKET_PER_MINUTE * unlocked_zoo_animals
-	passive_zoo_gold += int(float(elapsed_minutes) * float(attraction_score) * 0.25)
+	# Tính doanh thu thụ động từ du khách mua vé Vườn Thú Bờ Đông (chỉ từ Lv11 và có ít nhất 1 chuồng thú)
+	var passive_zoo_gold: int = 0
+	if level >= 11 and unlocked_zoo_animals > 0:
+		passive_zoo_gold = elapsed_minutes * BASE_ZOO_TICKET_PER_MINUTE * unlocked_zoo_animals
+		passive_zoo_gold += int(float(elapsed_minutes) * float(attraction_score) * 0.25)
 	
 	# Ước tính số mẻ nông sản chín trong thời gian vắng mặt (tối đa 12 ô)
 	var ripened_crops_count: int = mini(12, elapsed_minutes / 2)

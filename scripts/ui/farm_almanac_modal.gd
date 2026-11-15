@@ -93,7 +93,7 @@ func _init_almanac_database() -> void:
 			{"id": "strawberry", "name": "🍓 Dâu Tây Đỏ", "desc": "Quả mọng ngọt ngào dùng cho Quầy Nước Ép và Lò Bánh Ngọt."},
 			{"id": "sunflower", "name": "🌻 Hoa Hướng Dương", "desc": "Hoa mặt trời rực rỡ tăng điểm thu hút du khách bờ Đông."},
 			{"id": "rose", "name": "🌹 Hoa Hồng Đỏ", "desc": "Hoa thơm ngát tăng điểm thu hút và làm đẹp cảnh quan."},
-			{"id": "lavender", "name": "🪻 Hoa Oải Hương", "desc": "Màu tím lãng mạn xua muỗi và làm tinh dầu thơm."},
+			{"id": "lavender", "name": "🌸 Hoa Oải Hương", "desc": "Màu tím lãng mạn xua muỗi và làm tinh dầu thơm."},
 			{"id": "apple", "name": "🍎 Cây Táo Lâu Năm", "desc": "Sinh trưởng qua 3 giai đoạn, trĩu quả đỏ mọng mỗi mùa."},
 			{"id": "mango", "name": "🥭 Cây Xoài Nhiệt Đới", "desc": "Cây ăn quả lâu năm cho bóng mát và xoài chín thơm lừng."}
 		],
@@ -102,9 +102,9 @@ func _init_almanac_database() -> void:
 			{"id": "cow_dairy", "name": "🐄 Bò Sữa Chibi", "desc": "Nhai cỏ thong thả trong chuồng gỗ, cho sữa tươi mỗi ngày."},
 			{"id": "chicken", "name": "🐔 Gà Đẻ Trứng", "desc": "Mổ thóc nhịp nhàng, cung cấp trứng gà tươi nguyên chất."},
 			{"id": "pig", "name": "🐖 Heo Rừng Chibi", "desc": "Tắm bùn vui vẻ, thích ăn ngô ngọt và cám tươi."},
-			{"id": "zoo_capybara", "name": "🤎 Chuột Lang Capybara", "desc": "Ngôi sao thân thiện nhất tại Khu Bảo Tồn Bờ Tây."},
+			{"id": "zoo_capybara", "name": "🤎 Chuột Lang Capybara", "desc": "Ngôi sao thân thiện nhất tại Khu Bảo Tồn Bờ Đông."},
 			{"id": "zoo_panda", "name": "🐼 Gấu Trúc Panda", "desc": "Thú quý hiếm thích ăn trúc non, thu hút đông đảo du khách."},
-			{"id": "zoo_giraffe", "name": "🦒 Hươu Cao Cổ", "desc": "Vươn cổ ngắm nhìn toàn cảnh nông trại từ bờ Tây sông."},
+			{"id": "zoo_giraffe", "name": "🦒 Hươu Cao Cổ", "desc": "Vươn cổ ngắm nhìn toàn cảnh nông trại từ bờ Đông sông."},
 			{"id": "zoo_penguin", "name": "🐧 Chim Cánh Cụt", "desc": "Lạch bạch đáng yêu bên hồ nước mát trong khu bảo tồn."}
 		],
 		"recipes": [
@@ -118,10 +118,10 @@ func _init_almanac_database() -> void:
 			{"id": "carrot_juice", "name": "🥤 Nước Ép Cà Rốt", "desc": "Nước uống bổ dưỡng từ Quầy Nước Ép Hoa Quả."}
 		],
 		"visitors": [
-			{"id": "visitor_backpacker", "name": "🎒 Du Khách Ba Lô", "desc": "Đam mê chụp ảnh check-in bên Vườn Thú Bờ Tây."},
+			{"id": "visitor_backpacker", "name": "🎒 Du Khách Ba Lô", "desc": "Đam mê chụp ảnh check-in bên Vườn Thú Bờ Đông."},
 			{"id": "visitor_flower_girl", "name": "👒 Cô Gái Hái Hoa", "desc": "Thường mua hoa hồng, hướng dương và oải hương giá hời."},
 			{"id": "visitor_chef", "name": "👨‍🍳 Đầu Bếp Thượng Lưu", "desc": "Khách VIP chuyên đặt mua cá tầm, mật ong và phô mai."},
-			{"id": "visitor_carpenter", "name": "🪵 Bác Thợ Mộc", "desc": "Yêu thích các công trình gỗ và cảnh quan trang trại."},
+			{"id": "visitor_carpenter", "name": "🔨 Bác Thợ Mộc", "desc": "Yêu thích các công trình gỗ và cảnh quan trang trại."},
 			{"id": "visitor_shopper", "name": "🛍️ Khách Mua Sắm", "desc": "Thích ghé Sạp Hàng Ven Đường mua nông sản tươi."},
 			{"id": "visitor_photographer", "name": "📸 Nhiếp Ảnh Gia", "desc": "Chuyên săn ảnh độc lạ tại Quầy Check-in Vườn Thú."}
 		]

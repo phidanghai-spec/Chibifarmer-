@@ -430,7 +430,7 @@ func try_interact_withered() -> bool:
 		pop.tween_property(self, "scale", Vector2(1.15, 1.15), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		var grow_sc: Vector2 = Vector2(0.8, 0.8) * (1.0 + float(3 - harvest_left) * 0.08)
 		pop.tween_property(self, "scale", grow_sc, 0.12)
-		print("[MovableDecor] Cây đã được tưới nước há»“i sinh (💧 Hồi sinh cây!), thÃªm 1 vá»¥ quáº£ bonus!")
+		print("[MovableDecor] Cây đã được tưới nước hồi sinh (💧 Hồi sinh cây!), thêm 1 vụ quả bonus!")
 		return true
 	else:
 		var seed_reward: String = "apple_seed" if is_apple_tree else "mango_seed"
@@ -440,7 +440,7 @@ func try_interact_withered() -> bool:
 		StorageManager.add_xp(5)
 		EventBus.loot_collected.emit("xp", 5, global_position)
 		
-		print("[MovableDecor] ÄÃ£ Ä‘á»‘n cÃ¢y khÃ´ (🪓), thÆ°á»Ÿng +1 ", seed_reward, " vÃ  +5 XP!")
+		print("[MovableDecor] Đã đốn cây khô (🪓), thưởng +1 ", seed_reward, " và +5 XP!")
 		if main_farm != null and main_farm.has_method("remove_movable_decor"):
 			main_farm.call("remove_movable_decor", self)
 		else:

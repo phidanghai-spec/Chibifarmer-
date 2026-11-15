@@ -18,9 +18,25 @@ var _is_flying_tour: bool = false
 
 func _ready() -> void:
 	y_sort_enabled = true
+	if SaveManager != null and not SaveManager.zoo_updated.is_connected(_on_zoo_updated):
+		SaveManager.zoo_updated.connect(_on_zoo_updated)
 	_setup_zoo_sanctuary()
 
+func _on_zoo_updated(_animal_id: String) -> void:
+	refresh_zoo_grid_state()
+
+func is_zoo_constructed() -> bool:
+	if SaveManager == null:
+		return false
+	if SaveManager.is_building_constructed("mini_zoo") or SaveManager.is_building_constructed("zoo_capybara") or SaveManager.is_building_constructed("zoo_panda") or SaveManager.is_building_constructed("zoo_penguin") or SaveManager.is_building_constructed("zoo_giraffe") or SaveManager.is_building_constructed("zoo_balloon"):
+		return true
+	if SaveManager.is_animal_unlocked("zoo_capybara") or SaveManager.is_animal_unlocked("zoo_panda") or SaveManager.is_animal_unlocked("zoo_penguin") or SaveManager.is_animal_unlocked("zoo_giraffe"):
+		return true
+	return false
+
 func _draw() -> void:
+	if not is_zoo_constructed():
+		return
 	# Draw Sand Pathways linking the Zoo Park Plaza
 	var sand_color: Color = Color(0.88, 0.78, 0.58, 0.95) # Warm sand path
 	var sand_border: Color = Color(0.74, 0.62, 0.42, 0.95)
@@ -221,68 +237,84 @@ func _setup_zoo_sanctuary() -> void:
 	call_deferred("_setup_zoo_grid_barriers_and_pathways")
 	call_deferred("_clear_overlapping_scenery")
 
+func refresh_zoo_grid_state() -> void:
+	_setup_zoo_grid_barriers_and_pathways()
+	queue_redraw()
+
 func _setup_zoo_grid_barriers_and_pathways() -> void:
 	if GridManager == null or GridManager.astar_grid == null:
 		return
 	
-	# 1. Pave Zoo Sand Avenues with Weight 1.0 (seamless navigation from Wooden Bridge)
-	# Horizontal Central Avenue: x: 1120..1730, y: 285..335
-	var min_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1120.0, 285.0))
-	var max_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1730.0, 335.0))
-	for cx: int in range(min_h_cell.x, max_h_cell.x + 1):
-		for cy: int in range(min_h_cell.y, max_h_cell.y + 1):
-			var c: Vector2i = Vector2i(cx, cy)
-			if GridManager.is_within_bounds(c):
-				GridManager.astar_grid.set_point_solid(c, false)
-				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
-				GridManager.path_cells[c] = true
-	
-	# Vertical Central Avenue: x: 1450..1500, y: 140..480
-	var min_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1450.0, 140.0))
-	var max_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1500.0, 480.0))
-	for cx: int in range(min_v_cell.x, max_v_cell.x + 1):
-		for cy: int in range(min_v_cell.y, max_v_cell.y + 1):
-			var c: Vector2i = Vector2i(cx, cy)
-			if GridManager.is_within_bounds(c):
-				GridManager.astar_grid.set_point_solid(c, false)
-				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
-				GridManager.path_cells[c] = true
-	
-	# Shop Entrance Promenade: x: 1136..1178, y: 310..455
-	var min_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1136.0, 310.0))
-	var max_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1178.0, 455.0))
-	for cx: int in range(min_s_cell.x, max_s_cell.x + 1):
-		for cy: int in range(min_s_cell.y, max_s_cell.y + 1):
-			var c: Vector2i = Vector2i(cx, cy)
-			if GridManager.is_within_bounds(c):
-				GridManager.astar_grid.set_point_solid(c, false)
-				GridManager.astar_grid.set_point_weight_scale(c, 1.0)
-				GridManager.path_cells[c] = true
+	# First clear any previously registered zoo obstacle cells (code 950)
+	var to_clear: Array[Vector2i] = []
+	for cell_var: Variant in GridManager.occupied_cells:
+		var c_key: Vector2i = cell_var as Vector2i
+		if int(GridManager.occupied_cells[c_key]) == 950:
+			to_clear.append(c_key)
+	for c_clear: Vector2i in to_clear:
+		GridManager.occupied_cells.erase(c_clear)
+		if GridManager.astar_grid.is_in_bounds(c_clear.x, c_clear.y):
+			GridManager.astar_grid.set_point_solid(c_clear, false)
 
-	# 2. Mark the 4 Enclosures as Solid Obstacles (192x128px footprint)
-	# Leaving the central sand avenues open
-	var enclosure_centers: Array[Vector2] = []
-	for cfg: Dictionary in DataManager.get_zoo_enclosures():
-		if cfg.get("puzzle_piece_cost", null) == null:
+	var zoo_active: bool = is_zoo_constructed()
+	if entrance_gate != null and is_instance_valid(entrance_gate):
+		entrance_gate.visible = zoo_active
+	if feed_shop != null and is_instance_valid(feed_shop):
+		feed_shop.visible = zoo_active
+	if hot_air_balloon != null and is_instance_valid(hot_air_balloon):
+		hot_air_balloon.visible = zoo_active and (SaveManager.is_building_constructed("zoo_balloon") or SaveManager.is_building_constructed("mini_zoo") or StorageManager.level >= 28)
+
+	# 1. If Zoo is constructed, lower AStar weight on East Bank avenues for visitor navigation
+	# WITHOUT adding them to GridManager.path_cells (so players are never blocked from placing fields/items on open East Bank tiles!)
+	if zoo_active:
+		var min_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1120.0, 285.0))
+		var max_h_cell: Vector2i = GridManager.world_to_grid(Vector2(1730.0, 335.0))
+		for cx: int in range(min_h_cell.x, max_h_cell.x + 1):
+			for cy: int in range(min_h_cell.y, max_h_cell.y + 1):
+				var c: Vector2i = Vector2i(cx, cy)
+				if GridManager.is_within_bounds(c) and not GridManager.is_cell_occupied(c):
+					GridManager.astar_grid.set_point_solid(c, false)
+					GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+		
+		var min_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1450.0, 140.0))
+		var max_v_cell: Vector2i = GridManager.world_to_grid(Vector2(1500.0, 480.0))
+		for cx: int in range(min_v_cell.x, max_v_cell.x + 1):
+			for cy: int in range(min_v_cell.y, max_v_cell.y + 1):
+				var c: Vector2i = Vector2i(cx, cy)
+				if GridManager.is_within_bounds(c) and not GridManager.is_cell_occupied(c):
+					GridManager.astar_grid.set_point_solid(c, false)
+					GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+		
+		var min_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1136.0, 310.0))
+		var max_s_cell: Vector2i = GridManager.world_to_grid(Vector2(1178.0, 455.0))
+		for cx: int in range(min_s_cell.x, max_s_cell.x + 1):
+			for cy: int in range(min_s_cell.y, max_s_cell.y + 1):
+				var c: Vector2i = Vector2i(cx, cy)
+				if GridManager.is_within_bounds(c) and not GridManager.is_cell_occupied(c):
+					GridManager.astar_grid.set_point_solid(c, false)
+					GridManager.astar_grid.set_point_weight_scale(c, 1.0)
+
+	# 2. Only mark constructed/unlocked enclosures as occupied obstacles!
+	# Unconstructed enclosure land remains 100% unlocked for player fields, buildings, and decor.
+	for a_id: String in enclosures:
+		var enc: ZooEnclosure = enclosures[a_id] as ZooEnclosure
+		if enc == null or not is_instance_valid(enc):
 			continue
-		var pos_var: Variant = cfg.get("pos", [])
-		if pos_var is Array and (pos_var as Array).size() >= 2:
-			enclosure_centers.append(Vector2(float(pos_var[0]), float(pos_var[1])))
-	
-	for center_pos: Vector2 in enclosure_centers:
-		var enc_rect: Rect2 = Rect2(center_pos.x - 96.0, center_pos.y - 64.0, 192.0, 128.0)
+		var enc_unlocked: bool = SaveManager.is_animal_unlocked(a_id) or SaveManager.is_building_constructed(a_id)
+		enc.visible = zoo_active and (enc_unlocked or SaveManager.is_building_constructed("mini_zoo"))
+		enc.process_mode = Node.PROCESS_MODE_INHERIT if enc.visible else Node.PROCESS_MODE_DISABLED
+		if not enc_unlocked:
+			continue
+		var center_pos: Vector2 = enc.global_position
+		var enc_rect: Rect2 = Rect2(center_pos.x - 64.0, center_pos.y - 48.0, 128.0, 96.0)
 		var min_c: Vector2i = GridManager.world_to_grid(enc_rect.position)
-		var max_c: Vector2i = GridManager.world_to_grid(enc_rect.position + enc_rect.size)
+		var max_c: Vector2i = GridManager.world_to_grid(enc_rect.position + enc_rect.size - Vector2(1.0, 1.0))
 		for cx: int in range(min_c.x, max_c.x + 1):
 			for cy: int in range(min_c.y, max_c.y + 1):
 				var c: Vector2i = Vector2i(cx, cy)
 				if not GridManager.is_within_bounds(c):
 					continue
-				var w_pos: Vector2 = GridManager.grid_to_world(c)
-				# Do not block the central sand avenues!
-				var in_h_avenue: bool = (w_pos.y >= 280.0 and w_pos.y <= 340.0)
-				var in_v_avenue: bool = (w_pos.x >= 1445.0 and w_pos.x <= 1505.0)
-				if not in_h_avenue and not in_v_avenue:
+				if not GridManager.occupied_cells.has(c):
 					GridManager.astar_grid.set_point_solid(c, true)
 					GridManager.occupied_cells[c] = 950
 
@@ -323,6 +355,8 @@ func fly_balloon_tour(on_finish: Callable) -> void:
 		on_finish.call()
 
 func _clear_overlapping_scenery() -> void:
+	if not is_zoo_constructed():
+		return
 	var farm: Node2D = get_tree().current_scene as Node2D
 	if farm != null:
 		var sc_container: Node2D = farm.get("_scenery_container") as Node2D

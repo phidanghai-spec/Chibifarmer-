@@ -2,7 +2,7 @@ class_name OfflineReportModal
 extends PanelContainer
 
 ## OfflineReportModal
-## Hộp thoại thông báo sản lượng nông sản & tiền vé Vườn Thú Bờ Tây trong thời gian vắng mặt.
+## Hộp thoại thông báo sản lượng nông sản & tiền vé Vườn Thú Bờ Đông trong thời gian vắng mặt.
 ## 100% Static Typing GDScript 2.0.
 
 @onready var away_duration_label: Label = $ReportVBox/AwayDurationLabel
@@ -60,9 +60,10 @@ func _rebuild_summary_rows(crops_ready: int, honey_count: int, zoo_gold: int) ->
 		
 	var lines: Array[String] = [
 		"🌾 Ruộng đất & Cây ăn quả (Táo, Xoài) đã chín: +%d ô" % crops_ready,
-		"🍯 Đàn ong mật chăm chỉ thu hoạch: +%d Hũ mật ong" % honey_count,
-		"🎟️ Vé tham quan Vườn Thú Bờ Tây (Capybara, Panda): +%d Vàng" % zoo_gold
+		"🍯 Đàn ong mật chăm chỉ thu hoạch: +%d Hũ mật ong" % honey_count
 	]
+	if zoo_gold > 0:
+		lines.append("🎟️ Vé tham quan Vườn Thú Bờ Đông (Capybara, Panda): +%d Vàng" % zoo_gold)
 	
 	for line_text: String in lines:
 		var panel: PanelContainer = PanelContainer.new()

@@ -26,27 +26,27 @@ var npcs: Dictionary = {} # String -> Node2D
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(240, 36)
-	size = Vector2(240, 36)
+	custom_minimum_size = Vector2(326, 36)
+	size = Vector2(326, 36)
 	
-	# Đặt bảng cảnh báo ở góc phải trên màn hình, ngay dưới nút Âm thanh (TopRightHUD)
+	# Đặt bảng cảnh báo ở góc phải trên màn hình, ngay dưới TourismStarHUD (tránh đè nút & cắt chữ)
 	anchors_preset = Control.PRESET_TOP_RIGHT
 	anchor_left = 1.0
 	anchor_right = 1.0
-	offset_left = -250.0
-	offset_top = 56.0
-	offset_right = -18.0
-	offset_bottom = 92.0
+	offset_left = -340.0
+	offset_top = 104.0
+	offset_right = -14.0
+	offset_bottom = 140.0
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	
 	_banner_btn = Button.new()
 	_banner_btn.name = "AlertBannerButton"
 	_banner_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	_banner_btn.custom_minimum_size = Vector2(232, 34)
-	_banner_btn.size = Vector2(232, 34)
+	_banner_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_banner_btn.custom_minimum_size = Vector2(326, 34)
 	_banner_btn.text = "Nông trại êm ả!"
 	_banner_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner_btn.add_theme_font_size_override("font_size", 10)
+	_banner_btn.add_theme_font_size_override("font_size", 11)
 	_banner_btn.add_theme_color_override("font_color", Color(0.24, 0.15, 0.08))
 	_banner_btn.add_theme_color_override("font_hover_color", Color(0.85, 0.25, 0.05))
 	
@@ -126,6 +126,10 @@ func _scan_stock_alerts() -> void:
 	var egg_pos: Vector2 = _get_resource_target_pos("egg", Vector2(240.0, 720.0))
 	var milk_pos: Vector2 = _get_resource_target_pos("milk", Vector2(300.0, 720.0))
 	
+	var cur_lv: int = StorageManager.level if StorageManager != null else 1
+	var corn_unlock_lv: int = int(DataManager.get_crop("corn").get("unlock_level", 2)) if DataManager != null else 2
+	var cow_unlock_lv: int = DataManager.get_building_unlock_level("cow_pasture", 6) if DataManager != null else 6
+
 	if wheat_count <= 4:
 		_active_alerts.append({
 			"item": "wheat",
@@ -136,7 +140,7 @@ func _scan_stock_alerts() -> void:
 	else:
 		_update_npc_bubble("baker", "Bánh Đã Sẵn!", false)
 	
-	if corn_count <= 4:
+	if cur_lv >= corn_unlock_lv and corn_count <= 4:
 		_active_alerts.append({
 			"item": "corn",
 			"text": "Thiếu Ngô (%d còn lại)! Bấm để gieo trồng" % corn_count,
@@ -156,20 +160,26 @@ func _scan_stock_alerts() -> void:
 	else:
 		_update_npc_bubble("pastry", "Bánh Kem Xong!", false)
 	
-	if milk_count <= 2:
+	if cur_lv >= cow_unlock_lv and milk_count <= 2:
 		_active_alerts.append({
 			"item": "milk",
 			"text": "Thiếu Sữa Bò (%d còn lại)! Bấm để vắt sữa" % milk_count,
 			"pos": milk_pos
 		})
 		_update_npc_bubble("barista", "Cần Sữa Tươi!", true)
-	else:
+	elif cur_lv >= cow_unlock_lv:
 		_update_npc_bubble("barista", "Nước Mát Lạnh!", false)
+	else:
+		_update_npc_bubble("barista", "", false)
 	
 	if npcs.has("keeper"):
 		_update_npc_bubble("keeper", "Kho Sẵn Sàng!", false)
 	if npcs.has("fisher"):
-		_update_npc_bubble("fisher", "Bến Cá Sẵn Sàng!", false)
+		var fish_unlock_lv: int = DataManager.get_building_unlock_level("fishing_spot", 4) if DataManager != null else 4
+		if StorageManager != null and StorageManager.level >= fish_unlock_lv:
+			_update_npc_bubble("fisher", "Bến Cá Sẵn Sàng!", false)
+		else:
+			_update_npc_bubble("fisher", "", false)
 	
 	if not _active_alerts.is_empty():
 		_current_alert_idx = _current_alert_idx % _active_alerts.size()

@@ -15,6 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="HayDay Offline Tourism"
+config/version="1.0.0"
 run/main_scene="res://scenes/boot/BootSplash.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
@@ -31,6 +32,7 @@ SpriteAtlasManager="*res://scripts/core/sprite_atlas_manager.gd"
 SaveManager="*res://scripts/core/save_manager.gd"
 AudioManager="*res://scripts/core/audio_manager.gd"
 DailyNewspaper="*res://scripts/systems/daily_newspaper.gd"
+DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
 
 [debug]
 
@@ -53,15 +55,12 @@ gdscript/warnings/narrowing_conversion=0
 
 [display]
 
-window/size/viewport_width=1152
-window/size/viewport_height=648
-window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/debug_menu/plugin.cfg", "res://addons/shaker/plugin.cfg")
 
 [rendering]
 

@@ -292,13 +292,17 @@ func _handle_build_field(cell: Vector2i) -> void:
 		return
 	_last_drag_cell = cell
 	
-	var cost: int = 1
+	var cost: int = 10
 	var b_info: Dictionary = DataManager.get_building("field_plot")
 	if not b_info.is_empty():
-		cost = int(b_info.get("cost_gold", 1))
+		cost = maxi(1, int(b_info.get("cost_gold", 10)))
 	
 	if not StorageManager.has_gold(cost):
 		AudioManager.play_sfx("error")
+		if main_farm != null:
+			var hud: CanvasLayer = main_farm.get("ui_hud") as CanvasLayer
+			if hud != null and hud.has_method("show_floating_notice"):
+				hud.call("show_floating_notice", "❌ Không đủ Vàng để đào ô ruộng (%d Vàng)!" % cost)
 		return
 	
 	if GridManager.can_place_building("field_plot", cell):
@@ -308,7 +312,8 @@ func _handle_build_field(cell: Vector2i) -> void:
 			var inst_id: int = GridManager.place_building("field_plot", cell)
 			AudioManager.play_sfx("plant")
 			_bump_cursor_fx()
-			print("[DragActionManager] Built new field plot at cell: ", cell, " (inst_id: ", inst_id, ")")
+			SaveManager.save_game()
+			print("[DragActionManager] Built new field plot at cell: ", cell, " (inst_id: ", inst_id, ", -", cost, " gold)")
 	else:
 		AudioManager.play_sfx("error")
 
@@ -320,10 +325,14 @@ func _handle_build_path(cell: Vector2i) -> void:
 	var cost: int = 5
 	var p_info: Dictionary = DataManager.get_building("path_tile")
 	if not p_info.is_empty():
-		cost = int(p_info.get("cost_gold", 5))
+		cost = maxi(1, int(p_info.get("cost_gold", 5)))
 	
 	if not StorageManager.has_gold(cost):
 		AudioManager.play_sfx("error")
+		if main_farm != null:
+			var hud: CanvasLayer = main_farm.get("ui_hud") as CanvasLayer
+			if hud != null and hud.has_method("show_floating_notice"):
+				hud.call("show_floating_notice", "❌ Không đủ Vàng để lát đường (%d Vàng)!" % cost)
 		return
 	
 	if not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell):
@@ -333,7 +342,8 @@ func _handle_build_path(cell: Vector2i) -> void:
 			GridManager.place_path(cell)
 			AudioManager.play_sfx("plant")
 			_bump_cursor_fx()
-			print("[DragActionManager] Built path tile at cell: ", cell)
+			SaveManager.save_game()
+			print("[DragActionManager] Built path tile at cell: ", cell, " (-", cost, " gold)")
 	else:
 		AudioManager.play_sfx("error")
 
@@ -357,9 +367,12 @@ func _handle_dismantle(cell: Vector2i) -> void:
 	# 1. Path Tile
 	if GridManager.is_path_tile(cell):
 		if GridManager.remove_path(cell):
-			StorageManager.add_gold(5)
+			var p_info: Dictionary = DataManager.get_building("path_tile")
+			var refund_path: int = maxi(1, int(p_info.get("cost_gold", 5)))
+			StorageManager.add_gold(refund_path)
 			AudioManager.play_sfx("click")
 			_bump_cursor_fx()
+			SaveManager.save_game()
 			print("[DragActionManager] Dismantled path at cell: ", cell)
 			return
 
@@ -379,9 +392,12 @@ func _handle_dismantle(cell: Vector2i) -> void:
 			GridManager.astar_grid.set_point_solid(cell, false)
 			if main_farm != null and main_farm.has_method("_on_building_removed"):
 				main_farm.call("_on_building_removed", inst_id, cell)
-		StorageManager.add_gold(1)
+		var f_info: Dictionary = DataManager.get_building("field_plot")
+		var refund_field: int = maxi(1, int(f_info.get("cost_gold", 10)))
+		StorageManager.add_gold(refund_field)
 		AudioManager.play_sfx("click")
 		_bump_cursor_fx()
+		SaveManager.save_game()
 		print("[DragActionManager] Dismantled field plot at cell: ", cell)
 		return
 
@@ -395,6 +411,7 @@ func _handle_dismantle(cell: Vector2i) -> void:
 					StorageManager.add_gold(10)
 					AudioManager.play_sfx("click")
 					_bump_cursor_fx()
+					SaveManager.save_game()
 					print("[DragActionManager] Dismantled decor at cell: ", cell)
 					return
 

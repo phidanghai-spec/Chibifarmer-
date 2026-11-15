@@ -57,6 +57,10 @@ func apply_full_config(new_config: Dictionary) -> void:
 func equip_part(category: String, part_id: String) -> void:
 	current_config[category] = part_id
 	_refresh_authentic_avatar_sprite()
+	if is_inside_tree() and visual_pivot != null:
+		var tw: Tween = create_tween()
+		tw.tween_property(visual_pivot, "scale", Vector2(1.08, 0.92), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(visual_pivot, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _refresh_authentic_avatar_sprite() -> void:
 	_hide_legacy_paperdoll_layers()
@@ -68,10 +72,25 @@ func _refresh_authentic_avatar_sprite() -> void:
 	var hat_id: String = str(current_config.get("hat", "hat_straw_ribbon"))
 	var body_id: String = str(current_config.get("body", "body_warm_ivory"))
 	var gender: String = str(current_config.get("gender", "male"))
-	var is_female: bool = (gender == "female" or hair_id == "hair_braid_chestnut" or hair_id == "hair_curly_berry")
+
+	# Hair/preset selection: female-styled hairs switch to female base unless male-only hair is picked
+	var is_female: bool = (gender == "female")
+	if hair_id == "hair_braid_chestnut" or hair_id == "hair_curly_berry":
+		is_female = true
+	elif hair_id == "hair_short_sunny":
+		is_female = false
+
+	# Determine visual variant from outfit + hat/hair so every option changes appearance
+	var effective_style: String = outfit_id
+	if outfit_id == "outfit_denim_overalls":
+		if hat_id == "hat_chef_toque" or hair_id == "hair_bun_baker":
+			effective_style = "outfit_baker_apron"
+		elif hat_id == "hat_postman_cap":
+			effective_style = "outfit_carpenter_vest"
+
 	var sprite_id: String = "avatar_male_overalls"
 	if is_female:
-		match outfit_id:
+		match effective_style:
 			"outfit_floral_dress":
 				sprite_id = "avatar_female_dress"
 			"outfit_baker_apron":
@@ -81,7 +100,7 @@ func _refresh_authentic_avatar_sprite() -> void:
 			_:
 				sprite_id = "avatar_female_overalls"
 	else:
-		match outfit_id:
+		match effective_style:
 			"outfit_floral_dress":
 				sprite_id = "avatar_male_floral"
 			"outfit_baker_apron":
@@ -100,16 +119,24 @@ func _refresh_authentic_avatar_sprite() -> void:
 		body_layer.scale = _base_sprite_scale
 		body_layer.position = Vector2(0.0, -82.0)
 
-	# Subtle warm skin/lighting tint so Tab 1 options give pleasant visual feedback
+	# Distinct skin/lighting & hair/hat tint so every Tab 1 & Tab 2 option gives clear visual feedback
+	var base_tint: Color = Color(1.0, 1.0, 1.0, 1.0)
 	match body_id:
 		"body_peach_sunny":
-			body_layer.modulate = Color(1.02, 0.97, 0.95, 1.0)
+			base_tint = Color(1.05, 0.94, 0.92, 1.0)
 		"body_honey_tan":
-			body_layer.modulate = Color(0.98, 0.93, 0.86, 1.0)
+			base_tint = Color(0.96, 0.87, 0.74, 1.0)
 		"body_cocoa_warm":
-			body_layer.modulate = Color(0.92, 0.85, 0.78, 1.0)
+			base_tint = Color(0.84, 0.72, 0.62, 1.0)
 		_:
-			body_layer.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			base_tint = Color(1.0, 1.0, 1.0, 1.0)
+
+	if hair_id == "hair_curly_berry":
+		base_tint = base_tint * Color(1.04, 0.91, 0.96, 1.0)
+	elif hair_id == "hair_short_sunny":
+		base_tint = base_tint * Color(1.03, 1.01, 0.94, 1.0)
+
+	body_layer.modulate = base_tint
 
 func set_preview_action(mode: PreviewMode) -> void:
 	preview_mode = mode
