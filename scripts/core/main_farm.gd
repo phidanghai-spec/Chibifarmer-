@@ -1633,12 +1633,18 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 		(float(cell.y) + float(t_size.y) * 0.5) * 32.0
 	)
 	
+	var is_zoo_item: bool = _pending_build_id.begins_with("zoo_") or _pending_build_id == "mini_zoo"
+	var hit_zoo_reserve: bool = false
 	var can_place: bool = true
 	for ox: int in range(t_size.x):
 		for oy: int in range(t_size.y):
 			var c: Vector2i = cell + Vector2i(ox, oy)
 			if not GridManager.is_within_bounds(c) or GridManager.is_cell_occupied(c) or GridManager.is_path_tile(c):
 				can_place = false
+				break
+			if not is_zoo_item and GridManager.is_zoo_reserved_cell(c):
+				can_place = false
+				hit_zoo_reserve = true
 				break
 			var c_pos: Vector2 = GridManager.grid_to_world(c)
 			if _is_in_water_pond(c_pos):
@@ -1650,8 +1656,20 @@ func _handle_building_placement_click(mouse_pos: Vector2) -> void:
 	if not can_place:
 		AudioManager.play_sfx("error")
 		if ui_hud != null and ui_hud.has_method("show_floating_notice"):
-			ui_hud.show_floating_notice("❌ Vị trí này đang vướng vật cản hoặc mặt nước!")
+			if hit_zoo_reserve:
+				ui_hud.show_floating_notice("Khu này dành cho Sở Thú Bờ Đông")
+			else:
+				ui_hud.show_floating_notice("❌ Vị trí này đang vướng vật cản hoặc mặt nước!")
 		return
+	
+	if _pending_build_id == "mini_zoo" or _pending_build_id in ["zoo_capybara", "zoo_panda", "zoo_penguin", "zoo_giraffe"]:
+		var target_zone_id: String = "zoo_capybara" if _pending_build_id == "mini_zoo" else _pending_build_id
+		var zone_chk: Dictionary = GridManager.can_unlock_zoo_zone(target_zone_id)
+		if not bool(zone_chk.get("ok", true)):
+			AudioManager.play_sfx("error")
+			if ui_hud != null and ui_hud.has_method("show_floating_notice"):
+				ui_hud.show_floating_notice(String(zone_chk.get("message", "")))
+			return
 	
 	var b_cfg: Dictionary = DataManager.get_building(_pending_build_id)
 	if _pending_build_cost <= 0 and not b_cfg.is_empty():
@@ -2397,11 +2415,11 @@ func restore_from_save_manager() -> void:
 					GridManager.occupied_cells.erase(coord)
 					if GridManager.astar_grid != null and GridManager.astar_grid.is_in_bounds(coord.x, coord.y):
 						GridManager.astar_grid.set_point_solid(coord, false)
-				var inst_id: int = GridManager.place_building("field_plot", coord)
+				var inst_id: int = GridManager.place_building("field_plot", coord, true)
 				if inst_id == -1:
 					GridManager.occupied_cells.erase(coord)
 					GridManager.path_cells.erase(coord)
-					inst_id = GridManager.place_building("field_plot", coord)
+					inst_id = GridManager.place_building("field_plot", coord, true)
 				if not field_plots.has(coord):
 					plot = _spawn_field_plot(coord, inst_id)
 				else:

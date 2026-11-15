@@ -306,6 +306,14 @@ func on_player_interact(_avatar: Node2D) -> void:
 	
 	# 1. If Locked: Prompt to Unlock
 	if not SaveManager.is_animal_unlocked(animal_id):
+		var zone_chk: Dictionary = GridManager.can_unlock_zoo_zone(animal_id)
+		if not bool(zone_chk.get("ok", true)):
+			var err_msg: String = String(zone_chk.get("message", ""))
+			AudioManager.play_sfx("error")
+			_show_floating_text(err_msg)
+			if hud != null and hud.has_method("show_floating_notice"):
+				hud.call("show_floating_notice", err_msg)
+			return
 		if SaveManager.puzzle_pieces >= unlock_pieces_cost:
 			SaveManager.spend_puzzle_pieces(unlock_pieces_cost)
 			SaveManager.unlock_animal(animal_id)

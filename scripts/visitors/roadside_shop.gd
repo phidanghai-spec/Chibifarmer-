@@ -72,7 +72,17 @@ func get_suggested_price(item_id: String, count: int) -> int:
 	var base: int = DataManager.get_item_base_price(item_id)
 	return int(base * count * 1.2) # Hay Day default max suggested price
 
+func reset_for_test() -> void:
+	for i: int in range(slots.size()):
+		slots[i]["item_id"] = ""
+		slots[i]["count"] = 0
+		slots[i]["price"] = 0
+		slots[i]["is_sold"] = false
+	shop_updated.emit()
+
 func list_item(slot_index: int, item_id: String, count: int, price: int) -> bool:
+	if count <= 0 or price <= 0:
+		return false
 	if slot_index < 0 or slot_index >= slots.size():
 		return false
 	if not is_slot_empty(slot_index):

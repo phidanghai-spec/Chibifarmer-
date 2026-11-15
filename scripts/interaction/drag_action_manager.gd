@@ -305,6 +305,14 @@ func _handle_build_field(cell: Vector2i) -> void:
 				hud.call("show_floating_notice", "❌ Không đủ Vàng để đào ô ruộng (%d Vàng)!" % cost)
 		return
 	
+	if GridManager.is_zoo_reserved_cell(cell):
+		AudioManager.play_sfx("error")
+		if main_farm != null:
+			var hud_r: CanvasLayer = main_farm.get("ui_hud") as CanvasLayer
+			if hud_r != null and hud_r.has_method("show_floating_notice"):
+				hud_r.call("show_floating_notice", "Khu này dành cho Sở Thú Bờ Đông")
+		return
+	
 	if GridManager.can_place_building("field_plot", cell):
 		if StorageManager.spend_gold(cost):
 			if main_farm != null and main_farm.has_method("auto_clear_decor_at_cell"):
@@ -333,6 +341,14 @@ func _handle_build_path(cell: Vector2i) -> void:
 			var hud: CanvasLayer = main_farm.get("ui_hud") as CanvasLayer
 			if hud != null and hud.has_method("show_floating_notice"):
 				hud.call("show_floating_notice", "❌ Không đủ Vàng để lát đường (%d Vàng)!" % cost)
+		return
+	
+	if GridManager.is_zoo_reserved_cell(cell):
+		AudioManager.play_sfx("error")
+		if main_farm != null:
+			var hud_r: CanvasLayer = main_farm.get("ui_hud") as CanvasLayer
+			if hud_r != null and hud_r.has_method("show_floating_notice"):
+				hud_r.call("show_floating_notice", "Khu này dành cho Sở Thú Bờ Đông")
 		return
 	
 	if not GridManager.is_path_tile(cell) and not GridManager.is_cell_occupied(cell):
