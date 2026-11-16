@@ -7,6 +7,10 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   godot-tests:
     name: "Run gdUnit4 Logic & Visual Invariant Tests"
