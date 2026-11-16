@@ -11,6 +11,38 @@ $BuildDir = Join-Path $RepoRoot "build\web"
 $ExportHtml = Join-Path $BuildDir "index.html"
 $VercelConfigSrc = Join-Path $PSScriptRoot "vercel.web.json"
 
+$Branch = (git rev-parse --abbrev-ref HEAD).Trim()
+$Commit = (git rev-parse --short HEAD).Trim()
+Write-Host "Đang triển khai commit $Commit trên nhánh $Branch"
+
+if ($Prod) {
+    if ($Branch -ne "main") {
+        Write-Host "Từ chối triển khai production: nhánh hiện tại là '$Branch' (không phải main)."
+        exit 1
+    }
+    git diff --ignore-cr-at-eol --quiet
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Từ chối triển khai production: có thay đổi chưa stage trên cây làm việc."
+        exit 1
+    }
+    git diff --cached --quiet
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Từ chối triển khai production: có thay đổi đã stage nhưng chưa commit."
+        exit 1
+    }
+    git fetch origin
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Từ chối triển khai production: không thể chạy git fetch origin."
+        exit 1
+    }
+    $localHead = (git rev-parse HEAD).Trim()
+    $remoteMain = (git rev-parse origin/main).Trim()
+    if ($localHead -ne $remoteMain) {
+        Write-Host "Từ chối triển khai production: HEAD ($localHead) không khớp origin/main ($remoteMain)."
+        exit 1
+    }
+}
+
 function Resolve-GodotCli {
     $cmd = Get-Command godot -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
@@ -106,10 +138,10 @@ Push-Location $BuildDir
 try {
     if ($Prod) {
         Write-Host "Đang triển khai bản PRODUCTION lên Vercel..."
-        $deployOut = & $Vercel deploy --prod --yes
+        $deployOut = & $Vercel deploy --prod --yes --meta "gitCommit=$Commit"
     } else {
         Write-Host "Đang triển khai bản PREVIEW lên Vercel..."
-        $deployOut = & $Vercel deploy --yes
+        $deployOut = & $Vercel deploy --yes --meta "gitCommit=$Commit"
     }
     if ($LASTEXITCODE -ne 0) {
         Write-Error "vercel deploy thất bại với mã thoát $LASTEXITCODE."
